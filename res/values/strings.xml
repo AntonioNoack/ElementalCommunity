@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Elemental Community</string>
+    <string name="result_name">Result Name</string>
+    <string name="cancel">Cancel</string>
+    <string name="submit">Submit</string>
+    <string name="result_unknown_wanna_add_your_own">Result unknown! Wanna add your own?</string>
+    <string name="community_suggestions">Community suggestions:</string>
+    <string name="like">Like</string>
+    <string name="dislike">Dislike</string>
+    <string name="start">Start</string>
+    <string name="suggest">Suggest</string>
+    <string name="back">Back</string>
+    <string name="please_choose_name">Please choose the resulting element!</string>
+    <string name="please_choose_color">Please select the element color!</string>
+    <string name="only_az09">Only A-Za-z0-9, space, comma, dot and \' are allowed!</string>
+    <string name="sent">Sent!</string>
+</resources>
