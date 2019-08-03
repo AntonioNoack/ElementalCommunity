@@ -1,5 +1,6 @@
 package me.antonio.noack.elementalcommunity
 
+import android.app.Dialog
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,9 +12,11 @@ import kotlin.collections.HashMap
 import kotlin.concurrent.thread
 import android.view.MotionEvent
 import android.view.InputDevice
+import androidx.appcompat.app.AlertDialog
 import kotlinx.android.synthetic.main.combiner.*
 import kotlinx.android.synthetic.main.game.*
 import kotlinx.android.synthetic.main.menu.*
+import kotlinx.android.synthetic.main.settings.*
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.api.WebServices
 import kotlin.collections.ArrayList
@@ -80,12 +83,25 @@ class AllManager: AppCompatActivity() {
             unlocked.postInvalidate()
         }
 
-        start.setOnClickListener {
-            flipper.displayedChild = 1
-        }
+        start.setOnClickListener { flipper.displayedChild = 1 }
+        suggest.setOnClickListener { flipper.displayedChild = 2 }
+        settings.setOnClickListener { flipper.displayedChild = 3 }
+        back1.setOnClickListener { flipper.displayedChild = 0 }
+        back2.setOnClickListener { flipper.displayedChild = 0 }
+        back3.setOnClickListener { flipper.displayedChild = 0 }
 
-        suggest.setOnClickListener {
-            flipper.displayedChild = 2
+        resetEverything.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.are_you_sure_reset_everything)
+                .setPositiveButton(android.R.string.yes){ _, _ ->
+                    pref.edit().clear().putLong("customUUID", customUUID).apply()
+                    unlockedIds = hashSetOf(1, 2, 3, 4)
+                    for(list in unlockeds){ list.removeAll(list.filter { it.uuid > 4 }) }
+                    invalidate()
+                }
+                .setNegativeButton(android.R.string.no, null)
+                .setCancelable(true)
+                .show()
         }
 
         save = {
@@ -125,12 +141,6 @@ class AllManager: AppCompatActivity() {
         updateGroupSizes()
 
         askNews()
-
-        // todo a news section :D
-
-        // todo suggestions: if not found / on user wants it
-        // todo help? ;)
-        // todo count who found it :)
 
     }
 

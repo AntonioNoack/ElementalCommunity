@@ -39,6 +39,8 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     var scrollDest = 0f
 
     private var dragged: Element? = null
+    private var activeElement: Element? = null
+    private var activeness = 0f
 
     private val maxTouches = 64
     private var oldX = FloatArray(maxTouches)
@@ -47,7 +49,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     private var mx = 0f
     private var my = 0f
 
-    private var isInMotion = 0
+    private var isOnBorder = 0
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -105,7 +107,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     } else {
 
                         val y = event.y
-                        isInMotion = when {
+                        isOnBorder = when {
                             y < measuredWidth * 0.08f -> -1
                             y > measuredHeight * 0.92f -> +1
                             else -> 0
@@ -148,10 +150,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     //  add to achieved :D
                     val newOne = add(result)
                     unlockedIds.add(result.uuid)
+                    activeElement = result
+                    activeness = 1f
                     save()
-                    // todo scroll to destination on success
+                    // scroll to destination on success
                     scrollDest = getRow(result)*1f/countRows() * max(0f, neededHeight() - measuredHeight)
-                    isInMotion = if(scrollDest > scroll) +1 else -1
                     staticRunOnUIThread {
                         invalidate()
                         (if(newOne) AllManager.successSound else AllManager.okSound).play()
@@ -333,7 +336,16 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     if(index % entriesPerRow == 0) y0 += widthPerNode
 
                     val x0 = avgMargin + (index % entriesPerRow) * widthPerNode
-                    drawElement(canvas, x0, y0, widthPerNode, true, element, bgPaint, textPaint)
+                    if(activeElement == element && activeness > 0f){
+
+                        val delta = activeness * widthPerNode * 0.5f
+                        drawElement(canvas, x0 - delta, y0 - delta, widthPerNode + 2 * delta, true, element, bgPaint, textPaint)
+
+                    } else {
+
+                        drawElement(canvas, x0, y0, widthPerNode, true, element, bgPaint, textPaint)
+
+                    }
 
                 }
 
@@ -350,6 +362,13 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         if(dragged != null){
             drawElement(canvas, mx - widthPerNode/2, my - widthPerNode/2, widthPerNode, true, dragged, bgPaint, textPaint) }
 
+        if(activeness > 0f){
+
+            activeness -= deltaTime
+            invalidate()
+
+        }
+
         if(!scrollDest.isNaN()){
 
             scroll = mix(scroll, scrollDest, clamp(3f * deltaTime, 0f, 1f))
@@ -357,33 +376,29 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                 scroll.isNaN() -> {
                     scrollDest = Float.NaN
                     scroll = 0f
-                    isInMotion = 0
                 }
                 abs(scroll - scrollDest) < widthPerNode * 0.05f -> {
                     scrollDest = Float.NaN
-                    isInMotion = 0
                 }
                 else -> {
                     invalidate()
                 }
             }
 
-        } else {
+        }
 
-            if(isInMotion != 0){
+        if(isOnBorder != 0){
 
-                val oldScroll = scroll
-                scroll += isInMotion * deltaTime * widthPerNode * 5f
+            val oldScroll = scroll
+            scroll += isOnBorder * deltaTime * widthPerNode * 5f
 
-                checkScroll()
+            checkScroll()
 
-                if(oldScroll == scroll){
-                    isInMotion = 0
-                } else {
-                    invalidate()
-                }
+            if(oldScroll == scroll){
+                isOnBorder = 0
+            } else {
+                invalidate()
             }
-
         }
 
     }

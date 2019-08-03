@@ -4,9 +4,4 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <me.antonio.noack.elementalcommunity.NewsView
-            android:layout_margin="5dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
 </LinearLayout>
