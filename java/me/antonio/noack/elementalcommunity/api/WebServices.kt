@@ -131,7 +131,7 @@ object WebServices {
 
     }
 
-    fun suggestRecipe(all: AllManager, a: Element, b: Element, resultName: String, resultGroup: Int, onSuccess: () -> Unit, onError: (Exception) -> Unit = {
+    fun suggestRecipe(all: AllManager, a: Element, b: Element, resultName: String, resultGroup: Int, onSuccess: (bytes: ByteArray) -> Unit, onError: (Exception) -> Unit = {
         AllManager.staticToast1(
             "${it.javaClass.simpleName}: ${it.message}",
             true
@@ -140,14 +140,14 @@ object WebServices {
 
         Captcha.get(all, { token ->
 
-            println("$ServerURL?a=${a.uuid}&b=${b.uuid}&r=${URLEncoder.encode(resultName, "UTF-8")}&g=$resultGroup&u=$customUUID&t=${URLEncoder.encode(token, "UTF-8")}")
+            // a,b,r,g,u,t
 
             try {
 
                 val url = URL("$ServerURL?a=${a.uuid}&b=${b.uuid}&r=${URLEncoder.encode(resultName, "UTF-8")}&g=$resultGroup&u=$customUUID&t=${URLEncoder.encode(token, "UTF-8")}")
                 val con = url.openConnection()
-                con.getInputStream().readBytes()
-                onSuccess()
+                val bytes = con.getInputStream().readBytes()
+                onSuccess(bytes)
 
             } catch (e: Exception){
                 onError(e)
@@ -223,6 +223,36 @@ object WebServices {
             }
 
 
+
+        } catch (e: Exception){ }
+
+    }
+
+    fun updateGroupSizesAndNames(){
+
+        try {
+
+            val url = URL("$ServerURL?l")
+            val con = url.openConnection()
+            val data = String(con.getInputStream().readBytes()).split('\n')
+            val groupSizes = IntArray(GroupSizes.size)
+            for(entry in data){
+                val index1 = entry.indexOf(':')
+                val index2 = entry.indexOf(':', index1+1)
+                if(index1 > 0 && index2 > 0){
+                    val uuid = entry.substring(0, index1).toIntOrNull() ?: continue
+                    val group = entry.substring(index1+1, index2).toIntOrNull() ?: continue
+                    groupSizes[group]++
+                    val name = entry.substring(index2+1)
+                    Element.get(name, uuid, group)
+                }
+            }
+
+            for((id, size) in groupSizes.withIndex()){
+                GroupSizes[id] = size
+            }
+
+            invalidate()
 
         } catch (e: Exception){ }
 

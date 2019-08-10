@@ -22,6 +22,7 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.getMargin
 import me.antonio.noack.elementalcommunity.api.WebServices
 import me.antonio.noack.elementalcommunity.utils.Maths.fract
 import me.antonio.noack.elementalcommunity.utils.Maths.mix
+import java.lang.IllegalArgumentException
 import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.max
@@ -143,27 +144,31 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     }
 
+    fun unlockElement(element: Element){
+        //  add to achieved :D
+        val newOne = add(element)
+        unlockedIds.add(element.uuid)
+        activeElement = element
+        activeness = 1f
+        save()
+        // scroll to destination on success
+        scrollDest = getRow(element)*1f/countRows() * max(0f, neededHeight() - measuredHeight)
+        staticRunOnUIThread {
+            invalidate()
+            (if(newOne) AllManager.successSound else AllManager.okSound).play()
+        }
+    }
+
     open fun onRecipeRequest(first: Element, second: Element){
         thread(true){
             WebServices.askRecipe(first, second, { result ->
                 if(result != null){
-                    //  add to achieved :D
-                    val newOne = add(result)
-                    unlockedIds.add(result.uuid)
-                    activeElement = result
-                    activeness = 1f
-                    save()
-                    // scroll to destination on success
-                    scrollDest = getRow(result)*1f/countRows() * max(0f, neededHeight() - measuredHeight)
-                    staticRunOnUIThread {
-                        invalidate()
-                        (if(newOne) AllManager.successSound else AllManager.okSound).play()
-                    }
+                    unlockElement(result)
                 } else {
                     // staticRunOnUIThread { AllManager.askingSound.play() }
                     askForRecipe(first, second)
                     WebServices.askRecipe(first, second, { result2 ->
-                        if(result2 != null){// todo remove in the future, when the least amount of support is 2 or sth like that
+                        if(result2 != null){// remove in the future, when the least amount of support is 2 or sth like that
                             add(result2)
                             unlockedIds.add(result2.uuid)
                             save()
@@ -185,7 +190,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     .setView(R.layout.add_recipe)
                     .show()
                 dialog.findViewById<TextView>(R.id.cancel).setOnClickListener {
-                    dialog.dismiss()
+                    try { dialog.dismiss() } catch (e: IllegalArgumentException){}
                 }
                 dialog.findViewById<TextView>(R.id.submit).setOnClickListener {
                     val name = dialog.findViewById<TextView>(R.id.name).text.toString()
@@ -206,8 +211,19 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     }
                     thread {
                         WebServices.suggestRecipe(all, a, b, name, group, {
+                            val str = String(it).split('\n')[0]
+                            println("by recipe: $str")
+                            val index1 = str.indexOf(':')
+                            val index2 = str.indexOf(':', index1+1)
                             staticToast2(R.string.sent, false)
-                            staticRunOnUIThread { dialog.dismiss() }
+                            staticRunOnUIThread { try { dialog.dismiss() } catch (e: IllegalArgumentException){} }
+                            if(index1 > 0 && index2 > 0){
+                                val rUUID = str.substring(0, index1).toIntOrNull() ?: return@suggestRecipe
+                                val rGroup = str.substring(index1+1, index2).toIntOrNull() ?: return@suggestRecipe
+                                val rName = str.substring(index2+1)
+                                val element = Element.get(rName, rUUID, rGroup)
+                                unlockElement(element)
+                            }
                         })
                     }
                 }
@@ -222,7 +238,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                         view.theWidth = theWidth
                         view.invalidate()
                         view.onLiked = {
-                            dialog.dismiss()
+                            try { dialog.dismiss() } catch (e: IllegalArgumentException){}
                             WebServices.likeRecipe(all, candidate.uuid, {
                                 staticToast2(R.string.sent, false)
                             })

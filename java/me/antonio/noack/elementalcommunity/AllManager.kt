@@ -1,6 +1,5 @@
 package me.antonio.noack.elementalcommunity
 
-import android.app.Dialog
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -21,6 +20,7 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.api.WebServices
 import kotlin.collections.ArrayList
 
+// todo make a directory with all elements? :D
 
 // Sounds:
 // magic: https://freesound.org/people/suntemple/sounds/241809/
@@ -136,9 +136,7 @@ class AllManager: AppCompatActivity() {
             unlocked.add(element)
         }
 
-        // todo update names...
-
-        updateGroupSizes()
+        updateGroupSizesAndNames()
 
         askNews()
 
@@ -158,10 +156,9 @@ class AllManager: AppCompatActivity() {
         return super.onGenericMotionEvent(event)
     }
 
-    // todo make a directory with all elements? :D
-    fun updateGroupSizes(){
+    fun updateGroupSizesAndNames(){
         thread {
-            WebServices.updateGroupSizes()
+            WebServices.updateGroupSizesAndNames()
         }
     }
 
