@@ -5,7 +5,9 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -52,57 +54,63 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     private var isOnBorder = 0
 
+    private var zoom = 1f
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        entriesPerRow = if(measuredWidth > measuredHeight) 10 else 5
+        entriesPerRow = (if(measuredWidth > measuredHeight) 10 * zoom else 5 * zoom).toInt()
     }
+
+    fun validXY(event: MotionEvent): Triple<Boolean, Int, Int> {
+
+        val measuredWidth = measuredWidth
+        val entriesPerRow = entriesPerRow
+        val scroll = scroll
+
+        val width = measuredWidth * 1f
+        val avgMargin = getMargin(width / entriesPerRow)
+        val widthPerNode = (width - 2 * avgMargin) / (entriesPerRow + 0.5f)
+        val intX = (event.x - avgMargin) / widthPerNode
+        val intY = (event.y - avgMargin + scroll) / widthPerNode
+        val fraX = fract(intX)
+        val fraY = fract(intY)
+        val valid = sq(fraX - 0.5f) + sq(fraY - 0.5f) < 0.15f // < fraX in 0.18f .. 0.82f && fraY in 0.18f .. 0.82f
+        val internalX = intX.toInt()
+        val internalY = intY.toInt()
+
+        return Triple(valid, internalX, internalY)
+
+    }
+
+    fun sq(f: Float): Float = f*f
 
     init {
 
-        setOnTouchListener { _, event ->
+        val scrollListener = GestureDetector(object: GestureDetector.OnGestureListener {
+            override fun onShowPress(e: MotionEvent?) {}
+            override fun onDown(event: MotionEvent?): Boolean {
+                return if(event != null){
 
-            val width = measuredWidth * 1f
-            val avgMargin = getMargin(width / entriesPerRow)
-            val widthPerNode = (width - 2 * avgMargin) / (entriesPerRow + 0.5f)
-            val intX = (event.x - avgMargin) / widthPerNode
-            val intY = (event.y - avgMargin + scroll) / widthPerNode
-            val fraX = fract(intX)
-            val fraY = fract(intY)
-            val valid = fraX in 0.1f .. 0.9f && fraY in 0.1f .. 0.9f
-            val internalX = intX.toInt()
-            val internalY = intY.toInt()
-
-            when(event.actionMasked){
-                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
-
-                    mx = event.x
-                    my = event.y
-
-                    val index = event.actionIndex
-                    val id = event.getPointerId(index)
-                    oldX[id] = event.getX(index)
-                    oldY[id] = event.getY(index)
+                    val (valid, internalX, internalY) = validXY(event)
 
                     dragged = if(valid) getElementAt(internalX, internalY) else null
+                    dragged != null
 
-                    invalidate()
+                } else false
+            }
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean = false
+            override fun onScroll(event: MotionEvent?, e2: MotionEvent?, distanceX: Float, dy: Float): Boolean {
 
-                }
-
-                MotionEvent.ACTION_MOVE -> {
-
-                    mx = event.x
-                    my = event.y
+                return if(event != null){
 
                     if(dragged == null){
 
-                        for(index in 0 until event.pointerCount){
-                            val id = event.getPointerId(index)
-                            val dy = oldY[id] - event.getY(index)
-                            oldY[id] = event.getY(index)
-                            if(dy < widthPerNode * 0.3f){
-                                scroll += dy
-                            }
+                        val width = measuredWidth * 1f
+                        val avgMargin = getMargin(width / entriesPerRow)
+                        val widthPerNode = (width - 2 * avgMargin) / (entriesPerRow + 0.5f)
+
+                        if(dy != 0f && dy < widthPerNode * 0.7f){
+                            scroll += dy
                         }
 
                     } else {
@@ -117,15 +125,47 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     }
 
                     checkScroll()
-                    invalidate()
 
-                }
+                    true
 
+                } else false
+
+            }
+            override fun onLongPress(e: MotionEvent?) {}
+            override fun onSingleTapUp(event: MotionEvent?): Boolean = false
+        })
+
+        val zoomListener = ScaleGestureDetector(context, object: ScaleGestureDetector.OnScaleGestureListener {
+            override fun onScale(detector: ScaleGestureDetector?): Boolean {
+                return if(detector != null && detector.scaleFactor != 1f){
+                    zoom /= detector.scaleFactor
+                    val newEntriesPerRow = max(3, (if(measuredWidth > measuredHeight) 10 * zoom else 5 * zoom).toInt())
+                    if(newEntriesPerRow != entriesPerRow){
+                        dragged = null
+                        entriesPerRow = newEntriesPerRow
+                    }
+                    true
+                } else false
+            }
+            override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean = true
+            override fun onScaleEnd(detector: ScaleGestureDetector?) {}
+        })
+
+        setOnTouchListener { _, event ->
+
+            mx = event.x
+            my = event.y
+
+            scrollListener.onTouchEvent(event)
+            zoomListener.onTouchEvent(event)
+
+            when(event.actionMasked){
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
 
                     if(dragged != null){
                         val first = dragged!!
                         dragged = null
+                        val (valid, internalX, internalY) = validXY(event)
                         val second = if(valid) getElementAt(internalX, internalY) else null
                         if(second != null){
                             onRecipeRequest(first, second)
@@ -135,8 +175,9 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     invalidate()
 
                 }
-
             }
+
+            invalidate()
 
             true
 
@@ -270,6 +311,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     }
 
     private fun getElementAt(x: Int, y: Int): Element? {
+        if(x >= entriesPerRow) return null
         var sum = 0
         unlockeds.forEach { unlocked ->
             val delta = (unlocked.size + entriesPerRow - 1) / entriesPerRow
