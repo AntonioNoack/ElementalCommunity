@@ -6,10 +6,6 @@ import kotlin.concurrent.thread
 
 class Combiner(ctx: Context, attributeSet: AttributeSet?): UnlockedRows(ctx, attributeSet) {
 
-    /*init {
-        unlockeds = AllManager.elementsByGroup
-    }*/
-
     override fun onRecipeRequest(first: Element, second: Element) {
         thread {
             askForRecipe(first, second)

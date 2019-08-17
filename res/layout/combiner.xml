@@ -4,19 +4,48 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <TextView
-            android:text="@string/back"
-            android:id="@+id/back1"
-            android:padding="5dp"
-            android:textSize="17sp"
-            android:gravity="center"
+    <LinearLayout
+            android:orientation="horizontal"
             android:background="@color/colorPrimary"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content">
+
+        <ImageView
+                android:id="@+id/backArrow2"
+                android:src="@drawable/ic_arrow_back_black_24dp"
+                android:layout_width="50sp"
+                android:layout_height="50sp"/>
+
+        <TextView
+                android:text="@string/back"
+                android:id="@+id/back1"
+                android:padding="5dp"
+                android:textSize="24sp"
+                android:gravity="center"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="50sp"/>
+
+        <ImageView
+                android:id="@+id/searchButton2"
+                android:src="@drawable/ic_search_black_24dp"
+                android:layout_width="50sp"
+                android:layout_height="50sp"/>
+
+        <EditText
+                android:visibility="gone"
+                android:id="@+id/search2"
+                android:maxLines="1"
+                android:layout_weight="3"
+                android:layout_width="0dp"
+                android:layout_height="50sp"/>
+
+    </LinearLayout>
 
     <me.antonio.noack.elementalcommunity.Combiner
             android:id="@+id/combiner"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
+
 
 </LinearLayout>

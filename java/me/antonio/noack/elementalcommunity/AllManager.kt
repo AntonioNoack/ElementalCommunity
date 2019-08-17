@@ -3,6 +3,8 @@ package me.antonio.noack.elementalcommunity
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Toast
 import kotlinx.android.synthetic.main.all.*
 import java.lang.Math.abs
@@ -11,7 +13,11 @@ import kotlin.collections.HashMap
 import kotlin.concurrent.thread
 import android.view.MotionEvent
 import android.view.InputDevice
+import android.view.View
+import android.view.View.*
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.widget.addTextChangedListener
 import kotlinx.android.synthetic.main.combiner.*
 import kotlinx.android.synthetic.main.game.*
 import kotlinx.android.synthetic.main.menu.*
@@ -57,11 +63,19 @@ class AllManager: AppCompatActivity() {
 
     }
 
+    fun goFullScreen(){
+        val flags = SYSTEM_UI_FLAG_IMMERSIVE or SYSTEM_UI_FLAG_FULLSCREEN or SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        unlocked.systemUiVisibility = flags
+        combiner.systemUiVisibility = flags
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.all)
 
         actionBar?.hide()
+
+        goFullScreen()
 
         unlocked.all = this
         combiner.all = this
@@ -79,8 +93,13 @@ class AllManager: AppCompatActivity() {
         staticToast1 = { msg, isLong -> runOnUiThread { Toast.makeText(this, msg, if(isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show() } }
         staticToast2 = { msg, isLong -> runOnUiThread { Toast.makeText(this, msg, if(isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show() } }
         invalidate = {
+
+            combiner.invalidateSearch()
+            unlocked.invalidateSearch()
+
             combiner.postInvalidate()
             unlocked.postInvalidate()
+
         }
 
         start.setOnClickListener { flipper.displayedChild = 1 }
@@ -88,7 +107,8 @@ class AllManager: AppCompatActivity() {
         settings.setOnClickListener { flipper.displayedChild = 3 }
         back1.setOnClickListener { flipper.displayedChild = 0 }
         back2.setOnClickListener { flipper.displayedChild = 0 }
-        back3.setOnClickListener { flipper.displayedChild = 0 }
+        addSearchListeners(back3, backArrow, searchButton, search, unlocked)
+        addSearchListeners(back1, backArrow2, searchButton2, search2, combiner)
 
         resetEverything.setOnClickListener {
             AlertDialog.Builder(this)
@@ -136,10 +156,37 @@ class AllManager: AppCompatActivity() {
             unlocked.add(element)
         }
 
+        invalidate()
+
         updateGroupSizesAndNames()
 
         askNews()
 
+    }
+
+    fun addSearchListeners(back3: View, backArrow: View, searchButton: View, search: TextView, unlocked: UnlockedRows){
+        back3.setOnClickListener { flipper.displayedChild = 0 }
+        backArrow.setOnClickListener { flipper.displayedChild = 0 }
+        searchButton.setOnClickListener {
+            if(back3.visibility == VISIBLE){
+                back3.visibility = GONE
+                search.visibility = VISIBLE
+            } else {
+                back3.visibility = VISIBLE
+                search.visibility = GONE
+            }
+        }
+        search.addTextChangedListener(object: TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                unlocked.search = s.toString()
+                unlocked.invalidateSearch()
+            }
+            override fun afterTextChanged(s: Editable?) {
+                unlocked.search = s.toString()
+                unlocked.invalidateSearch()
+            }
+        })
     }
 
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
@@ -182,5 +229,10 @@ class AllManager: AppCompatActivity() {
     override fun onDestroy() {
         Sound.destroyAll()
         super.onDestroy()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        goFullScreen()
     }
 }

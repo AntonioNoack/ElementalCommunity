@@ -9,6 +9,8 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockeds
 
 class Element private constructor(var name: String, val uuid: Int, var group: Int){
 
+    var lcName = name.toLowerCase()
+
     init {
         synchronized(Unit){
             elementById[uuid] = this
@@ -34,6 +36,7 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
             val old = elementById[uuid]
             return if(old != null){
                 old.name = name
+                old.lcName = name.toLowerCase()
                 if(old.group != group){
                     synchronized(Unit){
                         elementsByGroup[old.group].remove(old)

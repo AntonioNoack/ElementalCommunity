@@ -66,8 +66,8 @@ object GroupsEtc {
 
     fun getMargin(widthPerNode: Float): Float = widthPerNode * 0.02f
 
-    fun drawElement(canvas: Canvas, x0: Float, y0: Float, widthPerNode: Float, margin: Boolean, element: Element, bgPaint: Paint, textPaint: Paint){
-        drawElement(canvas, x0, y0, widthPerNode, margin, element.name, element.group, bgPaint, textPaint)
+    fun drawElement(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, element: Element, bgPaint: Paint, textPaint: Paint){
+        drawElement(canvas, x0, y0, delta, widthPerNode, margin, element.name, element.group, bgPaint, textPaint)
     }
 
     var lastCacheWidth = -1f
@@ -201,37 +201,64 @@ object GroupsEtc {
         val dys = FloatArray(lines.size){ dy + (it - indexOffset) * lineOffset }
     }
 
-    fun drawElement(canvas: Canvas, x0: Float, y0: Float, widthPerNode: Float, margin: Boolean, rawName: String, group: Int, bgPaint: Paint, textPaint: Paint){
+    fun drawElement(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, rawName: String, group: Int, bgPaint: Paint, textPaint: Paint){
 
-        drawElementRaw(canvas, x0, y0, widthPerNode, margin, group, bgPaint)
+        drawElementRaw(canvas, x0, y0, delta, widthPerNode, margin, group, bgPaint)
 
         val cacheEntry = getCacheEntry(rawName, widthPerNode, textPaint, bgPaint)
         textPaint.color = cacheEntry.color
-        val textSize = cacheEntry.textSize
-        textPaint.textSize = textSize
 
-        val x = x0 + widthPerNode * 0.5f
-        val dys = cacheEntry.dys
+        if(delta == 0f){
 
-        for((index, text) in cacheEntry.lines.withIndex()){
-            canvas.drawText(text, x, y0 + dys[index], textPaint)
+            val textSize = cacheEntry.textSize
+            textPaint.textSize = textSize
+
+            val x = x0 + widthPerNode * 0.5f
+            val dys = cacheEntry.dys
+
+            for((index, text) in cacheEntry.lines.withIndex()){
+                canvas.drawText(text, x, y0 + dys[index], textPaint)
+            }
+
+        } else {
+
+            val save = canvas.save()
+
+            val zoom = (widthPerNode + delta + delta) / widthPerNode
+            val half = widthPerNode * 0.5f
+            canvas.scale(zoom, zoom, x0 + half, y0 + half)
+
+            val textSize = cacheEntry.textSize
+            textPaint.textSize = textSize
+
+            val x = x0 + widthPerNode * 0.5f
+            val dys = cacheEntry.dys
+
+            for((index, text) in cacheEntry.lines.withIndex()){
+                canvas.drawText(text, x, y0 + dys[index], textPaint)
+            }
+
+            canvas.restoreToCount(save)
+
         }
 
     }
 
-    fun drawElementRaw(canvas: Canvas, x0: Float, y0: Float, widthPerNode: Float, margin: Boolean, group: Int, bgPaint: Paint){
-        drawElementRaw(canvas, x0, y0, widthPerNode, if(margin) getMargin(widthPerNode) else 0f, group, bgPaint)
+    fun drawElementRaw(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, group: Int, bgPaint: Paint){
+        drawElementRaw(canvas, x0, y0, delta, widthPerNode, if(margin) getMargin(widthPerNode) else 0f, group, bgPaint)
     }
 
-    fun drawElementRaw(canvas: Canvas, x0: Float, y0: Float, widthPerNode: Float, margin: Float, group: Int, bgPaint: Paint){
+    fun drawElementRaw(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Float, group: Int, bgPaint: Paint){
 
         bgPaint.color = if(group < 0) 0xff000000.toInt() else GroupColors[group]
         val roundness = widthPerNode * 0.1f
+        val d0 = margin - delta
+        val d1 = widthPerNode - margin - margin + delta
         drawRoundRect(canvas,
-            x0 + margin,
-            y0 + margin,
-            x0 + widthPerNode - margin * 2,
-            y0 + widthPerNode - margin * 2,
+            x0 + d0,
+            y0 + d0,
+            x0 + d1,
+            y0 + d1,
             roundness, roundness, bgPaint)
 
     }

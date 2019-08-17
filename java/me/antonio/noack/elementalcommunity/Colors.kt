@@ -50,9 +50,9 @@ class Colors(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet)
             val x0 = (i / saturations.size) * widthPerNode
             val y0 = (i % saturations.size) * widthPerNode
             if(i == selected){
-                drawElementRaw(canvas, x0+widthPerNode/6, y0+widthPerNode/6, widthPerNode*2/3, true, i, bgPaint)
+                drawElementRaw(canvas, x0, y0, -widthPerNode/6, widthPerNode, true, i, bgPaint)
             } else {
-                drawElementRaw(canvas, x0, y0, widthPerNode, true, i, bgPaint)
+                drawElementRaw(canvas, x0, y0, 0f, widthPerNode, true, i, bgPaint)
             }
         }
 
