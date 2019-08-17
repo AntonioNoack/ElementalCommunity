@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import androidx.core.math.MathUtils.clamp
+import kotlin.math.abs
 import kotlin.math.max
 
 object GroupsEtc {
@@ -69,62 +70,151 @@ object GroupsEtc {
         drawElement(canvas, x0, y0, widthPerNode, margin, element.name, element.group, bgPaint, textPaint)
     }
 
-    fun drawElement(canvas: Canvas, x0: Float, y0: Float, widthPerNode: Float, margin: Boolean, rawName: String, group: Int, bgPaint: Paint, textPaint: Paint){
+    var lastCacheWidth = -1f
+    val cacheEntries = HashMap<String, CacheEntry>()
 
-        drawElementRaw(canvas, x0, y0, widthPerNode, margin, group, bgPaint)
+    fun join(list: List<String>, from: Int, to: Int = list.size): String {
+        if(from + 1 == to) return list[from]
+        return list.subList(from, to).joinToString(" ")
+    }
 
-        val name = rawName.trim()
+    fun split(parts: List<String>, index: Int): List<String> {
+        return listOf(join(parts, 0, index), join(parts, index))
+    }
 
-        // todo split long text into multiple sections...
-        val width0 = textPaint.measureText(name)
+    fun splitText(text: String, sideRatio: Float, textPaint: Paint): List<String> {
+        if(sideRatio < 4f || !text.contains(' ')) return listOf(text)
+        val parts = text.split(' ')
+        if(parts.size < 3) return parts
+        val partSizes = parts.map { part -> textPaint.measureText(part) }
+        if(sideRatio < 10f){// 2
 
-        val sideRatio = width0 / textPaint.textSize
-        if(sideRatio > 5f && name.contains(' ')){
-
-            val parts = name.split(' ')
-            val partSizes = parts.map { part -> textPaint.measureText(part) }
             var sum = 0f
             for(size in partSizes){
                 sum += size
             }
 
-            val splitIndex = if(sum < partSizes.last() * 2){
+            var lastDiff = sum
+            var sum2 = 0f
 
-                partSizes.size - 1
-
-            } else {
-                var sum2 = 0f
-                var index = 0
-                for((index2, size) in partSizes.withIndex()){
-                    sum2 += size
-                    if(sum2 + sum2 > sum){
-                        index = index2
-                        break
-                    }
+            var index = partSizes.lastIndex
+            for(i in 0 until partSizes.lastIndex){
+                sum2 += partSizes[i]
+                val len1 = sum2
+                val len2 = sum - sum2
+                val dif = abs(len1 - len2)
+                if(dif > lastDiff){
+                    index = i
+                    break
                 }
-                max(1, index)
+                lastDiff = dif
             }
 
-            val str1 = parts.subList(0, splitIndex).joinToString(" ")
-            val str2 = parts.subList(splitIndex, parts.size).joinToString(" ")
+            return split(parts, index)
 
-            val width1 = max(textPaint.measureText(str1), textPaint.measureText(str2))
+        } else { // 3
+            // wa + wb > wc, wb + wc > wa
+            // wa ~ wb ~ wc
 
-            textPaint.color = if(brightness(bgPaint.color) > 0.3f) 0xff000000.toInt() else -1
-            val ts = clamp(textPaint.textSize * widthPerNode * 0.8f / width1, widthPerNode*0.02f, widthPerNode*0.35f)
-            textPaint.textSize = ts
+            var sum = 0f
+            for(size in partSizes){
+                sum += size
+            }
+
+            var ba = 0
+            var bb = 0
+            var bs = Float.POSITIVE_INFINITY
+
+            var wa = partSizes[0]
+            for(a in 1 until parts.lastIndex){
+                var wb = partSizes[a]
+                for(b in a + 1 until parts.size){
+                    val wc = sum - (wa + wb)
+                    val score = abs(wa - wb) + abs(wb - wc) + abs(wc - wa)
+                    if(score < bs){
+                        bs = score
+                        ba = a
+                        bb = b
+                    }
+                    wb += partSizes[b]
+                }
+                wa += partSizes[a]
+            }
+
+            var sa = 0f
+            for(i in 0 until ba){ sa += partSizes[i] }
+            var sb = 0f
+            for(i in ba until bb){ sb += partSizes[i] }
+            val sc = sum - (sa + sb)
+            return when {
+                sa + sb < sc -> split(parts, bb)
+                sb + sc < sa -> split(parts, ba)
+                else ->
+                    listOf(join(parts, 0, ba), join(parts, ba, bb), join(parts, bb))
+            }
+        }
+
+    }
+
+    fun getCacheEntry(rawText: String, widthPerNode: Float, textPaint: Paint, bgPaint: Paint): CacheEntry {
+        if(lastCacheWidth != widthPerNode){
+            cacheEntries.clear()
+            lastCacheWidth = widthPerNode
+            println("cleared")
+        }
+        var entry = cacheEntries[rawText]
+        if(entry == null){
+
+            val text = rawText.trim()
+
+            // todo split long rawText into multiple sections...
+            val width0 = textPaint.measureText(text)
+
+            val color = if(brightness(bgPaint.color) > 0.3f) 0xff000000.toInt() else -1
+
+            val sideRatio = width0 / textPaint.textSize
+            val list: List<String> = splitText(text, sideRatio, textPaint)
+
+            var width1 = textPaint.measureText(list[0])
+            for(i in 1 until list.size){
+                width1 = max(width1, textPaint.measureText(list[i]))
+            }
+
+            val textSize = clamp(textPaint.textSize * widthPerNode * 0.8f / width1, widthPerNode*0.02f, widthPerNode*0.35f)
+            textPaint.textSize = textSize
             val textDy = (widthPerNode - (textPaint.ascent() + textPaint.descent()))/2
-            val y = y0 + textDy
-            canvas.drawText(str1, x0 + widthPerNode/2, y - ts * 0.7f, textPaint)
-            canvas.drawText(str2, x0 + widthPerNode/2, y + ts * 0.7f, textPaint)
 
-        } else {
+            entry = CacheEntry(textSize, textDy, color, list)
 
-            textPaint.color = if(brightness(bgPaint.color) > 0.3f) 0xff000000.toInt() else -1
-            textPaint.textSize = clamp(textPaint.textSize * widthPerNode * 0.8f / width0, widthPerNode*0.02f, widthPerNode*0.35f)
-            val textDy = (widthPerNode - (textPaint.ascent() + textPaint.descent()))/2
-            canvas.drawText(name, x0 + widthPerNode/2, y0 + textDy, textPaint)
+            cacheEntries[rawText] = entry
 
+        }
+
+        return entry
+    }
+
+    private const val spacingFactor = 0.6f
+    class CacheEntry(val textSize: Float, dy0: Float, val color: Int, val lines: List<String>){
+        val lineOffset = textSize * spacingFactor * 2f
+        val indexOffset = (lines.size - 1) * 0.5f
+        val dy = dy0
+        val dys = FloatArray(lines.size){ dy + (it - indexOffset) * lineOffset }
+    }
+
+    fun drawElement(canvas: Canvas, x0: Float, y0: Float, widthPerNode: Float, margin: Boolean, rawName: String, group: Int, bgPaint: Paint, textPaint: Paint){
+
+        drawElementRaw(canvas, x0, y0, widthPerNode, margin, group, bgPaint)
+
+        val cacheEntry = getCacheEntry(rawName, widthPerNode, textPaint, bgPaint)
+        textPaint.color = cacheEntry.color
+        val textSize = cacheEntry.textSize
+        textPaint.textSize = textSize
+
+        val x = x0 + widthPerNode * 0.5f
+        val dys = cacheEntry.dys
+
+        for((index, text) in cacheEntry.lines.withIndex()){
+            canvas.drawText(text, x, y0 + dys[index], textPaint)
         }
 
     }

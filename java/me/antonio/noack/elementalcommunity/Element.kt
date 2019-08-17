@@ -10,9 +10,11 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockeds
 class Element private constructor(var name: String, val uuid: Int, var group: Int){
 
     init {
-        elementById[uuid] = this
-        elementByName[name] = this
-        elementsByGroup[group].add(this)
+        synchronized(Unit){
+            elementById[uuid] = this
+            elementByName[name] = this
+            elementsByGroup[group].add(this)
+        }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -33,12 +35,14 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
             return if(old != null){
                 old.name = name
                 if(old.group != group){
-                    elementsByGroup[old.group].remove(old)
-                    unlockeds[old.group].remove(old)
-                    elementsByGroup[group].add(old)
-                    unlockeds[group].add(old)
-                    old.group = group
-                    save()
+                    synchronized(Unit){
+                        elementsByGroup[old.group].remove(old)
+                        unlockeds[old.group].remove(old)
+                        elementsByGroup[group].add(old)
+                        unlockeds[group].add(old)
+                        old.group = group
+                        save()
+                    }
                     invalidate()
                 }
                 old
