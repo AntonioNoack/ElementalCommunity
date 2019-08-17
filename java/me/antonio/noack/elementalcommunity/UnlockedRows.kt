@@ -30,13 +30,15 @@ import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.max
 
-// todo show things that might soon be available (if more players)
+// show things that might soon be available (if much more players)
 
 open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
     lateinit var all: AllManager
 
     var search = ""
+    var lastSearch = ""
+    var lastParts = -1
     val relativeRightBorder = 0.7f
 
     fun invalidateSearch(){
@@ -49,24 +51,37 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     list.addAll(unlocked)
                 }
             }
+
+            lastSearch = search
+            lastParts = 0
+
         } else {
+
             val parts = search.split(',').map { it.trim() }
             synchronized(Unit){
-                for((group, unlocked) in unlockeds.withIndex()){
+                for((group, unlocked) in (if(search.startsWith(lastSearch) && lastParts == parts.size) shownSymbols else unlockeds).withIndex()){
                     val list = shownSymbols[group]
-                    list.clear()
-                    list.addAll(unlocked.filter {
+                    val filtered = unlocked.filter {
                         val name = it.lcName
                         for(part in parts){
-                            if(!name.contains(part)){
-                                return@filter false
+                            if(name.contains(part)){
+                                return@filter true
                             }
                         }
-                        true
-                    })
+                        false
+                    }
+                    if(list != filtered){
+                        list.clear()
+                        list.addAll(filtered)
+                    }
                 }
             }
+
+            lastSearch = search
+            lastParts = parts.size
+
         }
+
         checkScroll()
         postInvalidate()
     }
@@ -375,7 +390,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         if(x >= entriesPerRow) return null
         var sum = 0
         synchronized(Unit){
-            unlockeds.forEach { unlocked ->
+            shownSymbols.forEach { unlocked ->
                 val delta = (unlocked.size + entriesPerRow - 1) / entriesPerRow
                 if(delta > 0 && y-sum in 0 until delta){
                     val indexHere = x + entriesPerRow * (y - sum)
