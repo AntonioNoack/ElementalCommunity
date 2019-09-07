@@ -11,7 +11,7 @@ import java.net.URL
 import java.net.URLEncoder
 import kotlin.concurrent.thread
 
-// todo require less Captchas...
+// done require less Captchas...
 
 object WebServices {
 
