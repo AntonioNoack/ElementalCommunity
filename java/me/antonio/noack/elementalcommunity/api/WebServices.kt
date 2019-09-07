@@ -9,10 +9,61 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.GroupSizes
 import java.lang.Exception
 import java.net.URL
 import java.net.URLEncoder
+import kotlin.concurrent.thread
+
+// todo require less Captchas...
 
 object WebServices {
 
     private const val ServerURL = "https://api.phychi.com/elemental/"
+
+    fun tryCaptcha(all: AllManager, args: String, onSuccess: (String) -> Unit, onError: (Exception) -> Unit = {
+        AllManager.staticToast1(
+            "${it.javaClass.simpleName}: ${it.message}",
+            true
+        )
+    }){
+
+        thread {
+            try {
+
+                val url = URL("$ServerURL?$args")
+                val con = url.openConnection()
+                val text = String(con.getInputStream().readBytes())
+                if(text.isBlank() || text.startsWith("#reauth", true) || text.startsWith("#auth", true)){
+
+                    println("text is empty: $text, $args")
+
+                    Captcha.get(all, { token ->
+
+                        thread {
+                            try {
+
+                                val url2 = URL("$ServerURL?$args&t=${URLEncoder.encode(token, "UTF-8")}")
+                                val con2 = url2.openConnection()
+                                val bytes = String(con2.getInputStream().readBytes())
+
+                                println("second text $bytes")
+
+                                onSuccess(bytes)
+
+                            } catch (e: Exception){
+                                onError(e)
+                            }
+                        }
+
+                    }, onError)
+
+                } else {
+                    onSuccess(text)
+                }
+
+            } catch (e: Exception){
+                onError(e)
+            }
+        }
+
+    }
 
     fun askRecipe(a: Element, b: Element, onSuccess: (Element?) -> Unit, onError: (Exception) -> Unit = {
         AllManager.staticToast1(
@@ -61,7 +112,7 @@ object WebServices {
 
         try {
 
-            val url = URL("$ServerURL?n=$count")
+            val url = URL("$ServerURL?n=${count * 3}")
             val con = url.openConnection()
             val raw = String(con.getInputStream().readBytes()).split(";;")
             val list = ArrayList<News>()
@@ -131,14 +182,17 @@ object WebServices {
 
     }
 
-    fun suggestRecipe(all: AllManager, a: Element, b: Element, resultName: String, resultGroup: Int, onSuccess: (bytes: ByteArray) -> Unit, onError: (Exception) -> Unit = {
+    fun suggestRecipe(all: AllManager, a: Element, b: Element, resultName: String, resultGroup: Int, onSuccess: (text: String) -> Unit, onError: (Exception) -> Unit = {
         AllManager.staticToast1(
             "${it.javaClass.simpleName}: ${it.message}",
             true
         )
     }){
 
-        Captcha.get(all, { token ->
+        // a,b,r,g,u,t
+        tryCaptcha(all, "a=${a.uuid}&b=${b.uuid}&r=${URLEncoder.encode(resultName, "UTF-8")}&g=$resultGroup&u=$customUUID", onSuccess, onError)
+
+        /*Captcha.get(all, { token ->
 
             // a,b,r,g,u,t
 
@@ -153,7 +207,7 @@ object WebServices {
                 onError(e)
             }
 
-        }, onError)
+        }, onError)*/
 
     }
 
@@ -164,7 +218,9 @@ object WebServices {
         )
     }){
 
-        Captcha.get(all, { token ->
+        tryCaptcha(all, "s=$uuid&r=1&u=$customUUID", { onSuccess() }, onError)
+
+        /*Captcha.get(all, { token ->
 
             try {
 
@@ -177,7 +233,7 @@ object WebServices {
                 onError(e)
             }
 
-        }, onError)
+        }, onError)*/
 
     }
 
@@ -188,7 +244,9 @@ object WebServices {
         )
     }){
 
-        Captcha.get(all, { token ->
+        tryCaptcha(all, "s=$uuid&r=-1&u=$customUUID", { onSuccess() }, onError)
+
+        /*Captcha.get(all, { token ->
 
             try {
 
@@ -201,7 +259,7 @@ object WebServices {
                 onError(e)
             }
 
-        }, onError)
+        }, onError)*/
 
     }
 

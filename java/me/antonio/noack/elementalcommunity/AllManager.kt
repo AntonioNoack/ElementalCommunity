@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.SparseArray
 import android.widget.Toast
 import kotlinx.android.synthetic.main.all.*
 import java.lang.Math.abs
@@ -39,7 +40,7 @@ class AllManager: AppCompatActivity() {
         var customUUID = 0L
 
         var unlockedIds = hashSetOf(1, 2, 3, 4)
-        var elementById = HashMap<Int, Element>()
+        var elementById = SparseArray<Element>()
 
         var elementsByGroup = Array(GroupColors.size){
             ArrayList<Element>()
@@ -103,7 +104,10 @@ class AllManager: AppCompatActivity() {
         }
 
         start.setOnClickListener { flipper.displayedChild = 1 }
-        suggest.setOnClickListener { flipper.displayedChild = 2 }
+        suggest.setOnClickListener {
+            combiner.invalidateSearch()
+            flipper.displayedChild = 2
+        }
         settings.setOnClickListener { flipper.displayedChild = 3 }
         back1.setOnClickListener { flipper.displayedChild = 0 }
         back2.setOnClickListener { flipper.displayedChild = 0 }

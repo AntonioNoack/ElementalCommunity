@@ -13,7 +13,7 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
 
     init {
         synchronized(Unit){
-            elementById[uuid] = this
+            elementById.put(uuid, this)
             elementByName[name] = this
             elementsByGroup[group].add(this)
         }

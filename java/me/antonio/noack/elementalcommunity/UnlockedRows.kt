@@ -327,7 +327,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     }
                     thread {
                         WebServices.suggestRecipe(all, a, b, name, group, {
-                            val str = String(it).split('\n')[0]
+                            val str = it.split('\n')[0]
                             println("by recipe: $str")
                             val index1 = str.indexOf(':')
                             val index2 = str.indexOf(':', index1+1)
@@ -483,22 +483,24 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
                 if(endY0 > -widthPerNode && y0 < height){
 
-                    for((index, element) in unlocked.withIndex()){
+                    synchronized(Unit){
+                        for((index, element) in unlocked.withIndex()){
 
-                        if(index % entriesPerRow == 0) y0 += widthPerNode
-                        if(y0 >= height) break
-                        if(y0 < -widthPerNode) continue
+                            if(index % entriesPerRow == 0) y0 += widthPerNode
+                            if(y0 >= height) break
+                            if(y0 < -widthPerNode) continue
 
-                        val x0 = avgMargin + (index % entriesPerRow) * widthPerNode
-                        if(activeElement == element && activeness > 0f){
+                            val x0 = avgMargin + (index % entriesPerRow) * widthPerNode
+                            if(activeElement == element && activeness > 0f){
 
-                            val delta = activeness * widthPerNode * 0.5f
-                            drawElement(canvas, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
+                                val delta = activeness * widthPerNode * 0.5f
+                                drawElement(canvas, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
 
-                        } else {
+                            } else {
 
-                            drawElement(canvas, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
+                                drawElement(canvas, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
 
+                            }
                         }
                     }
 
