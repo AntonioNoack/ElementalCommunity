@@ -1,6 +1,7 @@
 package me.antonio.noack.elementalcommunity
 
 import android.content.Context
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
@@ -75,6 +76,10 @@ class AllManager: AppCompatActivity() {
         setContentView(R.layout.all)
 
         actionBar?.hide()
+
+        if(Build.VERSION.SDK_INT >= 21){
+            window.navigationBarColor = resources.getColor(R.color.colorPrimary)
+        }
 
         goFullScreen()
 
