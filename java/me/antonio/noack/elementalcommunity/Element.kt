@@ -9,6 +9,15 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockeds
 
 class Element private constructor(var name: String, val uuid: Int, var group: Int){
 
+    var rank = -1
+
+    var srcA: Element? = null
+    var srcB: Element? = null
+    var hasTreeOutput = false
+
+    var treeX = 0
+    var treeY = 0
+
     var lcName = name.toLowerCase()
 
     init {

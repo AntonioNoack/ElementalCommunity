@@ -160,7 +160,7 @@ object GroupsEtc {
         if(lastCacheWidth != widthPerNode){
             cacheEntries.clear()
             lastCacheWidth = widthPerNode
-            println("cleared")
+            // println("cleared")
         }
         var entry = cacheEntries[rawText]
         if(entry == null){

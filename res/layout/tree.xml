@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:background="@color/colorPrimary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <ImageView
+                android:id="@+id/backArrow5"
+                android:src="@drawable/ic_arrow_back_black_24dp"
+                android:layout_width="50sp"
+                android:layout_height="50sp"/>
+
+        <SeekBar
+                android:id="@+id/spaceSlider"
+                android:thumbTint="@color/colorPrimaryDark"
+                android:progressTint="@color/colorPrimaryDark"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"/>
+
+    </LinearLayout>
+
+    <me.antonio.noack.elementalcommunity.tree.TreeView
+            android:id="@+id/tree"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+
+</LinearLayout>

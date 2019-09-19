@@ -17,13 +17,20 @@ import android.view.MotionEvent
 import android.view.InputDevice
 import android.view.View
 import android.view.View.*
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.addTextChangedListener
 import kotlinx.android.synthetic.main.combiner.*
+import kotlinx.android.synthetic.main.combiner.back1
+import kotlinx.android.synthetic.main.combiner.backArrow2
+import kotlinx.android.synthetic.main.combiner.search2
+import kotlinx.android.synthetic.main.combiner.searchButton2
 import kotlinx.android.synthetic.main.game.*
 import kotlinx.android.synthetic.main.menu.*
+import kotlinx.android.synthetic.main.menu_content.*
 import kotlinx.android.synthetic.main.settings.*
+import kotlinx.android.synthetic.main.tree.*
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.api.WebServices
 import kotlin.collections.ArrayList
@@ -51,7 +58,16 @@ class AllManager: AppCompatActivity() {
             ArrayList<Element>()
         }
 
+        var elementByRecipe = HashMap<Pair<Element, Element>, Element>()
+
         val elementByName = HashMap<String, Element>()
+
+        // for the tree
+        fun addRecipe(a: Element, b: Element, r: Element){
+            if(a.uuid > b.uuid) return addRecipe(b, a, r)
+            elementByRecipe[a to b] = r
+            invalidate()
+        }
 
         lateinit var staticToast1: (message: String, isLong: Boolean) -> Unit
         lateinit var staticToast2: (message: Int, isLong: Boolean) -> Unit
@@ -85,6 +101,7 @@ class AllManager: AppCompatActivity() {
 
         unlocked.all = this
         combiner.all = this
+        tree.all = this
 
         val pref = getPreferences(Context.MODE_PRIVATE)
 
@@ -105,19 +122,40 @@ class AllManager: AppCompatActivity() {
 
             combiner.postInvalidate()
             unlocked.postInvalidate()
+            tree.postInvalidate()
 
         }
 
         start.setOnClickListener { flipper.displayedChild = 1 }
-        suggest.setOnClickListener {
-            combiner.invalidateSearch()
+        treeButton.setOnClickListener {
             flipper.displayedChild = 2
         }
-        settings.setOnClickListener { flipper.displayedChild = 3 }
+        suggest.setOnClickListener {
+            combiner.invalidateSearch()
+            flipper.displayedChild = 3
+        }
+        settings.setOnClickListener { flipper.displayedChild = 4 }
         back1.setOnClickListener { flipper.displayedChild = 0 }
         back2.setOnClickListener { flipper.displayedChild = 0 }
+        backArrow5.setOnClickListener { flipper.displayedChild = 0 }
         addSearchListeners(back3, backArrow, searchButton, search, unlocked)
         addSearchListeners(back1, backArrow2, searchButton2, search2, combiner)
+        random.setOnClickListener { RandomSuggestion.make(this) }
+
+        val spaceSliderOffset = 1
+        spaceSlider.max = 5 + spaceSliderOffset
+        spaceSlider.progress = tree.tree.multiplierX - spaceSliderOffset
+        spaceSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val tree = tree.tree
+                val value = spaceSliderOffset + progress
+                tree.multiplierX = value
+                tree.multiplierY = value
+                invalidate()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
 
         resetEverything.setOnClickListener {
             AlertDialog.Builder(this)
@@ -141,6 +179,9 @@ class AllManager: AppCompatActivity() {
                 edit.putString("$id.name", element.name)
                 edit.putInt("$id.group", element.group)
             }
+            for((src, dst) in elementByRecipe){
+                edit.putInt("recipe.${src.first.uuid}.${src.second.uuid}", dst.uuid)
+            }
             edit.apply()
         }
 
@@ -155,14 +196,17 @@ class AllManager: AppCompatActivity() {
 
         customUUID = ci
 
-        val unlocked = unlocked
         val names = arrayOf("???", "Earth", "Air", "Water", "Fire")
         val groups = intArrayOf(20, 5, 12, 20, 4)
         for(id in unlockedIds){
             val name = pref.getString("$id.name", names.getOrNull(id) ?: names[0])!!
             val group = pref.getInt("$id.group", groups.getOrNull(id) ?: groups[0])
             val element = Element.get(name, id, group)
-            unlocked.add(element)
+            unlockeds[element.group].add(element)
+        }
+
+        for(list in unlockeds){
+            list.sortBy { it.uuid }
         }
 
         invalidate()
@@ -170,6 +214,16 @@ class AllManager: AppCompatActivity() {
         updateGroupSizesAndNames()
 
         askNews()
+
+        for((key, value) in pref.all){
+            if(key.startsWith("recipe.") && value is Int){
+                val parts = key.split('.')
+                val a = elementById[parts[1].toIntOrNull() ?: continue] ?: continue
+                val b = elementById[parts[2].toIntOrNull() ?: continue] ?: continue
+                val c = elementById[value] ?: continue
+                addRecipe(a, b, c)
+            }
+        }
 
     }
 

@@ -12,6 +12,8 @@
 
     <include layout="@layout/game"/>
 
+    <include layout="@layout/tree"/>
+
     <include layout="@layout/combiner"/>
 
     <include layout="@layout/settings"/>

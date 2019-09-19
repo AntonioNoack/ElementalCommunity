@@ -1,6 +1,7 @@
 package me.antonio.noack.elementalcommunity.api
 
 import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
 import me.antonio.noack.elementalcommunity.AllManager.Companion.customUUID
 import me.antonio.noack.elementalcommunity.AllManager.Companion.elementById
 import me.antonio.noack.elementalcommunity.AllManager.Companion.invalidate
@@ -65,6 +66,8 @@ object WebServices {
 
     }
 
+
+
     fun askRecipe(a: Element, b: Element, onSuccess: (Element?) -> Unit, onError: (Exception) -> Unit = {
         AllManager.staticToast1(
             "${it.javaClass.simpleName}: ${it.message}",
@@ -86,6 +89,7 @@ object WebServices {
                     id,
                     group
                 )
+                addRecipe(a, b, element)
                 onSuccess(element)
             } else {
                 onSuccess(null)

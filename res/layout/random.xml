@@ -5,39 +5,50 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <TextView
-            android:text="@string/result_unknown_wanna_add_your_own"
-            android:gravity="center"
-            android:textSize="20sp"
-            android:padding="5dp"
+    <LinearLayout
+            android:orientation="horizontal"
             android:background="@color/colorPrimary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-    <TextView
-            android:text="@string/community_suggestions"
-            android:id="@+id/title2"
-            android:gravity="center"
-            android:textSize="17sp"
             android:padding="5dp"
-            android:background="@color/colorPrimary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-    <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-        <LinearLayout
-                android:id="@+id/suggestions"
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+        <TextView
+                android:text="@string/component_a"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
 
+        <TextView
+                android:text="@string/component_b"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
 
-        </LinearLayout>
+    </LinearLayout>
 
-    </HorizontalScrollView>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_margin="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <me.antonio.noack.elementalcommunity.OneElement
+                android:id="@+id/first"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+
+        <me.antonio.noack.elementalcommunity.OneElement
+                android:id="@+id/second"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+
+    </LinearLayout>
 
     <EditText
             android:id="@+id/name"
@@ -75,17 +86,16 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"/>
 
+        <View android:layout_width="5dp" android:layout_height="5dp"/>
+
+        <Button
+                android:id="@+id/next"
+                android:background="@color/colorPrimary"
+                android:text="@string/skip_that"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"/>
+
     </LinearLayout>
-
-
-
-    <!--
-
-        todo query other suggestions for this recipe
-        todo upvote / downvote
-
-
-
-    -->
 
 </LinearLayout>

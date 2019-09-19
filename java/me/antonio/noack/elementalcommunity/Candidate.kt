@@ -10,10 +10,11 @@ import android.view.MotionEvent
 import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.getMargin
+import me.antonio.noack.elementalcommunity.api.WebServices
 
-class OneElement(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
+class Candidate(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
-    var element: Element? = null
+    var candidate: WebServices.Candidate? = null
 
     var theWidth = 350f
 
@@ -86,7 +87,7 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribute
 
             }
         }
-        setMeasuredDimension(theWidth.toInt(),  theWidth.toInt())
+        setMeasuredDimension(theWidth.toInt(),  (theWidth * bottom).toInt())
     }
 
     private val path = Path()
@@ -99,9 +100,43 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribute
         super.onDraw(canvas)
         if(canvas == null) return
 
-        val candidate = element
+        val candidate = candidate
         val width = measuredWidth * 1f
         drawElement(canvas, 0f, 0f, 0f, width, true, candidate?.name ?: "???", candidate?.group ?: 15, bgPaint, textPaint)
+
+        val margin = getMargin(width)
+        val shift = width * 0.03f
+
+        canvas.translate(0f, -margin)
+
+        bgPaint.style = Paint.Style.FILL
+        val color = bgPaint.color
+        val dark = darken(color)
+
+        bgPaint.color = if(touchesLike) dark else color
+
+        path.reset()
+        path.moveTo(margin, width)
+        path.lineTo(width/2 - margin/2, width)
+        path.lineTo(width/2 - 2*shift - margin/2, width*bottom)
+        path.lineTo(margin, width*bottom)
+        canvas.drawPath(path, bgPaint)
+
+        bgPaint.color = if(touchesDislike) dark else color
+
+        path.reset()
+        path.moveTo(width-margin, width)
+        path.lineTo(width/2 + margin/2, width)
+        path.lineTo(width/2 - 2*shift + margin/2, width*bottom)
+        path.lineTo(width-margin, width*bottom)
+        canvas.drawPath(path, bgPaint)
+
+        textPaint.textSize = (bottom-1f)*width*.5f
+        textPaint.color = 0xff000000.toInt()
+
+        val dy = (textPaint.ascent() + textPaint.descent())/2
+        canvas.drawText("Like", width/4, width*(1f+bottom)/2-dy, textPaint)
+        canvas.drawText("Dislike", width*3/4, width*(1f+bottom)/2-dy, textPaint)
 
     }
 

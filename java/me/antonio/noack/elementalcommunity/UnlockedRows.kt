@@ -14,6 +14,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.math.MathUtils.clamp
 import androidx.core.view.marginRight
+import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
 import me.antonio.noack.elementalcommunity.AllManager.Companion.save
 import me.antonio.noack.elementalcommunity.AllManager.Companion.staticRunOnUIThread
 import me.antonio.noack.elementalcommunity.AllManager.Companion.staticToast1
@@ -254,9 +255,9 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     }
 
-    fun unlockElement(element: Element){
+    fun unlockElement(sa: Element, sb: Element, element: Element){
         //  add to achieved :D
-        val newOne = add(element)
+        val newOne = add(sa, sb, element)
         synchronized(Unit){
             unlockedIds.add(element.uuid)
             activeElement = element
@@ -274,104 +275,15 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     }
 
     open fun onRecipeRequest(first: Element, second: Element){
-        thread(true){
-            WebServices.askRecipe(first, second, { result ->
-                if(result != null){
-                    unlockElement(result)
-                } else {
-                    // staticRunOnUIThread { AllManager.askingSound.play() }
-                    askForRecipe(first, second)
-                    WebServices.askRecipe(first, second, { result2 ->
-                        if(result2 != null){// remove in the future, when the least amount of support is 2 or sth like that
-                            synchronized(Unit){
-                                add(result2)
-                                unlockedIds.add(result2.uuid)
-                                save()
-                            }
-                        }
-                    }, {})
-                }
-            }, {
-                staticToast1("${it.javaClass.simpleName}: ${it.message}", true)
-            })
-        }
+        BasicOperations.onRecipeRequest(first, second, all, measuredWidth, {
+            unlockElement(first, second, it)
+        }, {
+            add(first, second, it)
+        })
     }
 
     fun askForRecipe(a: Element, b: Element){
-        // ask for recipe to add :)
-        // todo show that we are loading
-        WebServices.getCandidates(a, b, { candidates ->
-            staticRunOnUIThread {
-                val dialog: Dialog = AlertDialog.Builder(context)
-                    .setView(R.layout.add_recipe)
-                    .show()
-                dialog.findViewById<TextView>(R.id.cancel).setOnClickListener {
-                    try { dialog.dismiss() } catch (e: Throwable){}
-                }
-                dialog.findViewById<TextView>(R.id.submit).setOnClickListener {
-                    val name = dialog.findViewById<TextView>(R.id.name).text.toString()
-                    val group = dialog.findViewById<Colors>(R.id.colors).selected
-                    if(group < 0){
-                        staticToast2(R.string.please_choose_color, false)
-                        return@setOnClickListener
-                    }
-                    if(name.isEmpty()){
-                        staticToast2(R.string.please_choose_name, false)
-                        return@setOnClickListener
-                    }
-                    for(char in name){
-                        if(char !in 'A' .. 'Z' && char !in 'a' .. 'z' && char !in '0' .. '9' && char !in " ,.'"){
-                            staticToast2(R.string.only_az09, true)
-                            return@setOnClickListener
-                        }
-                    }
-                    thread {
-                        WebServices.suggestRecipe(all, a, b, name, group, {
-                            val str = it.split('\n')[0]
-                            println("by recipe: $str")
-                            val index1 = str.indexOf(':')
-                            val index2 = str.indexOf(':', index1+1)
-                            staticToast2(R.string.sent, false)
-                            staticRunOnUIThread { try { dialog.dismiss() } catch (e: IllegalArgumentException){} }
-                            if(index1 > 0 && index2 > 0){
-                                val rUUID = str.substring(0, index1).toIntOrNull() ?: return@suggestRecipe
-                                val rGroup = str.substring(index1+1, index2).toIntOrNull() ?: return@suggestRecipe
-                                val rName = str.substring(index2+1)
-                                val element = Element.get(rName, rUUID, rGroup)
-                                unlockElement(element)
-                            }
-                        })
-                    }
-                }
-                if(candidates.isEmpty()){
-                    dialog.findViewById<View>(R.id.title2).visibility = GONE
-                } else {
-                    val suggestionsView = dialog.findViewById<LinearLayout>(R.id.suggestions)
-                    val theWidth = measuredWidth * 2f / entriesPerRow
-                    for(candidate in candidates){
-                        val view = OneElement(context, null)
-                        view.candidate = candidate
-                        view.theWidth = theWidth
-                        view.invalidate()
-                        view.onLiked = {
-                            try { dialog.dismiss() } catch (e: IllegalArgumentException){}
-                            WebServices.likeRecipe(all, candidate.uuid, {
-                                staticToast2(R.string.sent, false)
-                            })
-                        }
-                        view.onDisliked = {
-                            WebServices.dislikeRecipe(all, candidate.uuid, {
-                                staticToast2(R.string.sent, false)
-                            })
-                        }
-                        view.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                        suggestionsView.addView(view)
-                    }
-                }
-            }
-        }, {
-            staticToast1("${it.javaClass.simpleName}: ${it.message}", true)
-        })
+        BasicOperations.askForRecipe(a, b, all, measuredWidth){ add(a, b, it) }
     }
 
     fun checkScroll(){
@@ -431,7 +343,8 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         return sum
     }
 
-    fun add(element: Element): Boolean {
+    fun add(sa: Element, sb: Element, element: Element): Boolean {
+        addRecipe(sa, sb, element)
         val unlocked = unlockeds[element.group]
         return if(!unlocked.contains(element) && element.uuid > -1){
             unlocked.add(element)
