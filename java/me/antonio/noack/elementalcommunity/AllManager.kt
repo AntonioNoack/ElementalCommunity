@@ -1,6 +1,7 @@
 package me.antonio.noack.elementalcommunity
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -33,13 +34,19 @@ import kotlinx.android.synthetic.main.settings.*
 import kotlinx.android.synthetic.main.tree.*
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.api.WebServices
+import java.security.interfaces.ECKey
 import kotlin.collections.ArrayList
+import android.os.VibrationEffect
+import android.os.Vibrator
+
+
 
 // todo make a directory with all elements? :D
 
 // Sounds:
 // magic: https://freesound.org/people/suntemple/sounds/241809/
 // ok: https://freesound.org/people/grunz/sounds/109663/
+// click: https://freesound.org/people/vitriolix/sounds/706/
 
 class AllManager: AppCompatActivity() {
 
@@ -57,6 +64,9 @@ class AllManager: AppCompatActivity() {
         var unlockeds = Array(GroupColors.size){
             ArrayList<Element>()
         }
+
+        var FAVOURITE_COUNT = 5
+        var favourites = arrayOfNulls<Element>(FAVOURITE_COUNT)
 
         var elementByRecipe = HashMap<Pair<Element, Element>, Element>()
 
@@ -77,8 +87,20 @@ class AllManager: AppCompatActivity() {
 
         lateinit var successSound: Sound
         lateinit var okSound: Sound
+        lateinit var clickSound: Sound
         // lateinit var askingSound: Sound
 
+    }
+
+    fun vibrate(millis: Long = 200L){
+        val v = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        // Vibrate for 500 milliseconds
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            v.vibrate(VibrationEffect.createOneShot(millis, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            //deprecated in API 26
+            v.vibrate(millis)
+        }
     }
 
     fun goFullScreen(){
@@ -107,6 +129,7 @@ class AllManager: AppCompatActivity() {
 
         successSound = Sound(R.raw.magic, this)
         okSound = Sound(R.raw.ok, this)
+        clickSound = Sound(R.raw.click, this)
         // askingSound = So
 
         staticRunOnUIThread = {
@@ -122,6 +145,7 @@ class AllManager: AppCompatActivity() {
 
             combiner.postInvalidate()
             unlocked.postInvalidate()
+            tree.hasTree = false
             tree.postInvalidate()
 
         }
@@ -134,7 +158,11 @@ class AllManager: AppCompatActivity() {
             combiner.invalidateSearch()
             flipper.displayedChild = 3
         }
-        settings.setOnClickListener { flipper.displayedChild = 4 }
+        settings.setOnClickListener {
+            favTitle.text = resources.getString(R.string.favourites).replace("#count", FAVOURITE_COUNT.toString())
+            favSlider.progress = if(FAVOURITE_COUNT == 0) 0 else FAVOURITE_COUNT - 2
+            flipper.displayedChild = 4
+        }
         back1.setOnClickListener { flipper.displayedChild = 0 }
         back2.setOnClickListener { flipper.displayedChild = 0 }
         backArrow5.setOnClickListener { flipper.displayedChild = 0 }
@@ -157,6 +185,21 @@ class AllManager: AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
+        favSlider.max = 10
+        favSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                var value = progress
+                if(value != 0) value += 2
+                FAVOURITE_COUNT = value
+                favTitle.text = resources.getString(R.string.favourites).replace("#count", FAVOURITE_COUNT.toString())
+                resizeFavourites(pref)
+                save()
+                invalidate()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
         resetEverything.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle(R.string.are_you_sure_reset_everything)
@@ -164,6 +207,11 @@ class AllManager: AppCompatActivity() {
                     pref.edit().clear().putLong("customUUID", customUUID).apply()
                     unlockedIds = hashSetOf(1, 2, 3, 4)
                     for(list in unlockeds){ list.removeAll(list.filter { it.uuid > 4 }) }
+                    for(i in 0 until favourites.size) favourites[i] = null
+                    FAVOURITE_COUNT = 5
+                    resizeFavourites(pref)
+                    favSlider.progress = FAVOURITE_COUNT-2
+                    save()
                     invalidate()
                 }
                 .setNegativeButton(android.R.string.no, null)
@@ -181,6 +229,13 @@ class AllManager: AppCompatActivity() {
             }
             for((src, dst) in elementByRecipe){
                 edit.putInt("recipe.${src.first.uuid}.${src.second.uuid}", dst.uuid)
+            }
+            for((i, favourite) in favourites.withIndex()){
+                if(favourite == null){
+                    edit.remove("favourites[$i]")
+                } else {
+                    edit.putInt("favourites[$i]", favourite.uuid)
+                }
             }
             edit.apply()
         }
@@ -209,6 +264,9 @@ class AllManager: AppCompatActivity() {
             list.sortBy { it.uuid }
         }
 
+        FAVOURITE_COUNT = pref.getInt("favourites.length", FAVOURITE_COUNT)
+        resizeFavourites(pref)
+
         invalidate()
 
         updateGroupSizesAndNames()
@@ -225,6 +283,13 @@ class AllManager: AppCompatActivity() {
             }
         }
 
+    }
+
+    fun resizeFavourites(pref: SharedPreferences){
+        favourites = Array(FAVOURITE_COUNT){ favourites.getOrNull(it) }
+        for(i in 0 until FAVOURITE_COUNT){
+            favourites[i] = favourites.getOrNull(i) ?: elementById[pref.getInt("favourites[$i]", -1)] ?: null
+        }
     }
 
     fun addSearchListeners(back3: View, backArrow: View, searchButton: View, search: TextView, unlocked: UnlockedRows){

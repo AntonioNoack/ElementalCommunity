@@ -11,7 +11,26 @@
             android:layout_height="0dp"/>
 
     <TextView
+            android:id="@+id/favTitle"
+            android:text="@string/favourites"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:background="@color/colorPrimary"
+            android:paddingTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    <SeekBar
+            android:id="@+id/favSlider"
+            android:thumbTint="@color/colorPrimaryDark"
+            android:progressTint="@color/colorPrimaryDark"
+            android:background="@color/colorPrimary"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"/>
+
+    <TextView
             android:id="@+id/resetEverything"
+            android:layout_marginTop="10dp"
             android:text="@string/reset_everything"
             android:gravity="center"
             android:textSize="30sp"

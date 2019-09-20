@@ -11,9 +11,11 @@ import android.view.View
 import androidx.core.math.MathUtils.clamp
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
+import me.antonio.noack.elementalcommunity.AreaType
 import me.antonio.noack.elementalcommunity.BasicOperations
 import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
+import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
 import me.antonio.noack.elementalcommunity.utils.Maths
 import kotlin.math.*
 
@@ -30,24 +32,51 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         hasTree = true
     }
 
-    override fun invalidate() {
-        super.invalidate()
-        hasTree = false
-    }
-
     var widthPerNode = 100f
 
-    fun validXY(event: MotionEvent): Triple<Boolean, Int, Int>{
+    fun validXY(event: MotionEvent, searchIfNull: Boolean = false): Triple<AreaType, Int, Int>{
+
         val x = event.x - measuredWidth * 0.5f
         val y = event.y - measuredHeight * 0.5f
-        val fx = x / widthPerNode + scrollX
-        val fy = y / widthPerNode + scrollY
-        val xi = floor(fx).toInt()
-        val yi = floor(fy).toInt()
+        var intX = x / widthPerNode + scrollX
+
+        var isSpecial = false
+        if(AllManager.FAVOURITE_COUNT > 0){
+            if(width > height){
+                // more width -> favourites at left
+                val favSize = height / AllManager.FAVOURITE_COUNT
+                if(event.x < favSize){
+                    val maybeX = event.y * AllManager.FAVOURITE_COUNT / height
+                    if(searchIfNull && AllManager.favourites[maybeX.toInt()] == null){
+                    } else {
+                        isSpecial = true
+                        intX = maybeX
+                    }
+                }
+            } else {
+                // more height -> favourites at bottom
+                val favSize = width / AllManager.FAVOURITE_COUNT
+                if(event.y > height - favSize){
+                    val maybeX = event.x * AllManager.FAVOURITE_COUNT / width
+                    if(searchIfNull && AllManager.favourites[maybeX.toInt()] == null){
+                    } else {
+                        isSpecial = true
+                        intX = maybeX
+                    }
+                }
+            }
+        }
+
+        val intY = y / widthPerNode + scrollY
+        val xi = floor(intX).toInt()
+        val yi = floor(intY).toInt()
         // we have no scroll section -> we are fine with always being valid
-        return Triple(if(tree.multiplierX <= 1){
-            fractOk(fx) && fractOk(fy)
-        } else true, xi, yi)
+        val valid = if(tree.multiplierX <= 1){
+            fractOk(intX) && fractOk(intY)
+        } else true
+        return Triple(if(isSpecial) if(intX-floor(intX) > 0.5f) AreaType.FAVOURITES_TOP else AreaType.FAVOURITES_BOTTOM else if(valid){
+            AreaType.ELEMENTS
+        } else AreaType.IGNORE, xi, yi)
     }
 
     fun fractOk(value: Float): Boolean {
@@ -78,15 +107,16 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
     fun setOnBorder(event: MotionEvent){
         val x = event.x
+        val offset = 0.08f * min(measuredWidth, measuredHeight)
         isOnBorderX = when {
-            x < measuredWidth * 0.12f -> -1
-            x > measuredWidth * 0.88f -> +1
+            x < offset -> -1
+            x > measuredWidth - offset -> +1
             else -> 0
         }
         val y = event.y
         isOnBorderY = when {
-            y < measuredWidth * 0.12f -> -1
-            y > measuredHeight - measuredWidth * 0.12f -> +1
+            y < offset -> -1
+            y > measuredHeight - offset -> +1
             else -> 0
         }
     }
@@ -100,7 +130,12 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
                     val (valid, internalX, internalY) = validXY(event)
 
-                    dragged = if(valid) getElementAt(internalX, internalY) else null
+                    dragged = when(valid){
+                        AreaType.ELEMENTS -> getElementAt(internalX, internalY)
+                        AreaType.FAVOURITES_TOP,
+                        AreaType.FAVOURITES_BOTTOM -> AllManager.favourites[internalX]
+                        AreaType.IGNORE -> null
+                    }
 
                     setOnBorder(event)
 
@@ -163,7 +198,19 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                         val first = dragged!!
                         dragged = null
                         val (valid, internalX, internalY) = validXY(event)
-                        val second = if(valid) getElementAt(internalX, internalY) else null
+                        val second = when(valid){
+                            AreaType.ELEMENTS -> getElementAt(internalX, internalY)
+                            AreaType.FAVOURITES_TOP,
+                            AreaType.FAVOURITES_BOTTOM -> {
+                                // set it here
+                                AllManager.favourites[internalX] = first
+                                AllManager.save()
+                                AllManager.clickSound.play()
+                                invalidate()
+                                null
+                            }
+                            AreaType.IGNORE -> null
+                        }
                         if(second != null){
                             BasicOperations.onRecipeRequest(first, second, all, measuredWidth, { unlockElement(first, second, it) }, { add(first, second, it) })
 
@@ -219,6 +266,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         linePaint.color = 0x30000000.toInt()
         linePaint.strokeWidth = max(2f, min(width, height) * 0.005f)
 
+        val line0 = System.nanoTime()
         if(tree.multiplierX != 1 || tree.multiplierY != 1){
             for(element in tree.elements){
                 if(element.hasTreeOutput){
@@ -261,6 +309,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                 }
             }
         }
+
+        drawFavourites(canvas, width, height, bgPaint, textPaint)
 
         val dragged = dragged
         if(dragged != null){

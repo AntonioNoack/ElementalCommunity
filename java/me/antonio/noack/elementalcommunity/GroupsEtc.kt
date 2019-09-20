@@ -66,8 +66,26 @@ object GroupsEtc {
 
     fun getMargin(widthPerNode: Float): Float = widthPerNode * 0.02f
 
-    fun drawElement(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, element: Element, bgPaint: Paint, textPaint: Paint){
-        drawElement(canvas, x0, y0, delta, widthPerNode, margin, element.name, element.group, bgPaint, textPaint)
+    fun drawElement(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, element: Element, bgPaint: Paint, textPaint: Paint, opacity: Float = 1f){
+        drawElement(canvas, x0, y0, delta, widthPerNode, margin, element.name, element.group, bgPaint, textPaint, opacity)
+    }
+
+    fun drawFavourites(canvas: Canvas, width: Float, height: Float, bgPaint: Paint, textPaint: Paint){
+        val opacity = 0.5f
+        if(width > height){// on the left
+            val fWidth = height / AllManager.FAVOURITE_COUNT
+            for((index, favourite) in AllManager.favourites.withIndex()){
+                if(favourite != null) drawElement(canvas, 0f,index*fWidth, 0f, fWidth, true, favourite, bgPaint, textPaint, opacity)
+                else drawElement(canvas, 0f, index*fWidth, 0f, fWidth, true, "", -1, bgPaint, textPaint, opacity)
+            }
+        } else {// on the bottom
+            val fWidth = width / AllManager.FAVOURITE_COUNT
+            val baseY = height - fWidth
+            for((index, favourite) in AllManager.favourites.withIndex()){
+                if(favourite != null) drawElement(canvas, index*fWidth, baseY, 0f, fWidth, true, favourite, bgPaint, textPaint, opacity)
+                else drawElement(canvas, index*fWidth, baseY, 0f, fWidth, true, "", -1, bgPaint, textPaint, opacity)
+            }
+        }
     }
 
     var lastCacheWidth = -1f
@@ -201,12 +219,13 @@ object GroupsEtc {
         val dys = FloatArray(lines.size){ dy + (it - indexOffset) * lineOffset }
     }
 
-    fun drawElement(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, rawName: String, group: Int, bgPaint: Paint, textPaint: Paint){
+    fun drawElement(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, rawName: String, group: Int, bgPaint: Paint, textPaint: Paint, opacity: Float = 1f){
 
-        drawElementRaw(canvas, x0, y0, delta, widthPerNode, margin, group, bgPaint)
+        drawElementRaw(canvas, x0, y0, delta, widthPerNode, margin, group, bgPaint, opacity)
 
         val cacheEntry = getCacheEntry(rawName, widthPerNode, textPaint, bgPaint)
         textPaint.color = cacheEntry.color
+        if(opacity < 1f) textPaint.color = textPaint.color.and(0xffffff) or ((opacity * 255).toInt().shl(24))
 
         if(delta == 0f){
 
@@ -244,13 +263,14 @@ object GroupsEtc {
 
     }
 
-    fun drawElementRaw(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, group: Int, bgPaint: Paint){
-        drawElementRaw(canvas, x0, y0, delta, widthPerNode, if(margin) getMargin(widthPerNode) else 0f, group, bgPaint)
+    fun drawElementRaw(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, group: Int, bgPaint: Paint, opacity: Float = 1f){
+        drawElementRaw(canvas, x0, y0, delta, widthPerNode, if(margin) getMargin(widthPerNode) else 0f, group, bgPaint, opacity)
     }
 
-    fun drawElementRaw(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Float, group: Int, bgPaint: Paint){
+    fun drawElementRaw(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Float, group: Int, bgPaint: Paint, opacity: Float = 1f){
 
         bgPaint.color = if(group < 0) 0xff000000.toInt() else GroupColors[group]
+        if(opacity < 1f) bgPaint.color = bgPaint.color.and(0xffffff) or ((opacity * 255).toInt().shl(24))
         val roundness = widthPerNode * 0.1f
         val d0 = margin - delta
         val d1 = widthPerNode - margin - margin + delta

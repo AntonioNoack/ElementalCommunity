@@ -22,4 +22,5 @@
     <string name="component_a">Component A</string>
     <string name="component_b">Component B</string>
     <string name="skip_that">Skip</string>
+    <string name="favourites">Favourites: #count</string>
 </resources>
