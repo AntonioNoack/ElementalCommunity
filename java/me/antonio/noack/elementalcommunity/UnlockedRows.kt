@@ -28,6 +28,8 @@ import kotlin.math.*
 
 open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
+    var allowLeftFavourites = false
+
     lateinit var all: AllManager
 
     var search = ""
@@ -140,7 +142,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
         var isSpecial = false
         if(FAVOURITE_COUNT > 0){
-            if(width > height){
+            if(width > height && allowLeftFavourites){
                 // more width -> favourites at left
                 val favSize = height / FAVOURITE_COUNT
                 if(event.x < favSize){
@@ -215,22 +217,21 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
             override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean = false
             override fun onScroll(event: MotionEvent?, e2: MotionEvent?, distanceX: Float, dy: Float): Boolean {
 
-                return if(event != null){
+                if(dragged == null){
 
-                    if(dragged == null){
-
-                        val widthPerNode = widthPerNode()
-                        if(dy != 0f && dy < widthPerNode * 0.7f){
-                            scroll += dy
-                        }
-
+                    val widthPerNode = widthPerNode()
+                    if(dy != 0f && dy < widthPerNode * 0.7f){
+                        scroll += dy
                     }
 
-                    scrollDest = Float.NaN
+                }
 
-                    true
+                scrollDest = Float.NaN
 
-                } else false
+                checkScroll()
+                invalidate()
+
+                return true
 
             }
             override fun onLongPress(e: MotionEvent?) {}
@@ -347,7 +348,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         }
         val (widthPerNode, avgMargin) = widthPerNodeNMargin()
         val favCount = FAVOURITE_COUNT
-        val maxSize = sum * widthPerNode + avgMargin + (if(measuredHeight > measuredWidth && favCount > 0) measuredWidth / favCount else 0)
+        val maxSize = sum * widthPerNode + avgMargin + (if((measuredHeight >= measuredWidth || !allowLeftFavourites) && favCount > 0) measuredWidth / favCount else 0)
         scroll = clamp(scroll,0f, 1f * max(0f, maxSize - measuredHeight))
     }
 
@@ -484,7 +485,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
             }
         }
 
-        drawFavourites(canvas, width, height, bgPaint, textPaint)
+        drawFavourites(canvas, width, height, bgPaint, textPaint, allowLeftFavourites)
 
         val dragged = dragged
         if(dragged != null){

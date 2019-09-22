@@ -2,7 +2,6 @@ package me.antonio.noack.elementalcommunity
 
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import kotlinx.android.synthetic.main.random.*
 import me.antonio.noack.elementalcommunity.BasicOperations.setSubmitAction
 
 object RandomSuggestion {
@@ -20,8 +19,8 @@ object RandomSuggestion {
         var compA = getRandomComponent()
         var compB = getRandomComponent()
 
-        dialog.first.element = compA
-        dialog.second.element = compB
+        val first = dialog.findViewById<OneElement>(R.id.first)!!
+        val second = dialog.findViewById<OneElement>(R.id.second)!!
 
         fun next(){
 
@@ -30,11 +29,11 @@ object RandomSuggestion {
             compA = getRandomComponent()
             compB = getRandomComponent()
 
-            dialog.first.element = compA
-            dialog.second.element = compB
+            first.element = compA
+            second.element = compB
 
-            dialog.first.invalidate()
-            dialog.second.invalidate()
+            first.invalidate()
+            second.invalidate()
 
         }
 
@@ -52,6 +51,8 @@ object RandomSuggestion {
             }
             next()
         })
+
+        next()
 
     }
 

@@ -21,6 +21,8 @@ import kotlin.math.*
 
 class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet){
 
+    var allowLeftFavourites = true
+
     lateinit var all: AllManager
     var unlockeds = AllManager.unlockeds
 
@@ -42,7 +44,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
         var isSpecial = false
         if(AllManager.FAVOURITE_COUNT > 0){
-            if(width > height){
+            if(width > height && allowLeftFavourites){
                 // more width -> favourites at left
                 val favSize = height / AllManager.FAVOURITE_COUNT
                 if(event.x < favSize){
@@ -146,24 +148,22 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
             override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean = false
             override fun onScroll(event: MotionEvent?, e2: MotionEvent?, dx: Float, dy: Float): Boolean {
 
-                return if(event != null){
+                if(dragged == null){
 
-                    if(dragged == null){
+                    val max = measuredWidth * 0.2f
 
-                        val max = measuredWidth * 0.2f
+                    if(dx != 0f && abs(dx) < max){ scrollX += dx / widthPerNode }
+                    if(dy != 0f && abs(dy) < max){ scrollY += dy / widthPerNode }
 
-                        if(dx != 0f && abs(dx) < max){ scrollX += dx / widthPerNode }
-                        if(dy != 0f && abs(dy) < max){ scrollY += dy / widthPerNode }
+                    checkScroll()
 
-                        checkScroll()
+                    invalidate()
 
-                    }
+                }
 
-                    scrollDest = null
+                scrollDest = null
 
-                    true
-
-                } else false
+                return true
 
             }
             override fun onLongPress(e: MotionEvent?) {}
@@ -310,7 +310,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
             }
         }
 
-        drawFavourites(canvas, width, height, bgPaint, textPaint)
+        drawFavourites(canvas, width, height, bgPaint, textPaint, allowLeftFavourites)
 
         val dragged = dragged
         if(dragged != null){

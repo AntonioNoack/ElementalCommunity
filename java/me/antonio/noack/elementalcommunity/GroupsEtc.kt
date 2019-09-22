@@ -70,9 +70,9 @@ object GroupsEtc {
         drawElement(canvas, x0, y0, delta, widthPerNode, margin, element.name, element.group, bgPaint, textPaint, opacity)
     }
 
-    fun drawFavourites(canvas: Canvas, width: Float, height: Float, bgPaint: Paint, textPaint: Paint){
+    fun drawFavourites(canvas: Canvas, width: Float, height: Float, bgPaint: Paint, textPaint: Paint, allowLeftFavourites: Boolean){
         val opacity = 0.5f
-        if(width > height){// on the left
+        if(width > height && allowLeftFavourites){// on the left
             val fWidth = height / AllManager.FAVOURITE_COUNT
             for((index, favourite) in AllManager.favourites.withIndex()){
                 if(favourite != null) drawElement(canvas, 0f,index*fWidth, 0f, fWidth, true, favourite, bgPaint, textPaint, opacity)

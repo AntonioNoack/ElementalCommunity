@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"/>
 
     <TextView
-            android:id="@+id/random"
+            android:id="@+id/randomButton"
             android:text="@string/random_suggestion"
             android:layout_marginTop="10dp"
             android:gravity="center"
@@ -65,7 +65,7 @@
             android:layout_height="wrap_content"/>
 
     <TextView
-            android:id="@+id/settings"
+            android:id="@+id/settingsButton"
             android:text="@string/settings"
             android:layout_marginTop="10dp"
             android:gravity="center"

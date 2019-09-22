@@ -30,7 +30,7 @@ object BasicOperations {
                     }, {})
                 }
             }, {
-                AllManager.staticToast1("${it.javaClass.simpleName}: ${it.message}", true)
+                AllManager.toast("${it.javaClass.simpleName}: ${it.message}", true)
             })
         }
     }
@@ -67,12 +67,12 @@ object BasicOperations {
                             } catch (e: IllegalArgumentException) {
                             }
                             WebServices.likeRecipe(all, candidate.uuid, {
-                                AllManager.staticToast2(R.string.sent, false)
+                                AllManager.toast(R.string.sent, false)
                             })
                         }
                         view.onDisliked = {
                             WebServices.dislikeRecipe(all, candidate.uuid, {
-                                AllManager.staticToast2(R.string.sent, false)
+                                AllManager.toast(R.string.sent, false)
                             })
                         }
                         view.layoutParams = LinearLayout.LayoutParams(
@@ -84,7 +84,7 @@ object BasicOperations {
                 }
             }
         }, {
-            AllManager.staticToast1("${it.javaClass.simpleName}: ${it.message}", true)
+            AllManager.toast("${it.javaClass.simpleName}: ${it.message}", true)
         })
     }
 
@@ -93,16 +93,16 @@ object BasicOperations {
             val name = dialog.findViewById<TextView>(R.id.name).text.toString()
             val group = dialog.findViewById<Colors>(R.id.colors).selected
             if (group < 0) {
-                AllManager.staticToast2(R.string.please_choose_color, false)
+                AllManager.toast(R.string.please_choose_color, false)
                 return@setOnClickListener
             }
             if (name.isEmpty()) {
-                AllManager.staticToast2(R.string.please_choose_name, false)
+                AllManager.toast(R.string.please_choose_name, false)
                 return@setOnClickListener
             }
             for (char in name) {
                 if (char !in 'A'..'Z' && char !in 'a'..'z' && char !in '0'..'9' && char !in " ,.'") {
-                    AllManager.staticToast2(R.string.only_az09, true)
+                    AllManager.toast(R.string.only_az09, true)
                     return@setOnClickListener
                 }
             }
@@ -111,7 +111,7 @@ object BasicOperations {
                     val str = it.split('\n')[0]
                     val index1 = str.indexOf(':')
                     val index2 = str.indexOf(':', index1 + 1)
-                    AllManager.staticToast2(R.string.sent, false)
+                    AllManager.toast(R.string.sent, false)
                     if(allowingDismiss){
                         AllManager.staticRunOnUIThread {
                             try {

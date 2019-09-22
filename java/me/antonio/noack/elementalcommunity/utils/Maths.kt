@@ -1,9 +1,11 @@
 package me.antonio.noack.elementalcommunity.utils
 
+import kotlin.math.floor
+
 object Maths {
 
     fun fract(x: Float): Float {
-        return x - Math.floor(x.toDouble()).toFloat()
+        return x - floor(x.toDouble()).toFloat()
     }
 
     fun mix(a: Float, b: Float, f: Float): Float {

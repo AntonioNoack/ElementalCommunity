@@ -50,7 +50,7 @@ class Tree {
         }
 
         for(id in 1 .. 4){
-            val element = AllManager.elementById[id]
+            val element = AllManager.elementById[id]!!
             element.rank = 0
             todo.remove(element)
         }
@@ -132,7 +132,7 @@ class Tree {
                     element.treeX = positionX * multiplierX
                     element.treeY = positionY * multiplierY
 
-                    if(rawX == maxPerRow-1){
+                    if(rawX == maxPerRow-1 && indexX < length - 1){
                         positionY++
                     }
 
@@ -151,7 +151,9 @@ class Tree {
                 treeMap.put(element.treeX.shl(16) or element.treeY.and(0xffff), element)
 
             }
+
             positionY++
+
         }
 
         bottom = ((positionY - 1) * multiplierY).toFloat()

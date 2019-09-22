@@ -8,37 +8,20 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.SparseArray
-import android.widget.Toast
-import kotlinx.android.synthetic.main.all.*
-import java.lang.Math.abs
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.concurrent.thread
-import android.view.MotionEvent
-import android.view.InputDevice
 import android.view.View
 import android.view.View.*
-import android.widget.SeekBar
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.core.widget.addTextChangedListener
-import kotlinx.android.synthetic.main.combiner.*
-import kotlinx.android.synthetic.main.combiner.back1
-import kotlinx.android.synthetic.main.combiner.backArrow2
-import kotlinx.android.synthetic.main.combiner.search2
-import kotlinx.android.synthetic.main.combiner.searchButton2
-import kotlinx.android.synthetic.main.game.*
-import kotlinx.android.synthetic.main.menu.*
-import kotlinx.android.synthetic.main.menu_content.*
-import kotlinx.android.synthetic.main.settings.*
-import kotlinx.android.synthetic.main.tree.*
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.api.WebServices
-import java.security.interfaces.ECKey
 import kotlin.collections.ArrayList
 import android.os.VibrationEffect
 import android.os.Vibrator
-
+import android.widget.*
+import me.antonio.noack.elementalcommunity.tree.TreeView
+import kotlin.math.abs
 
 
 // todo make a directory with all elements? :D
@@ -79,6 +62,9 @@ class AllManager: AppCompatActivity() {
             invalidate()
         }
 
+        fun toast(message: String, isLong: Boolean) = staticToast1(message, isLong)
+        fun toast(message: Int, isLong: Boolean) = staticToast2(message, isLong)
+
         lateinit var staticToast1: (message: String, isLong: Boolean) -> Unit
         lateinit var staticToast2: (message: Int, isLong: Boolean) -> Unit
         lateinit var staticRunOnUIThread: (() -> Unit) -> Unit
@@ -92,8 +78,60 @@ class AllManager: AppCompatActivity() {
 
     }
 
+    lateinit var combiner: Combiner
+    lateinit var unlocked: UnlockedRows
+    lateinit var treeView: TreeView
+    lateinit var startButton: View
+    lateinit var flipper: ViewFlipper
+    lateinit var treeViewButton: View
+    lateinit var suggestButton: View
+    lateinit var settingButton: View
+    lateinit var back1: View
+    lateinit var back2: View
+    lateinit var back3: View
+    lateinit var backArrow1: View
+    lateinit var backArrow2: View
+    lateinit var backArrow3: View
+    lateinit var favTitle: TextView
+    lateinit var favSlider: SeekBar
+    lateinit var search1: EditText
+    lateinit var search2: EditText
+    lateinit var searchButton1: EditText
+    lateinit var searchButton2: EditText
+    lateinit var randomButton: View
+    lateinit var spaceSlider: SeekBar
+    lateinit var resetEverythingButton: View
+    lateinit var newsView: NewsView
+
+    fun initViews(){
+        combiner = findViewById(R.id.combiner)
+        unlocked = findViewById(R.id.unlocked)
+        treeView = findViewById(R.id.tree)
+        startButton = findViewById(R.id.start)
+        flipper = findViewById(R.id.flipper)
+        treeViewButton = findViewById(R.id.treeButton)
+        suggestButton = findViewById(R.id.suggest)
+        settingButton = findViewById(R.id.settingsButton)
+        back1 = findViewById(R.id.back1)
+        back2 = findViewById(R.id.back2)
+        back3 = findViewById(R.id.back3)
+        favTitle = findViewById(R.id.favTitle)
+        favSlider = findViewById(R.id.favSlider)
+        backArrow1 = findViewById(R.id.backArrow1)
+        backArrow2 = findViewById(R.id.backArrow2)
+        backArrow3 = findViewById(R.id.backArrow3)
+        search1 = findViewById(R.id.search1)
+        search2 = findViewById(R.id.search2)
+        searchButton1 = findViewById(R.id.searchButton1)
+        searchButton2 = findViewById(R.id.searchButton2)
+        randomButton = findViewById(R.id.randomButton)
+        spaceSlider = findViewById(R.id.spaceSlider)
+        resetEverythingButton = findViewById(R.id.resetEverythingButton)
+        newsView = findViewById(R.id.newsView)
+    }
+
     fun vibrate(millis: Long = 200L){
-        val v = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        val v = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
         // Vibrate for 500 milliseconds
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             v.vibrate(VibrationEffect.createOneShot(millis, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -113,6 +151,8 @@ class AllManager: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.all)
 
+        initViews()
+
         actionBar?.hide()
 
         if(Build.VERSION.SDK_INT >= 21){
@@ -123,7 +163,7 @@ class AllManager: AppCompatActivity() {
 
         unlocked.all = this
         combiner.all = this
-        tree.all = this
+        treeView.all = this
 
         val pref = getPreferences(Context.MODE_PRIVATE)
 
@@ -145,37 +185,37 @@ class AllManager: AppCompatActivity() {
 
             combiner.postInvalidate()
             unlocked.postInvalidate()
-            tree.hasTree = false
-            tree.postInvalidate()
+            treeView.hasTree = false
+            treeView.postInvalidate()
 
         }
-
-        start.setOnClickListener { flipper.displayedChild = 1 }
-        treeButton.setOnClickListener {
+        
+        startButton.setOnClickListener { flipper.displayedChild = 1 }
+        treeViewButton.setOnClickListener {
             flipper.displayedChild = 2
         }
-        suggest.setOnClickListener {
+        suggestButton.setOnClickListener {
             combiner.invalidateSearch()
             flipper.displayedChild = 3
         }
-        settings.setOnClickListener {
+        settingButton.setOnClickListener {
             favTitle.text = resources.getString(R.string.favourites).replace("#count", FAVOURITE_COUNT.toString())
             favSlider.progress = if(FAVOURITE_COUNT == 0) 0 else FAVOURITE_COUNT - 2
             flipper.displayedChild = 4
         }
         back1.setOnClickListener { flipper.displayedChild = 0 }
         back2.setOnClickListener { flipper.displayedChild = 0 }
-        backArrow5.setOnClickListener { flipper.displayedChild = 0 }
-        addSearchListeners(back3, backArrow, searchButton, search, unlocked)
+        backArrow3.setOnClickListener { flipper.displayedChild = 0 }
+        addSearchListeners(back3, backArrow1, searchButton1, search1, unlocked)
         addSearchListeners(back1, backArrow2, searchButton2, search2, combiner)
-        random.setOnClickListener { RandomSuggestion.make(this) }
+        randomButton.setOnClickListener { RandomSuggestion.make(this) }
 
         val spaceSliderOffset = 1
         spaceSlider.max = 5 + spaceSliderOffset
-        spaceSlider.progress = tree.tree.multiplierX - spaceSliderOffset
+        spaceSlider.progress = treeView.tree.multiplierX - spaceSliderOffset
         spaceSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val tree = tree.tree
+                val tree = treeView.tree
                 val value = spaceSliderOffset + progress
                 tree.multiplierX = value
                 tree.multiplierY = value
@@ -200,7 +240,7 @@ class AllManager: AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        resetEverything.setOnClickListener {
+        resetEverythingButton.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle(R.string.are_you_sure_reset_everything)
                 .setPositiveButton(android.R.string.yes){ _, _ ->
@@ -274,11 +314,22 @@ class AllManager: AppCompatActivity() {
         askNews()
 
         for((key, value) in pref.all){
-            if(key.startsWith("recipe.") && value is Int){
+            if(key.endsWith(".name")){
+                // an element
+                val id = key.split('.')[0].toIntOrNull() ?: continue
+                val name = value.toString()
+                val group = pref.getInt("$id.group", -1)
+                if(group < 0) continue
+                Element.get(name, id, group)
+            }
+        }
+
+        for((key, value) in pref.all){
+            if(key.startsWith("recipe.") && (value is Int || value.toString().toIntOrNull() != null)){
                 val parts = key.split('.')
                 val a = elementById[parts[1].toIntOrNull() ?: continue] ?: continue
                 val b = elementById[parts[2].toIntOrNull() ?: continue] ?: continue
-                val c = elementById[value] ?: continue
+                val c = elementById[if(value is Int) value else value.toString().toInt()] ?: continue
                 addRecipe(a, b, c)
             }
         }
@@ -317,7 +368,7 @@ class AllManager: AppCompatActivity() {
         })
     }
 
-    override fun onGenericMotionEvent(event: MotionEvent): Boolean {
+    /*override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         if (0 != event.source and InputDevice.SOURCE_CLASS_POINTER) {
             when (event.action) {
                 MotionEvent.ACTION_SCROLL -> {
@@ -329,7 +380,7 @@ class AllManager: AppCompatActivity() {
             }
         }
         return super.onGenericMotionEvent(event)
-    }
+    }*/
 
     fun updateGroupSizesAndNames(){
         thread {
@@ -340,8 +391,8 @@ class AllManager: AppCompatActivity() {
     fun askNews(){
         thread {
             WebServices.askNews(20, {
-                news.news = it.toArray(arrayOfNulls(it.size))
-                news.postInvalidate()
+                newsView.news = it
+                newsView.postInvalidate()
             })
         }
     }

@@ -11,7 +11,7 @@
             android:layout_height="wrap_content">
 
         <ImageView
-                android:id="@+id/backArrow5"
+                android:id="@+id/backArrow3"
                 android:src="@drawable/ic_arrow_back_black_24dp"
                 android:layout_width="50sp"
                 android:layout_height="50sp"/>

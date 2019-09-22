@@ -11,7 +11,7 @@
             android:layout_height="wrap_content">
 
         <ImageView
-                android:id="@+id/backArrow"
+                android:id="@+id/backArrow1"
                 android:src="@drawable/ic_arrow_back_black_24dp"
                 android:layout_width="50sp"
                 android:layout_height="50sp"/>
@@ -27,14 +27,14 @@
                 android:layout_height="50sp"/>
 
         <ImageView
-                android:id="@+id/searchButton"
+                android:id="@+id/searchButton1"
                 android:src="@drawable/ic_search_black_24dp"
                 android:layout_width="50sp"
                 android:layout_height="50sp"/>
 
         <EditText
                 android:visibility="gone"
-                android:id="@+id/search"
+                android:id="@+id/search1"
                 android:maxLines="1"
                 android:layout_weight="3"
                 android:layout_width="0dp"

@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.getMargin
+import kotlin.math.min
 
 class OneElement(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
@@ -83,10 +84,11 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribute
 
             }
             MeasureSpec.AT_MOST -> {
-
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+                theWidth = min(measuredWidth.toFloat(), theWidth)
             }
         }
-        setMeasuredDimension(theWidth.toInt(),  theWidth.toInt())
+        setMeasuredDimension(theWidth.toInt(), theWidth.toInt())
     }
 
     private val path = Path()

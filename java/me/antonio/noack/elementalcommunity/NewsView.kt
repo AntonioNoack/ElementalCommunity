@@ -8,11 +8,13 @@ import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.api.WebServices
+import java.lang.StrictMath.pow
 import java.util.*
+import kotlin.math.max
 
 class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
-    var news = arrayOfNulls<WebServices.News?>(10)
+    var news = ArrayList<WebServices.News>(10)
 
     private val relativeWidth = 4f
 
@@ -32,12 +34,13 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
         val size = GroupColors.size
 
-
         val sideWays = measuredWidth > measuredHeight
         val width = measuredWidth * 1f
         val widthPerNode = width / if(sideWays) 2f * relativeWidth else relativeWidth
 
-        for(candidate in news){
+        for(i in 0 until max(10, news.size)){
+
+            val candidate = news.getOrNull(i)
 
             val store = canvas.save()
 
@@ -62,7 +65,7 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
             textPaint.color = 0xff000000.toInt()
             textPaint.textSize = widthPerNode*.21f
             val dy2 = (textPaint.ascent() + textPaint.descent())/2
-            canvas.drawText("${timeString(candidate?.dt ?: (Math.pow(2.0, 1.0 + 20.0 * random.nextDouble())).toInt())} ago ${if((candidate?.w ?: 0) > 0) "liked" else "disliked"}",
+            canvas.drawText("${timeString(candidate?.dt ?: (pow(2.0, 1.0 + 20.0 * random.nextDouble())).toInt())} ago ${if((candidate?.w ?: 0) > 0) "liked" else "disliked"}",
                 widthPerNode*relativeWidth/2,
                 widthPerNode + 1.5f * dy2, textPaint)
 

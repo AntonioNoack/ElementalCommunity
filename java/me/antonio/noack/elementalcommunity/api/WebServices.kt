@@ -7,10 +7,10 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.elementById
 import me.antonio.noack.elementalcommunity.AllManager.Companion.invalidate
 import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupSizes
+import me.antonio.noack.webdroid.Captcha
+import me.antonio.noack.webdroid.HTTP
 import java.lang.Exception
-import java.net.URL
 import java.net.URLEncoder
-import kotlin.concurrent.thread
 
 // done require less Captchas...
 
@@ -19,67 +19,35 @@ object WebServices {
     private const val ServerURL = "https://api.phychi.com/elemental/"
 
     fun tryCaptcha(all: AllManager, args: String, onSuccess: (String) -> Unit, onError: (Exception) -> Unit = {
-        AllManager.staticToast1(
+        AllManager.toast(
             "${it.javaClass.simpleName}: ${it.message}",
             true
         )
     }){
 
-        thread {
-            try {
+        HTTP.request("$ServerURL?$args", { text ->
+            if(text.isBlank() || text.startsWith("#reauth", true) || text.startsWith("#auth", true)){
 
-                val url = URL("$ServerURL?$args")
-                val con = url.openConnection()
-                val text = String(con.getInputStream().readBytes())
-                if(text.isBlank() || text.startsWith("#reauth", true) || text.startsWith("#auth", true)){
+                Captcha.get(all, { token ->
+                    HTTP.request("$ServerURL?$args&t=${URLEncoder.encode(token, "UTF-8")}", onSuccess, onError)
+                }, onError)
 
-                    println("text is empty: $text, $args")
-
-                    Captcha.get(all, { token ->
-
-                        thread {
-                            try {
-
-                                val url2 = URL("$ServerURL?$args&t=${URLEncoder.encode(token, "UTF-8")}")
-                                val con2 = url2.openConnection()
-                                val bytes = String(con2.getInputStream().readBytes())
-
-                                println("second text $bytes")
-
-                                onSuccess(bytes)
-
-                            } catch (e: Exception){
-                                onError(e)
-                            }
-                        }
-
-                    }, onError)
-
-                } else {
-                    onSuccess(text)
-                }
-
-            } catch (e: Exception){
-                onError(e)
-            }
-        }
+            } else onSuccess(text)
+        }, onError)
 
     }
 
 
 
     fun askRecipe(a: Element, b: Element, onSuccess: (Element?) -> Unit, onError: (Exception) -> Unit = {
-        AllManager.staticToast1(
+        AllManager.toast(
             "${it.javaClass.simpleName}: ${it.message}",
             true
         )
     }){
 
-        try {
-
-            val url = URL("$ServerURL?a=${a.uuid}&b=${b.uuid}")
-            val con = url.openConnection()
-            val data = String(con.getInputStream().readBytes()).split(';')
+        HTTP.request("$ServerURL?a=${a.uuid}&b=${b.uuid}", { text ->
+            val data = text.split(';')
             if(data.size > 1){
                 val id = data[0].toInt()
                 val group = data[1].toInt()
@@ -94,10 +62,7 @@ object WebServices {
             } else {
                 onSuccess(null)
             }
-
-        } catch (e: Exception){
-            onError(e)
-        }
+        }, onError)
 
     }
 
@@ -108,17 +73,14 @@ object WebServices {
     }
 
     fun askNews(count: Int, onSuccess: (ArrayList<News>) -> Unit, onError: (Exception) -> Unit = {
-        AllManager.staticToast1(
+        AllManager.toast(
             "${it.javaClass.simpleName}: ${it.message}",
             true
         )
     }){
 
-        try {
-
-            val url = URL("$ServerURL?n=${count * 3}")
-            val con = url.openConnection()
-            val raw = String(con.getInputStream().readBytes()).split(";;")
+        HTTP.request("$ServerURL?n=${count * 3}", { text ->
+            val raw = text.split(";;")
             val list = ArrayList<News>()
             for(news in raw){
                 val data = news.split(';')
@@ -148,27 +110,21 @@ object WebServices {
                 }
             }
             onSuccess(list)
-
-        } catch (e: Exception){
-            onError(e)
-        }
+        }, onError)
 
     }
 
     class Candidate(val uuid: Long, val name: String, val group: Int)
 
     fun getCandidates(a: Element, b: Element, onSuccess: (ArrayList<Candidate>) -> Unit, onError: (Exception) -> Unit = {
-        AllManager.staticToast1(
+        AllManager.toast(
             "${it.javaClass.simpleName}: ${it.message}",
             true
         )
     }){
 
-        try {
-
-            val url = URL("$ServerURL?o=1&a=${a.uuid}&b=${b.uuid}")
-            val con = url.openConnection()
-            val data = String(con.getInputStream().readBytes()).split(';')
+        HTTP.request("$ServerURL?o=1&a=${a.uuid}&b=${b.uuid}", { text ->
+            val data = text.split(';')
             var i = 0
             val candidates = ArrayList<Candidate>()
             while(i+2 < data.size){
@@ -178,16 +134,12 @@ object WebServices {
                 candidates.add(Candidate(uuid, name, group))
             }
             onSuccess(candidates)
-
-        } catch (e: Exception){
-            e.printStackTrace()
-            onError(e)
-        }
+        }, onError)
 
     }
 
     fun suggestRecipe(all: AllManager, a: Element, b: Element, resultName: String, resultGroup: Int, onSuccess: (text: String) -> Unit, onError: (Exception) -> Unit = {
-        AllManager.staticToast1(
+        AllManager.toast(
             "${it.javaClass.simpleName}: ${it.message}",
             true
         )
@@ -216,7 +168,7 @@ object WebServices {
     }
 
     fun likeRecipe(all: AllManager, uuid: Long, onSuccess: () -> Unit, onError: (Exception) -> Unit = {
-        AllManager.staticToast1(
+        AllManager.toast(
             "${it.javaClass.simpleName}: ${it.message}",
             true
         )
@@ -242,7 +194,7 @@ object WebServices {
     }
 
     fun dislikeRecipe(all: AllManager, uuid: Long, onSuccess: () -> Unit, onError: (Exception) -> Unit = {
-        AllManager.staticToast1(
+        AllManager.toast(
             "${it.javaClass.simpleName}: ${it.message}",
             true
         )
@@ -269,11 +221,8 @@ object WebServices {
 
     fun updateGroupSizes(){
 
-        try {
-
-            val url = URL("$ServerURL?c")
-            val con = url.openConnection()
-            val data = String(con.getInputStream().readBytes()).split(';')
+        HTTP.request("$ServerURL?c", { text ->
+            val data = text.split(';')
             for(entry in data){
                 val index = entry.indexOf(':')
                 if(index > 0){
@@ -283,20 +232,15 @@ object WebServices {
                     invalidate()
                 }
             }
-
-
-
-        } catch (e: Exception){ }
+        }, {})
 
     }
 
     fun updateGroupSizesAndNames(){
 
-        try {
+        HTTP.request("$ServerURL?l", {
 
-            val url = URL("$ServerURL?l")
-            val con = url.openConnection()
-            val data = String(con.getInputStream().readBytes()).split('\n')
+            val data = it.split('\n')
             val groupSizes = IntArray(GroupSizes.size)
             for(entry in data){
                 val index1 = entry.indexOf(':')
@@ -316,7 +260,7 @@ object WebServices {
 
             invalidate()
 
-        } catch (e: Exception){ }
+        }, {})
 
     }
 

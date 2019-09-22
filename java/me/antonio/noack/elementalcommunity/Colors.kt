@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElementRaw
@@ -18,13 +19,21 @@ class Colors(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet)
 
         setOnTouchListener { _, e ->
 
-            val widthPerNode = measuredHeight * 1f / saturations.size
-            val x = (e.x / widthPerNode).toInt()
-            val y = (e.y / widthPerNode).toInt()
+            when(e.actionMasked){
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
 
-            selected = x * saturations.size + y
+                    val widthPerNode = measuredHeight * 1f / saturations.size
+                    val x = (e.x / widthPerNode).toInt()
+                    val y = (e.y / widthPerNode).toInt()
 
-            invalidate()
+                    val newSelected = x * saturations.size + y
+                    if(selected != newSelected){
+                        selected = newSelected
+                        invalidate()
+                    }
+
+                }
+            }
 
             true
 

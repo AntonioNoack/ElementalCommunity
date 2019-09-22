@@ -31,6 +31,8 @@ class Candidate(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
 
     init {
 
+        MotionEvent.AXIS_VSCROLL
+
         val gestureDetector = GestureDetector(context, object: GestureDetector.OnGestureListener {
             override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean = false
             override fun onDown(e: MotionEvent?): Boolean = true
