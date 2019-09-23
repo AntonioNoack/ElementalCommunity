@@ -74,10 +74,10 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         if(AllManager.FAVOURITE_COUNT > 0){
             if(width > height && allowLeftFavourites){
                 // more width -> favourites at left
-                val favSize = height / AllManager.FAVOURITE_COUNT
+                val favSize = min(height.toFloat() / AllManager.FAVOURITE_COUNT, width * AllManager.MAX_FAVOURITES_RATIO)
                 if(event.x < favSize){
-                    val maybeX = event.y * AllManager.FAVOURITE_COUNT / height
-                    if(searchIfNull && AllManager.favourites[maybeX.toInt()] == null){
+                    val maybeX = event.y / favSize
+                    if(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null){
                     } else {
                         isSpecial = true
                         intX = maybeX
@@ -85,10 +85,10 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                 }
             } else {
                 // more height -> favourites at bottom
-                val favSize = width / AllManager.FAVOURITE_COUNT
+                val favSize = min(width.toFloat() / AllManager.FAVOURITE_COUNT, height * AllManager.MAX_FAVOURITES_RATIO)
                 if(event.y > height - favSize){
-                    val maybeX = event.x * AllManager.FAVOURITE_COUNT / width
-                    if(searchIfNull && AllManager.favourites[maybeX.toInt()] == null){
+                    val maybeX = event.x / favSize
+                    if(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null){
                     } else {
                         isSpecial = true
                         intX = maybeX
@@ -445,7 +445,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         val unlocked = unlockeds[element.group]
         return if(!unlocked.contains(element) && element.uuid > -1){
             unlocked.add(element)
-            unlocked.sortBy { it.uuid }
+            // unlocked.sortBy { it.uuid }
             // invalidateSearch()
             postInvalidate()
             true

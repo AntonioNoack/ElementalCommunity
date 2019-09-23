@@ -7,7 +7,9 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.invalidate
 import me.antonio.noack.elementalcommunity.AllManager.Companion.save
 import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockeds
 
-class Element private constructor(var name: String, val uuid: Int, var group: Int){
+class Element private constructor(var name: String, val uuid: Int, var group: Int): Comparable<Element> {
+
+    override fun compareTo(other: Element): Int = uuid.compareTo(other.uuid)
 
     var rank = -1
 

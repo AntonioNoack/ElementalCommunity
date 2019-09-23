@@ -41,13 +41,14 @@ class AllManager: AppCompatActivity() {
         var elementById = SparseArray<Element>()
 
         var elementsByGroup = Array(GroupColors.size){
-            ArrayList<Element>()
+            TreeSet<Element>()
         }
 
         var unlockeds = Array(GroupColors.size){
-            ArrayList<Element>()
+            TreeSet<Element>()
         }
 
+        const val MAX_FAVOURITES_RATIO = 0.15f
         var FAVOURITE_COUNT = 5
         var favourites = arrayOfNulls<Element>(FAVOURITE_COUNT)
 
@@ -96,8 +97,8 @@ class AllManager: AppCompatActivity() {
     lateinit var favSlider: SeekBar
     lateinit var search1: EditText
     lateinit var search2: EditText
-    lateinit var searchButton1: EditText
-    lateinit var searchButton2: EditText
+    lateinit var searchButton1: View
+    lateinit var searchButton2: View
     lateinit var randomButton: View
     lateinit var spaceSlider: SeekBar
     lateinit var resetEverythingButton: View
@@ -298,10 +299,6 @@ class AllManager: AppCompatActivity() {
             val group = pref.getInt("$id.group", groups.getOrNull(id) ?: groups[0])
             val element = Element.get(name, id, group)
             unlockeds[element.group].add(element)
-        }
-
-        for(list in unlockeds){
-            list.sortBy { it.uuid }
         }
 
         FAVOURITE_COUNT = pref.getInt("favourites.length", FAVOURITE_COUNT)

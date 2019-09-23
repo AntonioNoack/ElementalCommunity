@@ -20,6 +20,7 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
 import me.antonio.noack.elementalcommunity.GroupsEtc.getMargin
 import me.antonio.noack.elementalcommunity.utils.Maths.fract
 import me.antonio.noack.elementalcommunity.utils.Maths.mix
+import java.util.*
 import kotlin.math.*
 
 // show things that might soon be available (if much more players)
@@ -55,9 +56,10 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
             val parts = search.split(',').map { it.trim() }
             synchronized(Unit){
-                for((group, unlocked) in (if(search.startsWith(lastSearch) && lastParts == parts.size) shownSymbols else unlockeds).withIndex()){
+                for((group, unlocked) in
+                (if(search.startsWith(lastSearch) && lastParts == parts.size) shownSymbols else unlockeds).withIndex()){
                     val list = shownSymbols[group]
-                    val filtered = unlocked.filter {
+                    val filtered = unlocked.toList().filter {
                         val name = it.lcName
                         for(part in parts){
                             if(name.contains(part)){
@@ -83,7 +85,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     }
 
     var unlockeds = AllManager.unlockeds
-    val shownSymbols = Array(unlockeds.size){ ArrayList<Element>() }
+    val shownSymbols = Array(unlockeds.size){ TreeSet<Element>() }
 
     private var entriesPerRow = 5
 
@@ -144,10 +146,10 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         if(FAVOURITE_COUNT > 0){
             if(width > height && allowLeftFavourites){
                 // more width -> favourites at left
-                val favSize = height / FAVOURITE_COUNT
+                val favSize = min(height / FAVOURITE_COUNT, width * AllManager.MAX_FAVOURITES_RATIO)
                 if(event.x < favSize){
-                    val maybeX = event.y * FAVOURITE_COUNT / height
-                    if(searchIfNull && AllManager.favourites[maybeX.toInt()] == null){
+                    val maybeX = event.y / favSize
+                    if(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null){
                     } else {
                         isSpecial = true
                         intX = maybeX
@@ -155,10 +157,10 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                 }
             } else {
                 // more height -> favourites at bottom
-                val favSize = width / FAVOURITE_COUNT
+                val favSize = min(width / FAVOURITE_COUNT, height * AllManager.MAX_FAVOURITES_RATIO)
                 if(event.y > height - favSize){
-                    val maybeX = event.x * FAVOURITE_COUNT / width
-                    if(searchIfNull && AllManager.favourites[maybeX.toInt()] == null){
+                    val maybeX = event.x / favSize
+                    if(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null){
                     } else {
                         isSpecial = true
                         intX = maybeX
@@ -369,6 +371,10 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         return null
     }
 
+    fun <V> TreeSet<V>.getOrNull(index: Int): V? {
+        return this.elementAtOrNull(index)
+    }
+
     private fun getRow(element: Element, forceInAll: Boolean): Int {
         var sum = 0
         if(forceInAll){
@@ -403,7 +409,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         val unlocked = unlockeds[element.group]
         return if(!unlocked.contains(element) && element.uuid > -1){
             unlocked.add(element)
-            unlocked.sortBy { it.uuid }
+            // unlocked.sortBy { it.uuid }
             invalidateSearch()
             postInvalidate()
             true

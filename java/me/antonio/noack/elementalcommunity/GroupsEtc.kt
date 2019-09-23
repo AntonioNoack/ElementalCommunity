@@ -9,6 +9,7 @@ import androidx.core.math.MathUtils.clamp
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.max
+import kotlin.math.min
 
 object GroupsEtc {
 
@@ -86,13 +87,13 @@ object GroupsEtc {
     fun drawFavourites(canvas: Canvas, width: Float, height: Float, bgPaint: Paint, textPaint: Paint, allowLeftFavourites: Boolean){
         val opacity = 0.5f
         if(width > height && allowLeftFavourites){// on the left
-            val fWidth = height / AllManager.FAVOURITE_COUNT
+            val fWidth = min(height / AllManager.FAVOURITE_COUNT, width * AllManager.MAX_FAVOURITES_RATIO)
             for((index, favourite) in AllManager.favourites.withIndex()){
                 if(favourite != null) drawElement(canvas, 0f,index*fWidth, 0f, fWidth, true, favourite, bgPaint, textPaint, opacity)
                 else drawElement(canvas, 0f, index*fWidth, 0f, fWidth, true, "", -1, bgPaint, textPaint, opacity)
             }
         } else {// on the bottom
-            val fWidth = width / AllManager.FAVOURITE_COUNT
+            val fWidth = min(width / AllManager.FAVOURITE_COUNT, height * AllManager.MAX_FAVOURITES_RATIO)
             val baseY = height - fWidth
             for((index, favourite) in AllManager.favourites.withIndex()){
                 if(favourite != null) drawElement(canvas, index*fWidth, baseY, 0f, fWidth, true, favourite, bgPaint, textPaint, opacity)
