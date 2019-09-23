@@ -50,8 +50,6 @@ class Candidate(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
                     mx = 0f
                     my = 0f
 
-                    invalidate()
-
                     true
                 } else return false
             }
@@ -59,7 +57,6 @@ class Candidate(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
 
         setOnTouchListener { _, e ->
             calculateTouches(e)
-            invalidate()
             gestureDetector.onTouchEvent(e)
         }
 
@@ -70,8 +67,14 @@ class Candidate(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
         mx = e.x / measuredWidth
         my = e.y / measuredWidth
 
-        touchesLike = my > 1f && mx < 0.5f
-        touchesDislike = !touchesLike && my > 1f && mx > 0.5f
+        val newTouchesLike = my > 1f && mx < 0.5f
+        val newTouchesDislike = !touchesLike && my > 1f && mx > 0.5f
+
+        if(touchesLike != newTouchesLike || touchesDislike != newTouchesDislike){
+            touchesLike = newTouchesLike
+            touchesDislike = newTouchesDislike
+            invalidate()
+        }
 
     }
 
