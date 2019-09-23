@@ -53,6 +53,8 @@ class Colors(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet)
         super.onDraw(canvas)
         if(canvas == null) return
 
+        GroupsEtc.tick()
+
         val widthPerNode = measuredWidth * 1f / hues.size
 
         for(i in 0 until GroupColors.size){

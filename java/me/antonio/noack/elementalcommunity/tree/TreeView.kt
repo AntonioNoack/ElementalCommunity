@@ -9,11 +9,8 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.core.math.MathUtils.clamp
-import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.*
 import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
-import me.antonio.noack.elementalcommunity.AreaType
-import me.antonio.noack.elementalcommunity.BasicOperations
-import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
 import me.antonio.noack.elementalcommunity.utils.Maths
@@ -29,9 +26,40 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
     val tree = Tree()
     var hasTree = false
 
+    // measured border coordinates for prevention of scrolling further away
+
+    var minX = 0
+    var maxX = 0
+    var minY = 0
+    var maxY = 0
+
+    var minXf = 0f
+    var maxXf = 0f
+    var minYf = 0f
+    var maxYf = 0f
+
     private fun buildTree(){
+
         tree.invalidate()
         hasTree = true
+
+        minX = 0
+        minY = 0
+        maxX = 0
+        maxY = 0
+
+        for(element in tree.elements){
+            minX = min(minX, element.treeX)
+            maxX = max(maxX, element.treeX)
+            minY = min(minY, element.treeY)
+            maxY = max(maxY, element.treeY)
+        }
+
+        minXf = minX.toFloat()
+        maxXf = maxX.toFloat()
+        minYf = minY.toFloat()
+        maxYf = maxY.toFloat()
+
     }
 
     var widthPerNode = 100f
@@ -103,8 +131,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
     fun checkScroll(){
         // todo clamp the moving into the appropriate area
-        scrollX = clamp(scrollX, -tree.maxRadiusX, tree.maxRadiusX)
-        scrollY = clamp(scrollY, -tree.top, tree.bottom)
+        scrollX = clamp(scrollX, minXf, maxXf)
+        scrollY = clamp(scrollY, minYf, maxYf)
     }
 
     fun setOnBorder(event: MotionEvent){
@@ -250,6 +278,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         canvas ?: return
 
         if(!hasTree) buildTree()
+
+        GroupsEtc.tick()
 
         checkScroll()
 

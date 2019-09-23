@@ -247,6 +247,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                         dragged = null
                         entriesPerRow = newEntriesPerRow
                     }
+                    invalidate()
                     true
                 } else false
             }
@@ -423,6 +424,8 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         if(canvas == null) return
+
+        GroupsEtc.tick()
 
         val thisTime = System.nanoTime()
         val deltaTime = clamp((thisTime - lastTime).toInt(), 0, 250000000) * 1e-9f

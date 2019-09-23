@@ -4,17 +4,10 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent">
 
-    <LinearLayout
-            android:orientation="vertical"
+    <me.antonio.noack.elementalcommunity.NewsView
+            android:id="@+id/newsView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-        <me.antonio.noack.elementalcommunity.NewsView
-                android:id="@+id/newsView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-    </LinearLayout>
+            android:layout_height="match_parent"/>
 
     <LinearLayout
             android:orientation="horizontal"
@@ -27,15 +20,14 @@
                 android:layout_weight="1"
                 android:layout_height="5dp"/>
 
-        <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="0dp"
+        <FrameLayout
                 android:layout_weight="3"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content">
 
             <include layout="@layout/menu_content"/>
 
-        </LinearLayout>
+        </FrameLayout>
 
         <View
                 android:layout_width="0dp"
@@ -43,5 +35,6 @@
                 android:layout_height="5dp"/>
 
     </LinearLayout>
+
 
 </FrameLayout>

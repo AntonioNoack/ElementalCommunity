@@ -32,9 +32,11 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         super.onDraw(canvas)
         if(canvas == null) return
 
+        GroupsEtc.tick()
+
         val size = GroupColors.size
 
-        val sideWays = measuredWidth > measuredHeight
+        val sideWays = false // measuredWidth > measuredHeight
         val width = measuredWidth * 1f
         val widthPerNode = width / if(sideWays) 2f * relativeWidth else relativeWidth
 
@@ -44,7 +46,9 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
             val store = canvas.save()
 
-            if(sideWays) canvas.translate((width-relativeWidth*widthPerNode)/2 + (random.nextFloat()-.5f)*width, (random.nextFloat()-.5f)*width)
+            if(sideWays){
+                canvas.translate((width-relativeWidth*widthPerNode)/2 + (random.nextFloat()-.5f)*width, (random.nextFloat()-.5f)*width)
+            }
             canvas.rotate((random.nextFloat()-.5f) * 50, width/2, widthPerNode/2)
 
             drawElement(canvas, 0f, 0f, 0f, widthPerNode, true, candidate?.a?.name ?: "App", candidate?.a?.group ?: random.nextInt(size), bgPaint, textPaint)

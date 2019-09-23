@@ -4,14 +4,27 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.util.*
 import androidx.core.math.MathUtils.clamp
 import kotlin.math.abs
+import kotlin.math.ln
 import kotlin.math.max
 
 object GroupsEtc {
 
     val GroupColors: IntArray
     val GroupSizes: IntArray
+
+    fun tick(){
+        time = System.nanoTime()
+        val timeout = 5 * 1000000000L
+        for((_, cache) in cacheBySize.entries){
+            if(cache.map.isNotEmpty() && abs(cache.lastTime - time) > timeout){
+                println("cleared ${cache.size}")
+                cache.map.clear()
+            }// else println("${abs(cache.lastTime - time)}")
+        }
+    }
 
     private fun brightness(color: Int): Float {
         val r = (color shr 16) and 255
@@ -87,9 +100,6 @@ object GroupsEtc {
             }
         }
     }
-
-    var lastCacheWidth = -1f
-    val cacheEntries = HashMap<String, CacheEntry>()
 
     fun join(list: List<String>, from: Int, to: Int = list.size): String {
         if(from + 1 == to) return list[from]
@@ -174,18 +184,40 @@ object GroupsEtc {
 
     }
 
+    val cacheBySize = HashMap<Int, Cache>()
+    var time = System.nanoTime()
+
+    fun getCache(size: Float): HashMap<String, CacheEntry> {
+        val index = (ln(size) * 5).toInt()
+        var cache = cacheBySize[index] ?: null
+        if(cache == null){
+            cache = Cache(size)
+            cacheBySize.put(index, cache)
+        }
+        cache.lastTime = time
+        return cache.map
+    }
+
+    class Cache(val size: Float){
+        val map = HashMap<String, CacheEntry>()
+        var lastTime = System.nanoTime()
+    }
+
     fun getCacheEntry(rawText: String, widthPerNode: Float, textPaint: Paint, bgPaint: Paint): CacheEntry {
-        if(lastCacheWidth != widthPerNode){
+        /*if(lastCacheWidth != widthPerNode){
+            println("clear cache, $lastCacheWidth != $widthPerNode")
             cacheEntries.clear()
             lastCacheWidth = widthPerNode
             // println("cleared")
-        }
+        }*/
+        val cacheEntries = getCache(widthPerNode)
         var entry = cacheEntries[rawText]
         if(entry == null){
 
             val text = rawText.trim()
 
             // todo split long rawText into multiple sections...
+            textPaint.textSize = 20f
             val width0 = textPaint.measureText(text)
 
             val color = if(brightness(bgPaint.color) > 0.3f) 0xff000000.toInt() else -1

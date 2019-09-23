@@ -102,6 +102,8 @@ class Candidate(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
         super.onDraw(canvas)
         if(canvas == null) return
 
+        GroupsEtc.tick()
+
         val candidate = candidate
         val width = measuredWidth * 1f
         drawElement(canvas, 0f, 0f, 0f, width, true, candidate?.name ?: "???", candidate?.group ?: 15, bgPaint, textPaint)
