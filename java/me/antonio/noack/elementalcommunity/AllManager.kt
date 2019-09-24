@@ -77,6 +77,8 @@ class AllManager: AppCompatActivity() {
         lateinit var clickSound: Sound
         // lateinit var askingSound: Sound
 
+        var askFrequency = AskFrequencyOption.ALWAYS
+
     }
 
     lateinit var combiner: Combiner
@@ -103,6 +105,8 @@ class AllManager: AppCompatActivity() {
     lateinit var spaceSlider: SeekBar
     lateinit var resetEverythingButton: View
     lateinit var newsView: NewsView
+    lateinit var freqSlider: SeekBar
+    lateinit var freqTitle: TextView
 
     fun initViews(){
         combiner = findViewById(R.id.combiner)
@@ -129,6 +133,8 @@ class AllManager: AppCompatActivity() {
         spaceSlider = findViewById(R.id.spaceSlider)
         resetEverythingButton = findViewById(R.id.resetEverythingButton)
         newsView = findViewById(R.id.newsView)
+        freqSlider = findViewById(R.id.frequencySlider)
+        freqTitle = findViewById(R.id.frequencyTitle)
     }
 
     fun vibrate(millis: Long = 200L){
@@ -168,6 +174,8 @@ class AllManager: AppCompatActivity() {
 
         val pref = getPreferences(Context.MODE_PRIVATE)
 
+        askFrequency = AskFrequencyOption.get(pref)
+
         successSound = Sound(R.raw.magic, this)
         okSound = Sound(R.raw.ok, this)
         clickSound = Sound(R.raw.click, this)
@@ -202,6 +210,8 @@ class AllManager: AppCompatActivity() {
         settingButton.setOnClickListener {
             favTitle.text = resources.getString(R.string.favourites).replace("#count", FAVOURITE_COUNT.toString())
             favSlider.progress = if(FAVOURITE_COUNT == 0) 0 else FAVOURITE_COUNT - 2
+            freqSlider.progress = askFrequency.ordinal
+            freqTitle.text = resources.getString(R.string.frequency_of_asking_title).replace("#frequency", askFrequency.displayName)
             flipper.displayedChild = 4
         }
         back1.setOnClickListener { flipper.displayedChild = 0 }
@@ -236,6 +246,18 @@ class AllManager: AppCompatActivity() {
                 resizeFavourites(pref)
                 save()
                 invalidate()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        freqSlider.max = AskFrequencyOption.values().lastIndex
+        freqSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                askFrequency = AskFrequencyOption.values().getOrNull(progress) ?: AskFrequencyOption.ALWAYS
+                freqTitle.text = resources.getString(R.string.frequency_of_asking_title).replace("#frequency", askFrequency.displayName)
+                askFrequency.store(pref)
+                freqSlider.invalidate()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}

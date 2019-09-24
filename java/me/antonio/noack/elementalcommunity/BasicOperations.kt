@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.api.WebServices
 import java.lang.IllegalArgumentException
@@ -16,7 +17,7 @@ object BasicOperations {
             WebServices.askRecipe(first, second, { result ->
                 if(result != null){
                     unlockElement(result)
-                } else {
+                } else if(AllManager.askFrequency.isTrue()){
                     // staticRunOnUIThread { AllManager.askingSound.play() }
                     askForRecipe(first, second, all, measuredWidth, unlockElement)
                     WebServices.askRecipe(first, second, { result2 ->
@@ -28,6 +29,8 @@ object BasicOperations {
                             }
                         }
                     }, {})
+                } else {
+                    AllManager.toast(R.string.no_result_found, false)
                 }
             }, {
                 AllManager.toast("${it.javaClass.simpleName}: ${it.message}", true)
@@ -91,7 +94,7 @@ object BasicOperations {
     fun setSubmitAction(all: AllManager, submit: TextView, dialog: Dialog, allowingDismiss: Boolean, getComponentA: () -> Element, getComponentB: () -> Element, unlockElement: (Element) -> Unit){
         submit.setOnClickListener {
             val name = dialog.findViewById<TextView>(R.id.name).text.toString()
-            val group = dialog.findViewById<Colors>(R.id.colors).selected
+            val group = dialog.findViewById<GroupSelectorView>(R.id.colors).selected
             if (group < 0) {
                 AllManager.toast(R.string.please_choose_color, false)
                 return@setOnClickListener

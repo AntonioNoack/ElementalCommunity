@@ -189,7 +189,7 @@ object GroupsEtc {
     var time = System.nanoTime()
 
     fun getCache(size: Float): HashMap<String, CacheEntry> {
-        val index = (ln(size) * 5).toInt()
+        val index = (size * 3).toInt()
         var cache = cacheBySize[index] ?: null
         if(cache == null){
             cache = Cache(size)

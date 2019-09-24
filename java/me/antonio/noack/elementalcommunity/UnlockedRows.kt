@@ -59,7 +59,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                 for((group, unlocked) in
                 (if(search.startsWith(lastSearch) && lastParts == parts.size) shownSymbols else unlockeds).withIndex()){
                     val list = shownSymbols[group]
-                    val filtered = unlocked.toList().filter {
+                    val filtered = unlocked.filter {
                         val name = it.lcName
                         for(part in parts){
                             if(name.contains(part)){
@@ -371,7 +371,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         return null
     }
 
-    fun <V> TreeSet<V>.getOrNull(index: Int): V? {
+    fun <V: Comparable<V>> TreeSet<V>.getOrNull(index: Int): V? {
         return this.elementAtOrNull(index)
     }
 

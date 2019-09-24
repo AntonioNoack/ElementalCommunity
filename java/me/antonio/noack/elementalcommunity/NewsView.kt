@@ -11,9 +11,11 @@ import me.antonio.noack.elementalcommunity.api.WebServices
 import java.lang.StrictMath.pow
 import java.util.*
 import kotlin.math.max
+import kotlin.math.sin
 
 class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
+    val noise = NoiseMap2D()
     var news = ArrayList<WebServices.News>(10)
 
     private val relativeWidth = 4f
@@ -36,9 +38,10 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
         val size = GroupColors.size
 
-        val sideWays = false // measuredWidth > measuredHeight
         val width = measuredWidth * 1f
-        val widthPerNode = width / if(sideWays) 2f * relativeWidth else relativeWidth
+        val widthPerNode = width / relativeWidth
+
+        val time = sin(System.nanoTime() * 1e-10).toFloat()
 
         for(i in 0 until max(10, news.size)){
 
@@ -46,14 +49,11 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
             val store = canvas.save()
 
-            if(sideWays){
-                canvas.translate((width-relativeWidth*widthPerNode)/2 + (random.nextFloat()-.5f)*width, (random.nextFloat()-.5f)*width)
-            }
-            canvas.rotate((random.nextFloat()-.5f) * 50, width/2, widthPerNode/2)
+            canvas.rotate((noise.getNoise(time, i)-.5f) * 50, width/2, widthPerNode/2)
 
-            drawElement(canvas, 0f, 0f, 0f, widthPerNode, true, candidate?.a?.name ?: "App", candidate?.a?.group ?: random.nextInt(size), bgPaint, textPaint)
-            drawElement(canvas, widthPerNode*(relativeWidth-1f)/2, 0f, 0f, widthPerNode, true, candidate?.b?.name ?: "No WLAN", candidate?.b?.group ?: random.nextInt(size), bgPaint, textPaint)
-            drawElement(canvas, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true, candidate?.result ?: "No Game", candidate?.resultGroup ?: random.nextInt(size), bgPaint, textPaint)
+            drawElement(canvas, 0f, 0f, 0f, widthPerNode, true, candidate?.a?.name ?: "App", candidate?.a?.group ?: (noise.getNoise(time, 78+i*100).times(size).toInt()), bgPaint, textPaint)
+            drawElement(canvas, widthPerNode*(relativeWidth-1f)/2, 0f, 0f, widthPerNode, true, candidate?.b?.name ?: "No WLAN", candidate?.b?.group ?: (noise.getNoise(time, 156+i*1020).times(size).toInt()), bgPaint, textPaint)
+            drawElement(canvas, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true, candidate?.result ?: "No Game", candidate?.resultGroup ?: (noise.getNoise(time, 23+i*950).times(size).toInt()), bgPaint, textPaint)
 
             textPaint.textAlign = Paint.Align.CENTER
             textPaint.textSize = widthPerNode*.5f
@@ -74,9 +74,7 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                 widthPerNode + 1.5f * dy2, textPaint)
 
             canvas.restoreToCount(store)
-            if(!sideWays){
-                canvas.translate(0f, widthPerNode * if(sideWays) 0.42f else 0.85f)
-            }
+            canvas.translate(0f, widthPerNode * 0.85f)
 
         }
 

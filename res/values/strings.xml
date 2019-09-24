@@ -23,4 +23,6 @@
     <string name="component_b">Component B</string>
     <string name="skip_that">Skip</string>
     <string name="favourites">Favourites: #count</string>
+    <string name="frequency_of_asking_title">Frequency of asking for suggestions: #frequency</string>
+    <string name="no_result_found">No result was found!</string>
 </resources>

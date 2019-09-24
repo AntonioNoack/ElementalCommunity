@@ -11,14 +11,13 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.drawElementRaw
 import me.antonio.noack.elementalcommunity.GroupsEtc.hues
 import me.antonio.noack.elementalcommunity.GroupsEtc.saturations
 
-class Colors(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
+class GroupSelectorView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
     var selected = -1
 
     init {
 
         setOnTouchListener { _, e ->
-
             when(e.actionMasked){
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
 
@@ -32,11 +31,10 @@ class Colors(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet)
                         invalidate()
                     }
 
+                    true
                 }
+                else -> false
             }
-
-            true
-
         }
 
     }

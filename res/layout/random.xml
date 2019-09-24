@@ -62,7 +62,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-        <me.antonio.noack.elementalcommunity.Colors
+        <me.antonio.noack.elementalcommunity.GroupSelectorView
                 android:id="@+id/colors"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>

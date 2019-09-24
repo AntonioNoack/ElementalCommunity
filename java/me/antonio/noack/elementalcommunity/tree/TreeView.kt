@@ -25,6 +25,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
     val tree = Tree()
     var hasTree = false
+    var oldMultiplier = tree.multiplierX
 
     // measured border coordinates for prevention of scrolling further away
 
@@ -277,7 +278,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         super.draw(canvas)
         canvas ?: return
 
-        if(!hasTree) buildTree()
+        if(!hasTree || oldMultiplier != tree.multiplierX) buildTree()
 
         GroupsEtc.tick()
 
@@ -296,7 +297,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         linePaint.color = 0x30000000.toInt()
         linePaint.strokeWidth = max(2f, min(width, height) * 0.005f)
 
-        val line0 = System.nanoTime()
+        // val line0 = System.nanoTime()
         if(tree.multiplierX != 1 || tree.multiplierY != 1){
             for(element in tree.elements){
                 if(element.hasTreeOutput){

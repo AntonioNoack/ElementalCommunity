@@ -34,6 +34,25 @@
                 android:layout_height="20dp"/>
 
         <TextView
+                android:id="@+id/frequencyTitle"
+                android:text="@string/frequency_of_asking_title"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:textSize="20sp"
+                android:background="@color/colorPrimary"
+                android:paddingTop="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+        <SeekBar
+                android:id="@+id/frequencySlider"
+                android:thumbTint="@color/colorPrimaryDark"
+                android:progressTint="@color/colorPrimaryDark"
+                android:background="@color/colorPrimary"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"/>
+
+        <TextView
                 android:id="@+id/resetEverythingButton"
                 android:layout_marginTop="10dp"
                 android:text="@string/reset_everything"

@@ -10,6 +10,7 @@
             android:layout_height="match_parent"/>
 
     <LinearLayout
+            android:id="@+id/appZoom"
             android:orientation="vertical"
             android:background="#70006096"
             android:layout_width="match_parent"

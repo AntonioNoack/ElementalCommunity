@@ -4,6 +4,10 @@ import kotlin.math.floor
 
 object Maths {
 
+    fun fract(x: Double): Double {
+        return x - floor(x)
+    }
+
     fun fract(x: Float): Float {
         return x - floor(x.toDouble()).toFloat()
     }
