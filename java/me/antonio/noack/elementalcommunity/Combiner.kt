@@ -12,4 +12,8 @@ class Combiner(ctx: Context, attributeSet: AttributeSet?): UnlockedRows(ctx, att
         }
     }
 
+    fun askForRecipe(a: Element, b: Element){
+        BasicOperations.askForRecipe(a, b, all, measuredWidth, measuredHeight, { add(a, b, it) }){}
+    }
+
 }

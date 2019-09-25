@@ -11,8 +11,9 @@ import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.getMargin
 import me.antonio.noack.elementalcommunity.api.WebServices
+import kotlin.math.min
 
-class Candidate(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
+class CandidateView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
     var candidate: WebServices.Candidate? = null
 
@@ -56,8 +57,10 @@ class Candidate(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
         })
 
         setOnTouchListener { _, e ->
-            calculateTouches(e)
-            gestureDetector.onTouchEvent(e)
+            if(e.y > measuredWidth){// only the bottom is touchable
+                calculateTouches(e)
+                gestureDetector.onTouchEvent(e)
+            } else false
         }
 
     }
@@ -79,20 +82,11 @@ class Candidate(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val mode = MeasureSpec.getMode(widthMeasureSpec)
-        when(mode){
-            MeasureSpec.EXACTLY -> {
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-                theWidth = measuredWidth.toFloat()
-            }
-            MeasureSpec.UNSPECIFIED -> {
-
-            }
-            MeasureSpec.AT_MOST -> {
-
-            }
-        }
-        setMeasuredDimension(theWidth.toInt(),  (theWidth * bottom).toInt())
+        minimumWidth = theWidth.toInt()
+        minimumHeight = (theWidth * bottom).toInt()
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        val size = min(measuredWidth, (measuredHeight/bottom).toInt())
+        setMeasuredDimension(size, (size * bottom).toInt())
     }
 
     private val path = Path()

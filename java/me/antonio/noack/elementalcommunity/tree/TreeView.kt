@@ -241,7 +241,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                             AreaType.IGNORE -> null
                         }
                         if(second != null){
-                            BasicOperations.onRecipeRequest(first, second, all, measuredWidth, { unlockElement(first, second, it) }, { add(first, second, it) })
+                            BasicOperations.onRecipeRequest(first, second, all, measuredWidth, measuredHeight, { unlockElement(first, second, it) }, { add(first, second, it) })
 
                         }
                     }

@@ -4,31 +4,32 @@ import android.app.Dialog
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.api.WebServices
 import java.lang.IllegalArgumentException
 import kotlin.concurrent.thread
+import kotlin.math.min
 
 object BasicOperations {
 
-    fun onRecipeRequest(first: Element, second: Element, all: AllManager, measuredWidth: Int, unlockElement: (Element) -> Unit, add: (Element) -> Unit){
+    fun onRecipeRequest(first: Element, second: Element, all: AllManager, measuredWidth: Int, measuredHeight: Int, unlockElement: (Element) -> Unit, add: (Element) -> Unit){
         thread(true){
             WebServices.askRecipe(first, second, { result ->
                 if(result != null){
                     unlockElement(result)
                 } else if(AllManager.askFrequency.isTrue()){
                     // staticRunOnUIThread { AllManager.askingSound.play() }
-                    askForRecipe(first, second, all, measuredWidth, unlockElement)
-                    WebServices.askRecipe(first, second, { result2 ->
-                        if(result2 != null){// remove in the future, when the least amount of support is 2 or sth like that
-                            synchronized(Unit){
-                                add(result2)
-                                AllManager.unlockedIds.add(result2.uuid)
-                                AllManager.save()
+                    askForRecipe(first, second, all, measuredWidth, measuredHeight, unlockElement){
+                        WebServices.askRecipe(first, second, { result2 ->
+                            if(result2 != null){// remove in the future, when the least amount of support is 2 or sth like that
+                                synchronized(Unit){
+                                    add(result2)
+                                    AllManager.unlockedIds.add(result2.uuid)
+                                    AllManager.save()
+                                }
                             }
-                        }
-                    }, {})
+                        }, {})
+                    }
                 } else {
                     AllManager.toast(R.string.no_result_found, false)
                 }
@@ -38,7 +39,7 @@ object BasicOperations {
         }
     }
 
-    fun askForRecipe(a: Element, b: Element, all: AllManager, measuredWidth: Int, unlockElement: (Element) -> Unit){
+    fun askForRecipe(a: Element, b: Element, all: AllManager, measuredWidth: Int, measuredHeight: Int, unlockElement: (Element) -> Unit, onSuccess: () -> Unit){
         // ask for recipe to add :)
         // todo show that we are loading
         WebServices.getCandidates(a, b, { candidates ->
@@ -52,14 +53,17 @@ object BasicOperations {
                     } catch (e: Throwable) {
                     }
                 }
-                setSubmitAction(all, dialog.findViewById(R.id.submit)!!, dialog, true, { a }, { b }, {})
+                setSubmitAction(all, dialog.findViewById(R.id.submit)!!, dialog, true, { a }, { b }, {
+                    unlockElement(it)
+                    onSuccess()
+                })
                 if (candidates.isEmpty()) {
                     dialog.findViewById<View>(R.id.title2).visibility = View.GONE
                 } else {
                     val suggestionsView = dialog.findViewById<LinearLayout>(R.id.suggestions)
-                    val theWidth = measuredWidth * 2f / 5
+                    val theWidth = min(measuredWidth, measuredHeight) * 2f / 5
                     for (candidate in candidates) {
-                        val view = Candidate(all, null)
+                        val view = CandidateView(all, null)
                         view.candidate = candidate
                         view.layoutParams = LinearLayout.LayoutParams(theWidth.toInt(), LinearLayout.LayoutParams.WRAP_CONTENT)
                         view.theWidth = theWidth

@@ -331,15 +331,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     }
 
     open fun onRecipeRequest(first: Element, second: Element){
-        BasicOperations.onRecipeRequest(first, second, all, measuredWidth, {
+        BasicOperations.onRecipeRequest(first, second, all, measuredWidth, measuredHeight, {
             unlockElement(first, second, it)
         }, {
             add(first, second, it)
         })
-    }
-
-    fun askForRecipe(a: Element, b: Element){
-        BasicOperations.askForRecipe(a, b, all, measuredWidth){ add(a, b, it) }
     }
 
     fun checkScroll(){
