@@ -282,12 +282,14 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                             AreaType.ELEMENTS -> getElementAt(internalX, internalY)
                             AreaType.FAVOURITES_TOP,
                             AreaType.FAVOURITES_BOTTOM -> {
-                                // set it here
-                                AllManager.favourites[internalX] = first
-                                AllManager.save()
-                                AllManager.clickSound.play()
-                                invalidate()
-                                null
+                                if(internalX in 0 until FAVOURITE_COUNT){
+                                    // set it here
+                                    AllManager.favourites[internalX] = first
+                                    AllManager.save()
+                                    AllManager.clickSound.play()
+                                    invalidate()
+                                    null
+                                } else getElementAt(internalX, internalY)
                             }
                             AreaType.IGNORE -> null
                         }

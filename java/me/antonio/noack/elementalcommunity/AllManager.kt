@@ -274,6 +274,8 @@ class AllManager: AppCompatActivity() {
                     FAVOURITE_COUNT = 5
                     resizeFavourites(pref)
                     favSlider.progress = FAVOURITE_COUNT-2
+                    combiner.invalidateSearch()
+                    unlocked.invalidateSearch()
                     save()
                     invalidate()
                 }

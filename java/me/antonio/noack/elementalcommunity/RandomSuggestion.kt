@@ -23,18 +23,20 @@ object RandomSuggestion {
         val second = dialog.findViewById<OneElement>(R.id.second)!!
 
         fun next(){
+            all.runOnUiThread {
 
-            dialog.findViewById<TextView>(R.id.name)?.text = ""
+                dialog.findViewById<TextView>(R.id.name)?.text = ""
 
-            compA = getRandomComponent()
-            compB = getRandomComponent()
+                compA = getRandomComponent()
+                compB = getRandomComponent()
 
-            first.element = compA
-            second.element = compB
+                first.element = compA
+                second.element = compB
 
-            first.invalidate()
-            second.invalidate()
+                first.invalidate()
+                second.invalidate()
 
+            }
         }
 
         dialog.findViewById<TextView>(R.id.next)?.setOnClickListener { next() }
@@ -44,12 +46,14 @@ object RandomSuggestion {
         }
 
         setSubmitAction(all, dialog.findViewById(R.id.submit)!!, dialog, false, { compA }, { compB }, { result ->
-            if(AllManager.unlockedIds.contains(compA.uuid) && AllManager.unlockedIds.contains(compB.uuid)){
-                // unlock this element...
-                AllManager.unlockedIds.add(result.uuid)
-                AllManager.addRecipe(compA, compB, result)
+            all.runOnUiThread {
+                if(AllManager.unlockedIds.contains(compA.uuid) && AllManager.unlockedIds.contains(compB.uuid)){
+                    // unlock this element...
+                    AllManager.unlockedIds.add(result.uuid)
+                    AllManager.addRecipe(compA, compB, result)
+                }
+                next()
             }
-            next()
         })
 
         next()
