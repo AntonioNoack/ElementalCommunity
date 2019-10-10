@@ -55,7 +55,9 @@ class Tree {
             todo.remove(element)
         }
 
-        loop@ while(allRecipes.isNotEmpty()){
+        var hasChanges = true
+        loop@ while(hasChanges){
+            hasChanges = false
             for(recipe in allRecipes){
                 val (a, b, result) = recipe
                 val firstRank = a.rank
@@ -68,11 +70,14 @@ class Tree {
                         result.rank = max(firstRank, secondRank)+1
                     }
                     allRecipes.remove(recipe)
+                    hasChanges = true
                     continue@loop
                 }
             }
             break
         }
+
+        println("done tree loop x")
 
         val maxRank = elements.maxBy { it.rank }?.rank ?: 0
 
@@ -105,9 +110,13 @@ class Tree {
             byRank[if(rank < 0) byRank.lastIndex else rank].add(element)
         }
 
+        println("done tree loop y")
+
         for(unsorted in byRank){// primary sorted by group, then by uuid
-            unsorted.sortBy { sortScore(it) }
+            unsorted.sortBy { sortScore(it, -10) }
         }
+
+        println("done tree loop z")
 
         var positionY = 0
         for(list in byRank){
@@ -160,9 +169,10 @@ class Tree {
 
     }
 
-    fun sortScore(element: Element?): Int {
-        if(element == null) return 0
-        return  (3 * sortScore(element.srcA) + sortScore(element.srcB)) * 3 + element.uuid
+    fun sortScore(element: Element?, depth: Int): Int {
+        if(element == null || depth > 0) return 0
+        val sca = sortScore(element.srcA, depth+1)
+        return (3 * sca + if(element.srcB == element.srcA) sca else sortScore(element.srcB, depth+1)) * 3 + element.uuid
     }
 
 }

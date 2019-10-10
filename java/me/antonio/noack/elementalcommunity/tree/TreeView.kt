@@ -14,6 +14,7 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
 import me.antonio.noack.elementalcommunity.utils.Maths
+import kotlin.concurrent.thread
 import kotlin.math.*
 
 class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet){
@@ -25,6 +26,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
     val tree = Tree()
     var hasTree = false
+    var hasTreeReally = false
     var oldMultiplier = tree.multiplierX
 
     // measured border coordinates for prevention of scrolling further away
@@ -39,27 +41,47 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
     var minYf = 0f
     var maxYf = 0f
 
+    var ctr = 0
+
     private fun buildTree(){
 
-        tree.invalidate()
         hasTree = true
+        val ctr = ++ctr
+        thread {
 
-        minX = 0
-        minY = 0
-        maxX = 0
-        maxY = 0
+            println("starting the tree")
 
-        for(element in tree.elements){
-            minX = min(minX, element.treeX)
-            maxX = max(maxX, element.treeX)
-            minY = min(minY, element.treeY)
-            maxY = max(maxY, element.treeY)
+            tree.invalidate()
+
+            println("tree done")
+
+            if(ctr == this.ctr){
+
+                this.invalidate()
+
+                minX = 0
+                minY = 0
+                maxX = 0
+                maxY = 0
+
+                for(element in tree.elements){
+                    minX = min(minX, element.treeX)
+                    maxX = max(maxX, element.treeX)
+                    minY = min(minY, element.treeY)
+                    maxY = max(maxY, element.treeY)
+                }
+
+                minXf = minX.toFloat()
+                maxXf = maxX.toFloat()
+                minYf = minY.toFloat()
+                maxYf = maxY.toFloat()
+
+                hasTreeReally = true
+
+            }
+
         }
 
-        minXf = minX.toFloat()
-        maxXf = maxX.toFloat()
-        minYf = minY.toFloat()
-        maxYf = maxY.toFloat()
 
     }
 
@@ -287,6 +309,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         val thisTime = System.nanoTime()
         val deltaTime = clamp((thisTime - lastTime).toInt(), 0, 250000000) * 1e-9f
         lastTime = thisTime
+
+        if(!hasTreeReally) return
 
         val width = measuredWidth.toFloat()
         val height = measuredHeight.toFloat()
