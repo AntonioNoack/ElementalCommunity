@@ -343,46 +343,77 @@ object GroupsEtc {
 
     fun bowLength(float: Float) = if(float > 1f) 0f else sqrt(1f - float * float)
 
+    const val relativeRoundness = 0.1f
     fun drawElementRaw(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Float, group: Int, bgPaint: Paint, opacity: Float = 1f){
 
         val color = GroupColors.getOrNull(group) ?: 0xff000000.toInt()
         bgPaint.color = color
 
         if(opacity < 1f) bgPaint.color = bgPaint.color.and(0xffffff) or ((opacity * 255).toInt().shl(24))
-        val roundness = widthPerNode * 0.1f
+        val roundness = widthPerNode * relativeRoundness
         val d0 = margin - delta
         val d1 = widthPerNode - margin - margin + delta
 
         if(group == rainbowIndex){
 
-            // calculate the rainbow...
-            val x1 = (x0 + d0).toInt()
-            val x2 = (x0 + d1).toInt()
-            val y1 = y0 + d0 + roundness
-            val y2 = y0 + d1 - roundness
-            val fDelta = (rainbowColors.size - 0.0001f) / (x2 - x1)
-            // do we go top down or diagonal? -> top down
-            val roundness2 = x2 - roundness
             val alpha = clamp(opacity, 0f, 1f).times(255f).toInt().shl(24)
-            for(x in x1 .. x2){
-                val index = x - x1
-                val rainbowIndex = index * fDelta
-                val bowIndent = if(index < roundness){
-                    // calculate the size
-                    acos(x / roundness * PI)
-                    roundness * bowLength(1f - index / roundness)
-                } else if(x < roundness2){
-                    // full width
-                    roundness
-                } else {
-                    // calculate the size
-                    roundness * bowLength(1f - (x2 - x) / roundness)
+            if(relativeRoundness * rainbowColors.size > 1f){
+
+                // calculate the rainbow...
+                val x1 = (x0 + d0).toInt()
+                val x2 = (x0 + d1).toInt()
+                val y1 = y0 + d0 + roundness
+                val y2 = y0 + d1 - roundness
+                val fDelta = (rainbowColors.size - 0.0001f) / (x2 - x1)
+                // do we go top down or diagonal? -> top down
+                val roundness2 = x2 - roundness
+                for(x in x1 .. x2){
+                    val index = x - x1
+                    val rainbowIndex = index * fDelta
+                    val bowIndent = if(index < roundness){
+                        // calculate the size
+                        acos(x / roundness * PI)
+                        roundness * bowLength(1f - index / roundness)
+                    } else if(x < roundness2){
+                        // full width
+                        roundness
+                    } else {
+                        // calculate the size
+                        roundness * bowLength(1f - (x2 - x) / roundness)
+                    }
+                    val y3 = y1 - bowIndent
+                    val y4 = y2 + bowIndent
+                    val xf = x.toFloat()
+                    bgPaint.color = rainbowColors[rainbowIndex.toInt()] or alpha
+                    canvas.drawRect(xf, y3, xf+1f, y4, bgPaint)
                 }
-                val y3 = y1 - bowIndent
-                val y4 = y2 + bowIndent
-                val xf = x.toFloat()
-                bgPaint.color = rainbowColors[rainbowIndex.toInt()] or alpha
-                canvas.drawRect(xf, y3, xf+1f, y4, bgPaint)
+
+            } else {
+
+                // calculate the rainbow:
+                // first draw the first stripe, then the last, then the inner ones
+                val width = d1 - d0
+                val perStripe = width / rainbowColors.size
+
+                val save = canvas.save()
+                canvas.translate(x0 + d0, y0 + d0)
+
+                bgPaint.color = rainbowColors[0] or alpha
+                drawRoundRect(canvas, 0f, 0f, perStripe*2, width, roundness, roundness, bgPaint)
+
+                bgPaint.color = rainbowColors.last() or alpha
+                drawRoundRect(canvas, width-2*perStripe, 0f, width, width, roundness, roundness, bgPaint)
+
+                var x1 = perStripe
+                for(i in 1 until rainbowColors.size-1){
+                    val x2 = (i+1) * perStripe
+                    bgPaint.color = rainbowColors[i] or alpha
+                    canvas.drawRect(x1, 0f, x2, width, bgPaint)
+                    x1 = x2
+                }
+
+                canvas.restoreToCount(save)
+
             }
 
             bgPaint.color = -1 // force black letters, those are a little better readable
