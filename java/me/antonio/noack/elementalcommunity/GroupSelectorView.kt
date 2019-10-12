@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
+import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElementRaw
 import me.antonio.noack.elementalcommunity.GroupsEtc.hues
 import me.antonio.noack.elementalcommunity.GroupsEtc.saturations
@@ -14,6 +15,7 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.saturations
 class GroupSelectorView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
     var selected = -1
+    var debugColors = false
 
     init {
 
@@ -45,6 +47,9 @@ class GroupSelectorView(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     }
 
     private val bgPaint = Paint()
+    init {
+        bgPaint.textAlign = Paint.Align.CENTER
+    }
 
     override fun onDraw(canvas: Canvas?) {
 
@@ -58,12 +63,22 @@ class GroupSelectorView(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         for(i in 0 until GroupColors.size){
             val x0 = (i / saturations.size) * widthPerNode
             val y0 = (i % saturations.size) * widthPerNode
-            if(i == selected){
-                drawElementRaw(canvas, x0, y0, -widthPerNode/6, widthPerNode, true, i, bgPaint)
+            if(debugColors){
+
+                drawElement(canvas, -1, x0, y0, 0f,
+                    widthPerNode, true, "$i", i, bgPaint, bgPaint)
+
             } else {
-                drawElementRaw(canvas, x0, y0, 0f, widthPerNode, true, i, bgPaint)
+
+                if(i == selected){
+                    drawElementRaw(canvas, x0, y0, -widthPerNode/6, widthPerNode, true, i, bgPaint)
+                } else {
+                    drawElementRaw(canvas, x0, y0, 0f, widthPerNode, true, i, bgPaint)
+                }
+
             }
         }
+
 
     }
 
