@@ -55,14 +55,14 @@
                 android:layout_height="20dp"/>
 
         <androidx.appcompat.widget.SwitchCompat
+                android:layout_marginTop="10dp"
+                android:background="@color/colorPrimary"
                 android:id="@+id/craftingCountsSwitch"
                 android:text="@string/show_unlock_counter"
-                android:layout_marginTop="10dp"
-                android:textStyle="normal"
                 android:textSize="20sp"
-                android:background="@color/colorPrimary"
                 android:textColor="@color/colorPrimaryText"
                 android:padding="10dp"
+                android:checked="true"
                 android:theme="@style/SwitchColors"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
