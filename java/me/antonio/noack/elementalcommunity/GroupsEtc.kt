@@ -388,6 +388,8 @@ object GroupsEtc {
                 canvas.drawRect(xf, y3, xf+1f, y4, bgPaint)
             }
 
+            bgPaint.color = -1 // force black letters, those are a little better readable
+
         } else {
 
             drawRoundRect(canvas,
