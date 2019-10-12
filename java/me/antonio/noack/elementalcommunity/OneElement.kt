@@ -44,7 +44,7 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribute
 
         val candidate = element
         val width = measuredWidth * 1f
-        drawElement(canvas, 0f, 0f, 0f, width, true, candidate?.name ?: "???", candidate?.group ?: 15, bgPaint, textPaint)
+        drawElement(canvas, -1,0f, 0f, 0f, width, true, candidate?.name ?: "???", candidate?.group ?: 15, bgPaint, textPaint)
 
     }
 

@@ -21,6 +21,7 @@
                 android:gravity="center"
                 android:textSize="20sp"
                 android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
                 android:paddingTop="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
@@ -40,6 +41,7 @@
                 android:gravity="center"
                 android:textSize="20sp"
                 android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
                 android:paddingTop="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
@@ -52,6 +54,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="20dp"/>
 
+        <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/craftingCountsSwitch"
+                android:text="@string/show_unlock_counter"
+                android:layout_marginTop="10dp"
+                android:textStyle="normal"
+                android:textSize="20sp"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
+                android:padding="10dp"
+                android:theme="@style/SwitchColors"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
         <TextView
                 android:id="@+id/resetEverythingButton"
                 android:layout_marginTop="10dp"
@@ -59,6 +74,7 @@
                 android:gravity="center"
                 android:textSize="30sp"
                 android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
                 android:padding="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
@@ -70,6 +86,7 @@
                 android:gravity="center"
                 android:textSize="30sp"
                 android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
                 android:padding="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>

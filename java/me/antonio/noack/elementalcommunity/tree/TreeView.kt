@@ -49,11 +49,11 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         val ctr = ++ctr
         thread {
 
-            println("starting the tree")
+            // println("starting the tree")
 
             tree.invalidate()
 
-            println("tree done")
+            // println("tree done")
 
             if(ctr == this.ctr){
 
@@ -153,7 +153,6 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
     var my = 0f
 
     fun checkScroll(){
-        // todo clamp the moving into the appropriate area
         scrollX = clamp(scrollX, minXf, maxXf)
         scrollY = clamp(scrollY, minYf, maxYf)
     }
@@ -351,6 +350,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         val minY = (- centerY / widthPerNode + scrollY - 1.5f).toInt()
         val maxY = (centerY / widthPerNode + scrollY + 0.5f).toInt()
 
+        val showCraftingCounts = AllManager.showCraftingCounts
+
         for(element in tree.elements){
             // done draw the element
             if(element.treeX in minX .. maxX && element.treeY in minY .. maxY){
@@ -358,18 +359,18 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                 val y0 = centerY + (element.treeY - scrollY) * widthPerNode
                 if(activeElement == element && activeness > 0f){
                     val delta = activeness * widthPerNode * 0.5f
-                    drawElement(canvas, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
+                    drawElement(canvas, showCraftingCounts, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
                 } else {
-                    drawElement(canvas, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
+                    drawElement(canvas, showCraftingCounts, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
                 }
             }
         }
 
-        drawFavourites(canvas, width, height, bgPaint, textPaint, allowLeftFavourites)
+        drawFavourites(canvas, false, width, height, bgPaint, textPaint, allowLeftFavourites)
 
         val dragged = dragged
         if(dragged != null){
-            drawElement(canvas, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
+            drawElement(canvas, false, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
 
         if(activeness > 0f){
             this.activeness -= deltaTime

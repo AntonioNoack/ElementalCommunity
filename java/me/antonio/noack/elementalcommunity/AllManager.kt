@@ -16,10 +16,11 @@ import android.view.View.*
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.api.WebServices
-import kotlin.collections.ArrayList
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.*
+import androidx.appcompat.widget.SwitchCompat
+import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import kotlin.math.abs
 
@@ -36,6 +37,7 @@ class AllManager: AppCompatActivity() {
     companion object {
 
         var customUUID = 0L
+        var showCraftingCounts = true
 
         var unlockedIds = hashSetOf(1, 2, 3, 4)
         var elementById = SparseArray<Element>()
@@ -107,6 +109,7 @@ class AllManager: AppCompatActivity() {
     lateinit var newsView: NewsView
     lateinit var freqSlider: SeekBar
     lateinit var freqTitle: TextView
+    lateinit var craftingCountsSwitch: SwitchCompat
 
     fun initViews(){
         combiner = findViewById(R.id.combiner)
@@ -135,6 +138,7 @@ class AllManager: AppCompatActivity() {
         newsView = findViewById(R.id.newsView)
         freqSlider = findViewById(R.id.frequencySlider)
         freqTitle = findViewById(R.id.frequencyTitle)
+        craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch)
     }
 
     fun vibrate(millis: Long = 200L){
@@ -174,7 +178,8 @@ class AllManager: AppCompatActivity() {
 
         val pref = getPreferences(Context.MODE_PRIVATE)
 
-        askFrequency = AskFrequencyOption.get(pref)
+        askFrequency = AskFrequencyOption[pref]
+        showCraftingCounts = pref.getBoolean("showCraftingCounts", true)
 
         successSound = Sound(R.raw.magic, this)
         okSound = Sound(R.raw.ok, this)
@@ -263,6 +268,13 @@ class AllManager: AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
+        craftingCountsSwitch.isChecked = showCraftingCounts
+        craftingCountsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            showCraftingCounts = isChecked
+            pref.edit().putBoolean("showCraftingCounts", isChecked).apply()
+            invalidate()
+        }
+
         resetEverythingButton.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle(R.string.are_you_sure_reset_everything)
@@ -291,6 +303,9 @@ class AllManager: AppCompatActivity() {
                 val id = element.uuid
                 edit.putString("$id.name", element.name)
                 edit.putInt("$id.group", element.group)
+                if(element.craftingCount >= minimumCraftingCount){
+                    edit.putInt("$id.crafted", element.craftingCount)
+                }
             }
             for((src, dst) in elementByRecipe){
                 edit.putInt("recipe.${src.first.uuid}.${src.second.uuid}", dst.uuid)
@@ -321,7 +336,8 @@ class AllManager: AppCompatActivity() {
         for(id in unlockedIds){
             val name = pref.getString("$id.name", names.getOrNull(id) ?: names[0])!!
             val group = pref.getInt("$id.group", groups.getOrNull(id) ?: groups[0])
-            val element = Element.get(name, id, group)
+            val craftingCount = pref.getInt("$id.crafted", -1)
+            val element = Element.get(name, id, group, craftingCount)
             unlockeds[element.group].add(element)
         }
 
@@ -341,7 +357,8 @@ class AllManager: AppCompatActivity() {
                 val name = value.toString()
                 val group = pref.getInt("$id.group", -1)
                 if(group < 0) continue
-                Element.get(name, id, group)
+                val craftingCount = pref.getInt("$id.crafted", -1)
+                Element.get(name, id, group, craftingCount)
             }
         }
 

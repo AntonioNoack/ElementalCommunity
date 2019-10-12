@@ -16,6 +16,8 @@ import java.net.URLEncoder
 
 object WebServices {
 
+    private const val webVersion = 1
+    private const val webVersionName = "v"
     private const val ServerURL = "https://api.phychi.com/elemental/"
 
     fun tryCaptcha(all: AllManager, args: String, onSuccess: (String) -> Unit, onError: (Exception) -> Unit = {
@@ -29,15 +31,13 @@ object WebServices {
             if(text.isBlank() || text.startsWith("#reauth", true) || text.startsWith("#auth", true)){
 
                 Captcha.get(all, { token ->
-                    HTTP.request("$ServerURL?$args&t=${URLEncoder.encode(token, "UTF-8")}", onSuccess, onError)
+                    HTTP.request("$ServerURL?$args&$webVersionName=$webVersion&t=${URLEncoder.encode(token, "UTF-8")}", onSuccess, onError)
                 }, onError)
 
             } else onSuccess(text)
         }, onError)
 
     }
-
-
 
     fun askRecipe(a: Element, b: Element, onSuccess: (Element?) -> Unit, onError: (Exception) -> Unit = {
         AllManager.toast(
@@ -46,16 +46,18 @@ object WebServices {
         )
     }){
 
-        HTTP.request("$ServerURL?a=${a.uuid}&b=${b.uuid}", { text ->
+        HTTP.request("$ServerURL?a=${a.uuid}&b=${b.uuid}&$webVersionName=$webVersion", { text ->
             val data = text.split(';')
             if(data.size > 1){
                 val id = data[0].toInt()
                 val group = data[1].toInt()
                 val name = data[2]
-                val element = elementById[id] ?: Element.get(
+                val craftingCounter = data.getOrNull(3)?.toIntOrNull() ?: -1
+                val element = Element.get(
                     name,
                     id,
-                    group
+                    group,
+                    craftingCounter
                 )
                 addRecipe(a, b, element)
                 onSuccess(element)
@@ -79,7 +81,7 @@ object WebServices {
         )
     }){
 
-        HTTP.request("$ServerURL?n=${count * 3}", { text ->
+        HTTP.request("$ServerURL?n=${count * 3}&$webVersionName=$webVersion", { text ->
             val raw = text.split(";;")
             val list = ArrayList<News>()
             for(news in raw){
@@ -89,11 +91,11 @@ object WebServices {
                     val aId = data[1].toIntOrNull() ?: continue
                     val aName = data[2]
                     val aGroup = data[3].toIntOrNull() ?: continue
-                    val a = Element.get(aName, aId, aGroup)
+                    val a = Element.get(aName, aId, aGroup, -1)
                     val bId = data[4].toIntOrNull() ?: continue
                     val bName = data[5]
                     val bGroup = data[6].toIntOrNull() ?: continue
-                    val b = Element.get(bName, bId, bGroup)
+                    val b = Element.get(bName, bId, bGroup, -1)
                     val result = data[7]
                     val resultGroup = data[8].toIntOrNull() ?: continue
                     val weight = data[9].toIntOrNull() ?: continue
@@ -123,7 +125,7 @@ object WebServices {
         )
     }){
 
-        HTTP.request("$ServerURL?o=1&a=${a.uuid}&b=${b.uuid}", { text ->
+        HTTP.request("$ServerURL?o=1&a=${a.uuid}&b=${b.uuid}&$webVersionName=$webVersion", { text ->
             val data = text.split(';')
             var i = 0
             val candidates = ArrayList<Candidate>()
@@ -219,7 +221,7 @@ object WebServices {
 
     }
 
-    fun updateGroupSizes(){
+    /*fun updateGroupSizes(){
 
         HTTP.request("$ServerURL?c", { text ->
             val data = text.split(';')
@@ -234,23 +236,25 @@ object WebServices {
             }
         }, {})
 
-    }
+    }*/
 
     fun updateGroupSizesAndNames(){
 
-        HTTP.request("$ServerURL?l", {
+        HTTP.request("$ServerURL?l2&$webVersionName=$webVersion", {
 
             val data = it.split('\n')
             val groupSizes = IntArray(GroupSizes.size)
             for(entry in data){
-                val index1 = entry.indexOf(':')
-                val index2 = entry.indexOf(':', index1+1)
-                if(index1 > 0 && index2 > 0){
-                    val uuid = entry.substring(0, index1).toIntOrNull() ?: continue
-                    val group = entry.substring(index1+1, index2).toIntOrNull() ?: continue
-                    groupSizes[group]++
-                    val name = entry.substring(index2+1)
-                    Element.get(name, uuid, group)
+                val parts = entry.split(':')
+                if(parts.size >= 4){
+                    val uuid = parts[0].toIntOrNull() ?: continue
+                    val group = parts[1].toIntOrNull() ?: continue
+                    if(group in 0 until groupSizes.size){
+                        groupSizes[group]++
+                    }
+                    val name = parts[2]
+                    val craftingCount = parts[3].toIntOrNull() ?: continue
+                    Element.get(name, uuid, group, craftingCount)
                 }
             }
 

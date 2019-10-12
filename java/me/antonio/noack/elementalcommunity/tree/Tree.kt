@@ -77,8 +77,6 @@ class Tree {
             break
         }
 
-        println("done tree loop x")
-
         val maxRank = elements.maxBy { it.rank }?.rank ?: 0
 
         // this would iterate over all elements, however we want to use all recipes, that are possible to use
@@ -110,13 +108,9 @@ class Tree {
             byRank[if(rank < 0) byRank.lastIndex else rank].add(element)
         }
 
-        println("done tree loop y")
-
         for(unsorted in byRank){// primary sorted by group, then by uuid
             unsorted.sortBy { sortScore(it, -10) }
         }
-
-        println("done tree loop z")
 
         var positionY = 0
         for(list in byRank){

@@ -51,9 +51,9 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
             canvas.rotate((noise.getNoise(time, i)-.5f) * 50, width/2, widthPerNode/2)
 
-            drawElement(canvas, 0f, 0f, 0f, widthPerNode, true, candidate?.a?.name ?: "App", candidate?.a?.group ?: (noise.getNoise(time, 78+i*100).times(size).toInt()), bgPaint, textPaint)
-            drawElement(canvas, widthPerNode*(relativeWidth-1f)/2, 0f, 0f, widthPerNode, true, candidate?.b?.name ?: "No WLAN", candidate?.b?.group ?: (noise.getNoise(time, 156+i*1020).times(size).toInt()), bgPaint, textPaint)
-            drawElement(canvas, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true, candidate?.result ?: "No Game", candidate?.resultGroup ?: (noise.getNoise(time, 23+i*950).times(size).toInt()), bgPaint, textPaint)
+            drawElement(canvas, -1, 0f, 0f, 0f, widthPerNode, true, candidate?.a?.name ?: "App", candidate?.a?.group ?: (noise.getNoise(time, 78+i*100).times(size).toInt()), bgPaint, textPaint)
+            drawElement(canvas, -1, widthPerNode*(relativeWidth-1f)/2, 0f, 0f, widthPerNode, true, candidate?.b?.name ?: "No WLAN", candidate?.b?.group ?: (noise.getNoise(time, 156+i*1020).times(size).toInt()), bgPaint, textPaint)
+            drawElement(canvas, -1, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true, candidate?.result ?: "No Game", candidate?.resultGroup ?: (noise.getNoise(time, 23+i*950).times(size).toInt()), bgPaint, textPaint)
 
             textPaint.textAlign = Paint.Align.CENTER
             textPaint.textSize = widthPerNode*.5f

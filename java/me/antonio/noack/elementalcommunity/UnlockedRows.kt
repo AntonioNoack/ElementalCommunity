@@ -449,6 +449,8 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         textPaint.textSize = widthPerNode * 0.13f
         textPaint.textAlign = Paint.Align.CENTER
 
+        val showCraftingCounts = AllManager.showCraftingCounts
+
         shownSymbols.forEachIndexed { group, unlocked ->
 
             if(unlocked.isNotEmpty()){
@@ -469,11 +471,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                             if(activeElement == element && activeness > 0f){
 
                                 val delta = activeness * widthPerNode * 0.5f
-                                drawElement(canvas, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
+                                drawElement(canvas, showCraftingCounts, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
 
                             } else {
 
-                                drawElement(canvas, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
+                                drawElement(canvas, showCraftingCounts, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
 
                             }
                         }
@@ -492,11 +494,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
             }
         }
 
-        drawFavourites(canvas, width, height, bgPaint, textPaint, allowLeftFavourites)
+        drawFavourites(canvas, false, width, height, bgPaint, textPaint, allowLeftFavourites)
 
         val dragged = dragged
         if(dragged != null){
-            drawElement(canvas, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
+            drawElement(canvas, false, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
 
         if(activeness > 0f){
 
