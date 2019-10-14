@@ -11,7 +11,7 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 
 class Element private constructor(var name: String, val uuid: Int, var group: Int): Comparable<Element> {
 
-    override fun compareTo(other: Element): Int = uuid.compareTo(other.uuid)
+    override fun compareTo(other: Element): Int = name.compareTo(other.name)
 
     var rank = -1
 

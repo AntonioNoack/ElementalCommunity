@@ -108,7 +108,7 @@ object BasicOperations {
                 return@setOnClickListener
             }
             for (char in name) {
-                if (char !in 'A'..'Z' && char !in 'a'..'z' && char !in '0'..'9' && char !in " '.,-/") {
+                if (char !in 'A'..'Z' && char !in 'a'..'z' && char !in '0'..'9' && char !in " '.,-/*") {
                     AllManager.toast(R.string.only_az09, true)
                     return@setOnClickListener
                 }

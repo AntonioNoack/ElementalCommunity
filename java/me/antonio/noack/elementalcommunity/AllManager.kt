@@ -42,11 +42,11 @@ class AllManager: AppCompatActivity() {
         var unlockedIds = hashSetOf(1, 2, 3, 4)
         var elementById = SparseArray<Element>()
 
-        var elementsByGroup = Array(GroupColors.size){
+        var elementsByGroup = Array(GroupColors.size + 12){
             TreeSet<Element>()
         }
 
-        var unlockeds = Array(GroupColors.size){
+        var unlockeds = Array(GroupColors.size + 12){
             TreeSet<Element>()
         }
 
