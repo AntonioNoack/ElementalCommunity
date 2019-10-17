@@ -36,6 +36,8 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
         GroupsEtc.tick()
 
+        textPaint.textAlign = Paint.Align.CENTER
+
         val size = GroupColors.size
 
         val width = measuredWidth * 1f

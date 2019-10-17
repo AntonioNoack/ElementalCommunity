@@ -20,8 +20,11 @@
                 android:id="@+id/spaceSlider"
                 android:thumbTint="@color/colorPrimaryDark"
                 android:progressTint="@color/colorPrimaryDark"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="50dp"/>
+
+        <include layout="@layout/diamond_bar"/>
 
     </LinearLayout>
 

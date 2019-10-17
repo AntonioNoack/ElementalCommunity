@@ -50,7 +50,7 @@ object RandomSuggestion {
                 if(AllManager.unlockedIds.contains(compA.uuid) && AllManager.unlockedIds.contains(compB.uuid)){
                     // unlock this element...
                     AllManager.unlockedIds.add(result.uuid)
-                    AllManager.addRecipe(compA, compB, result)
+                    AllManager.addRecipe(compA, compB, result, all)
                 }
                 next()
             }

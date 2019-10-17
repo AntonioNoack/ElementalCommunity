@@ -467,7 +467,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
     var activeness = 0f
 
     fun add(sa: Element, sb: Element, element: Element): Boolean {
-        addRecipe(sa, sb, element)
+        addRecipe(sa, sb, element, all)
         val unlocked = unlockeds[element.group]
         return if(!unlocked.contains(element) && element.uuid > -1){
             unlocked.add(element)

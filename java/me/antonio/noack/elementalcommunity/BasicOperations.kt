@@ -14,13 +14,13 @@ object BasicOperations {
 
     fun onRecipeRequest(first: Element, second: Element, all: AllManager, measuredWidth: Int, measuredHeight: Int, unlockElement: (Element) -> Unit, add: (Element) -> Unit){
         thread(true){
-            WebServices.askRecipe(first, second, { result ->
+            WebServices.askRecipe(first, second, all, { result ->
                 if(result != null){
                     unlockElement(result)
                 } else if(AllManager.askFrequency.isTrue()){
                     // staticRunOnUIThread { AllManager.askingSound.play() }
                     askForRecipe(first, second, all, measuredWidth, measuredHeight, unlockElement){
-                        WebServices.askRecipe(first, second, { result2 ->
+                        WebServices.askRecipe(first, second, all, { result2 ->
                             if(result2 != null){// remove in the future, when the least amount of support is 2 or sth like that
                                 synchronized(Unit){
                                     add(result2)

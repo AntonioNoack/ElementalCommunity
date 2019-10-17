@@ -39,7 +39,7 @@ object WebServices {
 
     }
 
-    fun askRecipe(a: Element, b: Element, onSuccess: (Element?) -> Unit, onError: (Exception) -> Unit = {
+    fun askRecipe(a: Element, b: Element, all: AllManager, onSuccess: (Element?) -> Unit, onError: (Exception) -> Unit = {
         AllManager.toast(
             "${it.javaClass.simpleName}: ${it.message}",
             true
@@ -59,7 +59,7 @@ object WebServices {
                     group,
                     craftingCounter
                 )
-                addRecipe(a, b, element)
+                addRecipe(a, b, element, all)
                 onSuccess(element)
             } else {
                 onSuccess(null)
@@ -237,6 +237,17 @@ object WebServices {
         }, {})
 
     }*/
+
+    fun askRecipes(name: String, onSuccess: (raw: String) -> Unit, onError: (Exception) -> Unit = {
+        AllManager.toast(
+            "${it.javaClass.simpleName}: ${it.message}",
+            true
+        )
+    }){
+
+        HTTP.request("$ServerURL?qr=$name&$webVersionName=$webVersion", onSuccess, onError)
+
+    }
 
     fun updateGroupSizesAndNames(){
 

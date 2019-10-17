@@ -26,4 +26,9 @@
     <string name="frequency_of_asking_title">Frequency of asking for suggestions: #frequency</string>
     <string name="no_result_found">No result was found!</string>
     <string name="show_unlock_counter">Show unlock counter</string>
+    <string name="diamond_example">512</string>
+    <string name="recipe_lookup">Recipe Lookup:</string>
+    <string name="recipe_lookup_short">lookup</string>
+    <string name="lookup_cost">10 / lookup</string>
+    <string name="cost_template">#cost / #name</string>
 </resources>

@@ -20,7 +20,9 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.*
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.view.children
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
+import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import kotlin.math.abs
 
@@ -59,10 +61,11 @@ class AllManager: AppCompatActivity() {
         val elementByName = HashMap<String, Element>()
 
         // for the tree
-        fun addRecipe(a: Element, b: Element, r: Element){
-            if(a.uuid > b.uuid) return addRecipe(b, a, r)
+        fun addRecipe(a: Element, b: Element, r: Element, all: AllManager){
+            if(a.uuid > b.uuid) return addRecipe(b, a, r, all)
             elementByRecipe[a to b] = r
             invalidate()
+            all.updateDiamondCount()
         }
 
         fun toast(message: String, isLong: Boolean) = staticToast1(message, isLong)
@@ -83,6 +86,7 @@ class AllManager: AppCompatActivity() {
 
     }
 
+    lateinit var pref: SharedPreferences
     lateinit var combiner: Combiner
     lateinit var unlocked: UnlockedRows
     lateinit var treeView: TreeView
@@ -110,6 +114,8 @@ class AllManager: AppCompatActivity() {
     lateinit var freqSlider: SeekBar
     lateinit var freqTitle: TextView
     lateinit var craftingCountsSwitch: SwitchCompat
+
+    val diamondViews = ArrayList<TextView>()
 
     fun initViews(){
         combiner = findViewById(R.id.combiner)
@@ -176,7 +182,7 @@ class AllManager: AppCompatActivity() {
         combiner.all = this
         treeView.all = this
 
-        val pref = getPreferences(Context.MODE_PRIVATE)
+        pref = getPreferences(Context.MODE_PRIVATE)
 
         askFrequency = AskFrequencyOption[pref]
         showCraftingCounts = pref.getBoolean("showCraftingCounts", true)
@@ -296,6 +302,12 @@ class AllManager: AppCompatActivity() {
                 .show()
         }
 
+        resetEverythingButton.setOnLongClickListener {
+            // generate 100 diamonds over 10 long clicks
+            spendDiamonds(if(Math.random() < 0.1) -250 else 15)
+            true
+        }
+
         save = {
             val edit = pref.edit()
             edit.putString("unlocked", unlockedIds.joinToString(","))
@@ -368,10 +380,51 @@ class AllManager: AppCompatActivity() {
                 val a = elementById[parts[1].toIntOrNull() ?: continue] ?: continue
                 val b = elementById[parts[2].toIntOrNull() ?: continue] ?: continue
                 val c = elementById[if(value is Int) value else value.toString().toInt()] ?: continue
-                addRecipe(a, b, c)
+                addRecipe(a, b, c, this)
             }
         }
 
+        diamondViews.clear()
+
+        for(child in flipper.children){
+            val diamondTextView = child.findViewById<TextView>(R.id.diamonds) ?: continue
+            diamondViews.add(diamondTextView)
+            diamondTextView.setOnClickListener {
+                RecipeHelper.openHelper(this)
+            }
+            (diamondTextView.parent as? View)?.setOnClickListener {
+                RecipeHelper.openHelper(this)
+            }
+        }
+
+        updateDiamondCount()
+
+    }
+
+    fun getDiamondCount(): Int {
+        return elementByRecipe.size + unlockedIds.size * 3 - pref.getInt("diamondCountSpent", 0)
+    }
+
+    fun spendDiamonds(count: Int): Boolean {
+        val current = getDiamondCount()
+        val hasEnough = count < 0 || current >= count
+        if(hasEnough){
+            successSound.play()
+            pref.edit().putInt("diamondCountSpent", pref.getInt("diamondCountSpent", 0) + count).apply()
+            updateDiamondCount()
+        } else {
+            RecipeHelper.offerSpendingMoneyOnDiamondsOrWatchAds(this)
+        }
+        return hasEnough
+    }
+
+    fun updateDiamondCount(){
+        runOnUiThread {
+            val count = getDiamondCount()
+            for(view in diamondViews){
+                view.text = count.toString()
+            }
+        }
     }
 
     fun resizeFavourites(pref: SharedPreferences){
@@ -384,12 +437,15 @@ class AllManager: AppCompatActivity() {
     fun addSearchListeners(back3: View, backArrow: View, searchButton: View, search: TextView, unlocked: UnlockedRows){
         back3.setOnClickListener { flipper.displayedChild = 0 }
         backArrow.setOnClickListener { flipper.displayedChild = 0 }
+        val diamondView = (back3.parent as? View)?.findViewById<View>(R.id.diamonds)
         searchButton.setOnClickListener {
             if(back3.visibility == VISIBLE){
                 back3.visibility = GONE
+                diamondView?.visibility = GONE
                 search.visibility = VISIBLE
             } else {
                 back3.visibility = VISIBLE
+                diamondView?.visibility = VISIBLE
                 search.visibility = GONE
             }
         }

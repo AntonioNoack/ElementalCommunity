@@ -40,6 +40,8 @@
                 android:layout_width="0dp"
                 android:layout_height="50sp"/>
 
+        <include layout="@layout/diamond_bar"/>
+
     </LinearLayout>
 
     <me.antonio.noack.elementalcommunity.Combiner

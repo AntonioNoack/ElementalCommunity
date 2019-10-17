@@ -403,7 +403,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     }
 
     fun add(sa: Element, sb: Element, element: Element): Boolean {
-        addRecipe(sa, sb, element)
+        addRecipe(sa, sb, element, all)
         val unlocked = unlockeds[element.group]
         return if(!unlocked.contains(element) && element.uuid > -1){
             unlocked.add(element)
