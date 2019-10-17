@@ -84,6 +84,10 @@ class AllManager: AppCompatActivity() {
 
         var askFrequency = AskFrequencyOption.ALWAYS
 
+        const val diamondBuyKey = "diamondCountBought"
+        const val diamondWatchKey = "diamondCountWatched"
+        const val diamondSpentKey = "diamondCountSpent"
+
     }
 
     lateinit var pref: SharedPreferences
@@ -401,8 +405,19 @@ class AllManager: AppCompatActivity() {
 
     }
 
+    fun acknowledgeDiamondPurchase(amount: Int){
+        pref.edit().putInt(diamondBuyKey, pref.getInt(diamondBuyKey, 0) + amount).apply()
+        updateDiamondCount()
+    }
+
     fun getDiamondCount(): Int {
-        return elementByRecipe.size + unlockedIds.size * 3 - pref.getInt("diamondCountSpent", 0)
+        // split for statistics + no-loss, when everything is reset
+        var count = elementByRecipe.size
+        count += 3 * unlockedIds.size
+        count += pref.getInt(diamondWatchKey, 0)
+        count += pref.getInt(diamondBuyKey, 0)
+        count -= pref.getInt(diamondSpentKey, 0)
+        return count
     }
 
     fun spendDiamonds(count: Int): Boolean {
@@ -410,7 +425,7 @@ class AllManager: AppCompatActivity() {
         val hasEnough = count < 0 || current >= count
         if(hasEnough){
             successSound.play()
-            pref.edit().putInt("diamondCountSpent", pref.getInt("diamondCountSpent", 0) + count).apply()
+            pref.edit().putInt(diamondSpentKey, pref.getInt(diamondSpentKey, 0) + count).apply()
             updateDiamondCount()
         } else {
             RecipeHelper.offerSpendingMoneyOnDiamondsOrWatchAds(this)
