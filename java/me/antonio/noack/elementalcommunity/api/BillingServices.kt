@@ -36,9 +36,9 @@ object BillingServices {
                     skuList.add("gas")
                     val params = SkuDetailsParams.newBuilder()
                     params.setSkusList(skuList).setType(BillingClient.SkuType.INAPP)
-                    client.querySkuDetailsAsync(params.build(), { billingResult, skuDetailsList ->
+                    client.querySkuDetailsAsync(params.build()){ billingResult, skuDetailsList ->
                         // Process the result.
-                    })
+                    }
                     isWorking = true
                 }
             }

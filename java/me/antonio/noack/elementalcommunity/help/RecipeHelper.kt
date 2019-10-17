@@ -15,6 +15,7 @@ import me.antonio.noack.elementalcommunity.RecipeView
 import me.antonio.noack.elementalcommunity.api.WebServices
 import me.antonio.noack.elementalcommunity.utils.Compact
 import me.antonio.noack.elementalcommunity.utils.Compact.compacted
+import me.antonio.noack.webdroid.StringID
 import kotlin.random.Random
 
 object RecipeHelper {
@@ -197,6 +198,6 @@ object RecipeHelper {
     }
 
     // todo multiple products per offer?
-    class Offer(val title: Int, val shortName: Int, val cost: Int, val buildLayout: (all: AllManager, list: ViewGroup, dialog: AlertDialog) -> Unit)
+    class Offer(val title: StringID, val shortName: StringID, val cost: Int, val buildLayout: (all: AllManager, list: ViewGroup, dialog: AlertDialog) -> Unit)
 
 }
