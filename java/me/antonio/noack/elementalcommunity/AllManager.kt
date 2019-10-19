@@ -1,7 +1,9 @@
 package me.antonio.noack.elementalcommunity
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -23,7 +25,9 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.children
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import me.antonio.noack.elementalcommunity.help.RecipeHelper
+import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.tree.TreeView
+import me.antonio.noack.elementalcommunity.utils.Maths
 import kotlin.math.abs
 
 
@@ -122,33 +126,44 @@ class AllManager: AppCompatActivity() {
     val diamondViews = ArrayList<TextView>()
 
     fun initViews(){
-        combiner = findViewById(R.id.combiner)
-        unlocked = findViewById(R.id.unlocked)
-        treeView = findViewById(R.id.tree)
-        startButton = findViewById(R.id.start)
-        flipper = findViewById(R.id.flipper)
-        treeViewButton = findViewById(R.id.treeButton)
-        suggestButton = findViewById(R.id.suggest)
-        settingButton = findViewById(R.id.settingsButton)
-        back1 = findViewById(R.id.back1)
-        back2 = findViewById(R.id.back2)
-        back3 = findViewById(R.id.back3)
-        favTitle = findViewById(R.id.favTitle)
-        favSlider = findViewById(R.id.favSlider)
-        backArrow1 = findViewById(R.id.backArrow1)
-        backArrow2 = findViewById(R.id.backArrow2)
-        backArrow3 = findViewById(R.id.backArrow3)
-        search1 = findViewById(R.id.search1)
-        search2 = findViewById(R.id.search2)
-        searchButton1 = findViewById(R.id.searchButton1)
-        searchButton2 = findViewById(R.id.searchButton2)
-        randomButton = findViewById(R.id.randomButton)
-        spaceSlider = findViewById(R.id.spaceSlider)
-        resetEverythingButton = findViewById(R.id.resetEverythingButton)
-        newsView = findViewById(R.id.newsView)
-        freqSlider = findViewById(R.id.frequencySlider)
-        freqTitle = findViewById(R.id.frequencyTitle)
-        craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch)
+        combiner = findViewById(R.id.combiner)!!
+        unlocked = findViewById(R.id.unlocked)!!
+        treeView = findViewById(R.id.tree)!!
+        startButton = findViewById(R.id.start)!!
+        flipper = findViewById(R.id.flipper)!!
+        treeViewButton = findViewById(R.id.treeButton)!!
+        suggestButton = findViewById(R.id.suggest)!!
+        settingButton = findViewById(R.id.settingsButton)!!
+        back1 = findViewById(R.id.back1)!!
+        back2 = findViewById(R.id.back2)!!
+        back3 = findViewById(R.id.back3)!!
+        favTitle = findViewById(R.id.favTitle)!!
+        favSlider = findViewById(R.id.favSlider)!!
+        backArrow1 = findViewById(R.id.backArrow1)!!
+        backArrow2 = findViewById(R.id.backArrow2)!!
+        backArrow3 = findViewById(R.id.backArrow3)!!
+        search1 = findViewById(R.id.search1)!!
+        search2 = findViewById(R.id.search2)!!
+        searchButton1 = findViewById(R.id.searchButton1)!!
+        searchButton2 = findViewById(R.id.searchButton2)!!
+        randomButton = findViewById(R.id.randomButton)!!
+        spaceSlider = findViewById(R.id.spaceSlider)!!
+        resetEverythingButton = findViewById(R.id.resetEverythingButton)!!
+        newsView = findViewById(R.id.newsView)!!
+        freqSlider = findViewById(R.id.frequencySlider)!!
+        freqTitle = findViewById(R.id.frequencyTitle)!!
+        craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch)!!
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when(requestCode){
+            SaveLoadLogic.IMAGE_SELECTED -> {
+                println("got answer :) $data")
+            }
+            else -> {
+                super.onActivityResult(requestCode, resultCode, data)
+            }
+        }
     }
 
     fun vibrate(millis: Long = 200L){
@@ -186,7 +201,12 @@ class AllManager: AppCompatActivity() {
         combiner.all = this
         treeView.all = this
 
-        pref = getPreferences(Context.MODE_PRIVATE)
+        pref = BetterPreferences(getPreferences(Context.MODE_PRIVATE))
+
+        loadEverythingFromPreferences()
+    }
+
+    fun loadEverythingFromPreferences() {
 
         askFrequency = AskFrequencyOption[pref]
         showCraftingCounts = pref.getBoolean("showCraftingCounts", true)
@@ -308,7 +328,7 @@ class AllManager: AppCompatActivity() {
 
         resetEverythingButton.setOnLongClickListener {
             // generate 100 diamonds over 10 long clicks
-            spendDiamonds(if(Math.random() < 0.1) -250 else 15)
+            spendDiamonds(if(Maths.random() < 0.1) -250 else 15)
             true
         }
 
@@ -402,6 +422,8 @@ class AllManager: AppCompatActivity() {
         }
 
         updateDiamondCount()
+
+        SaveLoadLogic.init(this)
 
     }
 
@@ -523,4 +545,16 @@ class AllManager: AppCompatActivity() {
         super.onResume()
         goFullScreen()
     }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when(requestCode){
+            SaveLoadLogic.WRITE_EXT_STORAGE_CODE -> {
+                if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    SaveLoadLogic.onWriteAllowed?.invoke()
+                }
+            }
+        }
+    }
+
 }

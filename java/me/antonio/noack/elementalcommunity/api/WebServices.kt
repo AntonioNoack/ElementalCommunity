@@ -27,7 +27,7 @@ object WebServices {
         )
     }){
 
-        HTTP.request("$ServerURL?$args", { text ->
+        HTTP.request("$ServerURL?$args&$webVersionName=$webVersion", { text ->
             if(text.isBlank() || text.startsWith("#reauth", true) || text.startsWith("#auth", true)){
 
                 Captcha.get(all, { token ->
@@ -36,6 +36,37 @@ object WebServices {
 
             } else onSuccess(text)
         }, onError)
+
+    }
+
+    fun tryCaptchaLarge(all: AllManager, largeArgs: String, args: String, onSuccess: (String) -> Unit, onError: (Exception) -> Unit = {
+        AllManager.toast(
+            "${it.javaClass.simpleName}: ${it.message}",
+            true
+        )
+    }){
+
+        // nah, we always ask directly, so we don't waste upload speed?, or do we? idk...
+
+        if(largeArgs.length < 100000){
+
+            HTTP.requestLarge("$ServerURL?$args", largeArgs, { text ->
+                if(text.isBlank() || text.startsWith("#reauth", true) || text.startsWith("#auth", true)){
+
+                    Captcha.get(all, { token ->
+                        HTTP.requestLarge("$ServerURL?$args&$webVersionName=$webVersion&t=${URLEncoder.encode(token, "UTF-8")}", largeArgs, onSuccess, onError, true)
+                    }, onError)
+
+                } else onSuccess(text)
+            }, onError, true)
+
+        } else {
+
+            Captcha.get(all, { token ->
+                HTTP.requestLarge("$ServerURL?$args&$webVersionName=$webVersion&t=${URLEncoder.encode(token, "UTF-8")}", largeArgs, onSuccess, onError, true)
+            }, onError)
+
+        }
 
     }
 

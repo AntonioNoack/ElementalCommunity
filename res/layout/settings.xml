@@ -10,11 +10,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-        <View
-                android:layout_width="match_parent"
-                android:layout_weight="1"
-                android:layout_height="0dp"/>
-
         <TextView
                 android:id="@+id/favTitle"
                 android:text="@string/favourites"
@@ -67,7 +62,37 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-        <TextView
+        <Button
+                android:id="@+id/saveProgress"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
+                android:layout_marginTop="10dp"
+                android:text="@string/save_progress"
+                android:gravity="center"
+                android:textSize="30sp"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+        <Button
+                android:id="@+id/loadProgress"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
+                android:layout_marginTop="10dp"
+                android:text="@string/load_progress"
+                android:gravity="center"
+                android:textSize="30sp"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+        <Button
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
                 android:id="@+id/resetEverythingButton"
                 android:layout_marginTop="10dp"
                 android:text="@string/reset_everything"
@@ -79,7 +104,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-        <TextView
+        <Button
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
                 android:id="@+id/back2"
                 android:text="@string/back"
                 android:layout_marginTop="10dp"
@@ -90,11 +117,6 @@
                 android:padding="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
-
-        <View
-                android:layout_width="match_parent"
-                android:layout_weight="1"
-                android:layout_height="0dp"/>
 
     </LinearLayout>
 

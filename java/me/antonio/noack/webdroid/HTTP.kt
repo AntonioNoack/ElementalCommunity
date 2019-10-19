@@ -1,5 +1,6 @@
 package me.antonio.noack.webdroid
 
+import java.io.BufferedInputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -17,6 +18,7 @@ object HTTP {
     fun request(url: String, type: String, onSuccess: (String) -> Unit, onError: (IOException) -> Unit) =
         request(url, type, onSuccess, onError, true)
 
+
     fun request(url: String, type: String, onSuccess: (String) -> Unit, onError: (IOException) -> Unit, https: Boolean) {
         thread {
             try {
@@ -25,6 +27,27 @@ object HTTP {
                     con as HttpsURLConnection
                 }
                 con.requestMethod = type
+                con.useCaches = false
+                onSuccess(String(con.inputStream.buffered().readBytes()))
+            } catch (e: IOException){
+                onError(e)
+            }
+        }
+    }
+
+    fun requestLarge(url: String, largeArgs: String, onSuccess: (String) -> Unit, onError: (IOException) -> Unit, https: Boolean) {
+        thread {
+            try {
+                val con = URL(url).openConnection() as HttpURLConnection
+                if(https){
+                    con as HttpsURLConnection
+                }
+                con.useCaches = false
+                con.requestMethod = "POST"
+                con.doOutput = true
+                val out = con.outputStream.buffered()
+                out.write(largeArgs.toByteArray())
+                out.flush()
                 onSuccess(String(con.inputStream.buffered().readBytes()))
             } catch (e: IOException){
                 onError(e)

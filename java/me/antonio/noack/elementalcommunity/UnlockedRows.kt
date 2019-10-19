@@ -38,8 +38,16 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     var lastParts = -1
     val relativeRightBorder = 0.7f
 
+    var searchIsInvalid = true
+
     fun invalidateSearch(){
+        searchIsInvalid = true
+    }
+
+    fun validateSearch(){
+
         search = search.toLowerCase().trim()
+
         if(search.isEmpty()){
             synchronized(Unit){
                 for((group, unlocked) in unlockeds.withIndex()){
@@ -428,6 +436,10 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         if(canvas == null) return
+
+        if(searchIsInvalid){
+            validateSearch()
+        }
 
         GroupsEtc.tick()
 

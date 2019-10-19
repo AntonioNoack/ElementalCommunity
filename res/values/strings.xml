@@ -31,4 +31,22 @@
     <string name="recipe_lookup_short">lookup</string>
     <string name="lookup_cost">10 / lookup</string>
     <string name="cost_template">#cost / #name</string>
+    <string name="upload_progress_to_server">Upload progress to server</string>
+    <string name="download_progress_from_server">Download progress from server</string>
+    <string name="save_progress">Save progress</string>
+    <string name="load_progress">Load progress</string>
+    <string name="save_progress_to_file">Save progress to file</string>
+    <string name="load_progress_from_file">Load progress from file</string>
+    <string name="please_enter_the_password">Please enter the password!</string>
+    <string name="password">Password</string>
+    <string name="ok">OK</string>
+    <string name="override_old_data">Delete old achievements</string>
+    <string name="merge_achievements">Merge achievements</string>
+    <string name="success">Success!</string>
+    <string name="this_is_your_password">This is your password:</string>
+    <string name="choose">Choose</string>
+    <string name="please_select_the_file">Please select the file</string>
+    <string name="save_progress_to_name">Save progress to #name</string>
+    <string name="load_progress_from_name">Load progress from #name</string>
+    <string name="please_select_a_file">Please select a file!</string>
 </resources>

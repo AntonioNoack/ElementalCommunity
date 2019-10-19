@@ -13,7 +13,6 @@ import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.RecipeView
 import me.antonio.noack.elementalcommunity.api.WebServices
-import me.antonio.noack.elementalcommunity.utils.Compact
 import me.antonio.noack.elementalcommunity.utils.Compact.compacted
 import me.antonio.noack.webdroid.StringID
 import kotlin.random.Random
@@ -43,8 +42,8 @@ object RecipeHelper {
 
         for(offer in offers){
             val headerView = all.layoutInflater.inflate(R.layout.helper_offer, offerList, false)
-            headerView.findViewById<TextView>(R.id.title).text = res.getString(offer.title)
-            headerView.findViewById<TextView>(R.id.cost).text = costString
+            headerView.findViewById<TextView>(R.id.title)!!.text = res.getString(offer.title)
+            headerView.findViewById<TextView>(R.id.cost)!!.text = costString
                 .replace("#cost", offer.cost.toString())
                 .replace("#name", res.getString(offer.shortName))
             offerList.addView(headerView)
@@ -95,7 +94,7 @@ object RecipeHelper {
         if(!apply) return string
         val random = Random(string.hashCode())
         val randomIndex = random.nextInt(string.length)
-        val readableChance = 0.3f
+        val readableChance = 0.3f * (1-1/(1+0.1f*string.length))
         return string.mapIndexed { index, c ->
             if(index == randomIndex || random.nextFloat() < readableChance){
                 c
@@ -108,10 +107,10 @@ object RecipeHelper {
         Offer(R.string.recipe_lookup, R.string.recipe_lookup_short, lookUpCost){ all, list, dialog ->
 
             val mainList = all.layoutInflater.inflate(R.layout.helper_search_recipe, list, false) as ViewGroup
-            val textField = mainList.findViewById<EditText>(R.id.search)
+            val textField = mainList.findViewById<EditText>(R.id.search)!!
 
             var oldSearch: String
-            val recipes = mainList.findViewById<ViewGroup>(R.id.previews)
+            val recipes = mainList.findViewById<ViewGroup>(R.id.previews)!!
 
             // todo show names of elements blurred, which are not already discovered
             fun showResult(list: List<Recipe>, search: String){

@@ -21,55 +21,65 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-        <TextView
+        <Button
                 android:id="@+id/start"
                 android:text="@string/start"
                 android:gravity="center"
                 android:textSize="30sp"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
                 android:background="@color/colorPrimary"
                 android:padding="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-        <TextView
+        <Button
                 android:id="@+id/treeButton"
                 android:text="@string/tree_view"
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:textSize="30sp"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
                 android:background="@color/colorPrimary"
                 android:padding="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-        <TextView
+        <Button
                 android:id="@+id/randomButton"
                 android:text="@string/random_suggestion"
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:textSize="30sp"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
                 android:background="@color/colorPrimary"
                 android:padding="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-        <TextView
+        <Button
                 android:id="@+id/suggest"
                 android:text="@string/suggest"
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:textSize="30sp"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
                 android:background="@color/colorPrimary"
                 android:padding="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-        <TextView
+        <Button
                 android:id="@+id/settingsButton"
                 android:text="@string/settings"
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:textSize="30sp"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
                 android:background="@color/colorPrimary"
                 android:padding="10dp"
                 android:layout_width="match_parent"

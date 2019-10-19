@@ -47,7 +47,7 @@ object BasicOperations {
                 val dialog: Dialog = AlertDialog.Builder(all)
                     .setView(R.layout.add_recipe)
                     .show()
-                dialog.findViewById<TextView>(R.id.cancel).setOnClickListener {
+                dialog.findViewById<TextView>(R.id.cancel)!!.setOnClickListener {
                     try {
                         dialog.dismiss()
                     } catch (e: Throwable) {
@@ -58,9 +58,9 @@ object BasicOperations {
                     onSuccess()
                 })
                 if (candidates.isEmpty()) {
-                    dialog.findViewById<View>(R.id.title2).visibility = View.GONE
+                    dialog.findViewById<View>(R.id.title2)!!.visibility = View.GONE
                 } else {
-                    val suggestionsView = dialog.findViewById<LinearLayout>(R.id.suggestions)
+                    val suggestionsView = dialog.findViewById<LinearLayout>(R.id.suggestions)!!
                     val theWidth = min(measuredWidth, measuredHeight) * 2f / 5
                     for (candidate in candidates) {
                         val view = CandidateView(all, null)
@@ -97,8 +97,8 @@ object BasicOperations {
 
     fun setSubmitAction(all: AllManager, submit: TextView, dialog: Dialog, allowingDismiss: Boolean, getComponentA: () -> Element, getComponentB: () -> Element, unlockElement: (Element) -> Unit){
         submit.setOnClickListener {
-            val name = dialog.findViewById<TextView>(R.id.name).text.toString()
-            val group = dialog.findViewById<GroupSelectorView>(R.id.colors).selected
+            val name = dialog.findViewById<TextView>(R.id.name)!!.text.toString()
+            val group = dialog.findViewById<GroupSelectorView>(R.id.colors)!!.selected
             if (group < 0) {
                 AllManager.toast(R.string.please_choose_color, false)
                 return@setOnClickListener

@@ -8,10 +8,15 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.invalidate
 import me.antonio.noack.elementalcommunity.AllManager.Companion.save
 import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockeds
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
+import kotlin.math.min
 
 class Element private constructor(var name: String, val uuid: Int, var group: Int): Comparable<Element> {
 
-    override fun compareTo(other: Element): Int = name.toLowerCase().compareTo(other.name.toLowerCase())
+    override fun compareTo(other: Element): Int {
+        val x = hashLong.compareTo(other.hashLong)
+        if(x != 0) return x
+        else return lcName.compareTo(other.lcName)
+    }
 
     var rank = -1
 
@@ -28,6 +33,19 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
     var treeY = 0
 
     var lcName = name.toLowerCase()
+    var hashLong = hashLong()
+
+    fun hashLong(): Long {
+        val lcName = lcName
+        var x = 0L
+        for(i in 0 until min(9, lcName.length)){
+            x = x.shl(7) or lcName[i].toLong()
+        }
+        for(i in min(9, lcName.length) until 9){
+            x = x.shl(7)
+        }
+        return x
+    }
 
     init {
         synchronized(Unit){
@@ -55,6 +73,7 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
             return if(old != null){
                 old.name = name
                 old.lcName = name.toLowerCase()
+                old.hashLong = old.hashLong
                 if(craftingCount >= minimumCraftingCount){ old.craftingCount = craftingCount }
                 if(old.group != group){
                     synchronized(Unit){

@@ -16,4 +16,6 @@ object Maths {
         return (1-f)*a+b*f
     }
 
+    fun random() = Math.random()
+
 }
