@@ -57,7 +57,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
             if(ctr == this.ctr){
 
-                this.invalidate()
+                this.postInvalidate()
 
                 minX = 0
                 minY = 0
