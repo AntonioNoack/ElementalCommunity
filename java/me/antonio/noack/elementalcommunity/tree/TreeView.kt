@@ -322,17 +322,19 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
         // val line0 = System.nanoTime()
         if(tree.multiplierX != 1 || tree.multiplierY != 1){
-            for(element in tree.elements){
-                if(element.hasTreeOutput){
-                    drawElementOutput(canvas, centerX, centerY, element)
+            synchronized(tree.elements){
+                for(element in tree.elements){
+                    if(element.hasTreeOutput){
+                        drawElementOutput(canvas, centerX, centerY, element)
+                    }
                 }
-            }
 
-            for(element in tree.elements){
-                val srcA = element.srcA ?: continue
-                val srcB = element.srcB ?: continue
-                drawPath(canvas, centerX, centerY, srcA, element, true)
-                if(srcA != srcB) drawPath(canvas, centerX, centerY, srcB, element, false)
+                for(element in tree.elements){
+                    val srcA = element.srcA ?: continue
+                    val srcB = element.srcB ?: continue
+                    drawPath(canvas, centerX, centerY, srcA, element, true)
+                    if(srcA != srcB) drawPath(canvas, centerX, centerY, srcB, element, false)
+                }
             }
         }
 
@@ -352,16 +354,18 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
         val showCraftingCounts = AllManager.showCraftingCounts
 
-        for(element in tree.elements){
-            // done draw the element
-            if(element.treeX in minX .. maxX && element.treeY in minY .. maxY){
-                val x0 = centerX + (element.treeX - scrollX) * widthPerNode
-                val y0 = centerY + (element.treeY - scrollY) * widthPerNode
-                if(activeElement == element && activeness > 0f){
-                    val delta = activeness * widthPerNode * 0.5f
-                    drawElement(canvas, showCraftingCounts, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
-                } else {
-                    drawElement(canvas, showCraftingCounts, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
+        synchronized(tree.elements){
+            for(element in tree.elements){
+                // done draw the element
+                if(element.treeX in minX .. maxX && element.treeY in minY .. maxY){
+                    val x0 = centerX + (element.treeX - scrollX) * widthPerNode
+                    val y0 = centerY + (element.treeY - scrollY) * widthPerNode
+                    if(activeElement == element && activeness > 0f){
+                        val delta = activeness * widthPerNode * 0.5f
+                        drawElement(canvas, showCraftingCounts, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
+                    } else {
+                        drawElement(canvas, showCraftingCounts, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
+                    }
                 }
             }
         }
