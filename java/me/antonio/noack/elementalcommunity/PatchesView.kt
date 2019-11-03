@@ -9,7 +9,7 @@ import kotlin.math.max
 class PatchesView(context: Context, attributeSet: AttributeSet?): ViewGroup(context, attributeSet){
 
     fun dpToPx(dp: Int): Float {
-        val displayMetrics = context.resources.displayMetrics
+        val displayMetrics = context!!.resources.displayMetrics
         return (dp * displayMetrics.density) + 0.5f
     }
 

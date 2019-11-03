@@ -31,9 +31,6 @@ import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.utils.Maths
 import kotlin.math.abs
 
-
-// todo make a directory with all elements? :D
-
 // Sounds:
 // magic: https://freesound.org/people/suntemple/sounds/241809/
 // ok: https://freesound.org/people/grunz/sounds/109663/

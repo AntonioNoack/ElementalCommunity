@@ -139,7 +139,7 @@ object SettingsInit {
             .setCancelable(true)
             .show()
 
-        dialog.findViewById<View>(R.id.switchToDefault).setOnClickListener {
+        dialog.findViewById<View>(R.id.switchToDefault)!!.setOnClickListener {
 
             if(WebServices.serverInstance != 0){
                 askNews()
@@ -153,15 +153,32 @@ object SettingsInit {
                 .apply()
             // shows the server
             newsView.postInvalidate()
+
+            AllManager.toast(R.string.success, true)
+
             dialog.dismiss()
         }
 
-        dialog.findViewById<View>(R.id.submit).setOnClickListener {
+        dialog.findViewById<View>(R.id.submit)!!.setOnClickListener {
             val name = dialog.findViewById<TextView>(R.id.name)!!.text.trim().toString()
             if(name.isNotEmpty()){
-                checkServerName(name) ?: return@setOnClickListener
+
                 val pass = dialog.findViewById<TextView>(R.id.password)!!.text.trim().toString()
                 val passInt = if(pass.isEmpty()) 0L else hashPassword(pass)
+
+                if(name.startsWith("http://") || name.startsWith("https://")){
+                    AllManager.toast("External servers are not controlled by Antonio Noack, and might crash your game! (Success)", true)
+                    WebServices.serverName = name
+                    WebServices.serverInstance = passInt.toInt()
+                    pref.edit()
+                        .putInt("serverInstance", passInt.toInt())
+                        .putString("serverName", name)
+                        .apply()
+                    dialog.dismiss()
+                    return@setOnClickListener
+                }
+
+                checkServerName(name) ?: return@setOnClickListener
                 WebServices.requestServerInstance(this, name, passInt, { realName, id ->
 
                     if(realName == null || realName.isEmpty()){
@@ -201,12 +218,12 @@ object SettingsInit {
             }
         }
 
-        dialog.findViewById<View>(R.id.createServer).setOnClickListener {
+        dialog.findViewById<View>(R.id.createServer)!!.setOnClickListener {
             createOwnServer()
             dialog.dismiss()
         }
 
-        dialog.findViewById<View>(R.id.back).setOnClickListener {
+        dialog.findViewById<View>(R.id.back)!!.setOnClickListener {
             dialog.dismiss()
         }
     }
@@ -230,7 +247,7 @@ object SettingsInit {
             .setCancelable(true)
             .show()
 
-        dialog.findViewById<View>(R.id.createServer).setOnClickListener {
+        dialog.findViewById<View>(R.id.createServer)!!.setOnClickListener {
             val name = dialog.findViewById<TextView>(R.id.name)!!.text.trim().toString()
             if(name.isNotEmpty()) {
                 checkServerName(name) ?: return@setOnClickListener
@@ -254,10 +271,7 @@ object SettingsInit {
                             .apply()
                         // shows the server
                         newsView.postInvalidate()
-                        AllManager.toast("Success!, you can invite players via " +
-                                "https://elemental.phychi.com/invite" +
-                                "?server=$realName" +
-                                (if(pass.isEmpty()) "" else "&pwd=${passInt.toString(16)}"), true)
+                        AllManager.toast("Success! You can invite others with this name and password, if you want to, too.", true)
                         dialog.dismiss()
                     }
                     dialog.dismiss()
@@ -267,7 +281,7 @@ object SettingsInit {
             }
         }
 
-        dialog.findViewById<View>(R.id.back).setOnClickListener {
+        dialog.findViewById<View>(R.id.back)!!.setOnClickListener {
             dialog.dismiss()
         }
     }
@@ -280,8 +294,9 @@ object SettingsInit {
         val seed = pass.hashCode().toLong()
         val big = BigInteger(seed.toString())
         val prime = BigInteger("51163516513147")
-        val pow = big.modPow(prime, BigInteger("2").pow(64).minus(BigInteger.ONE))
-        return pow.toLong()
+        val pow = big.modPow(prime, BigInteger("2").pow(64).minus(BigInteger("1")))
+        return pow.toLong().toLong() and 0x7fffffffffffffffL
     }
+
 
 }

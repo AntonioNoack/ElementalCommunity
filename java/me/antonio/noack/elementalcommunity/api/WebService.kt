@@ -28,6 +28,9 @@ open class WebService(private val serverURL: String): ServerService {
     private val webVersion = 1
     private val webVersionName = "v"
 
+    fun isExternalSource() = serverName.startsWith("http://") || serverName.startsWith("https://")
+    fun getURL() = if(isExternalSource()) serverName else serverURL
+
     fun tryCaptcha(all: AllManager, args: String, onSuccess: (String) -> Unit, onError: (Exception) -> Unit = {
         AllManager.toast(
             "${it.javaClass.simpleName}: ${it.message}",
@@ -88,7 +91,7 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun askRecipe(a: Element, b: Element, all: AllManager, onSuccess: (Element?) -> Unit, onError: (Exception) -> Unit){
 
-        val url = "$serverURL?a=${a.uuid}&b=${b.uuid}" +
+        val url = "${getURL()}?a=${a.uuid}&b=${b.uuid}" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance"
 
@@ -116,7 +119,7 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun askNews(count: Int, onSuccess: (ArrayList<News>) -> Unit, onError: (Exception) -> Unit){
 
-        HTTP.request("$serverURL?n=${count * 3}" +
+        HTTP.request("${getURL()}?n=${count * 3}" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance",
 
@@ -158,7 +161,7 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun getCandidates(a: Element, b: Element, onSuccess: (ArrayList<Candidate>) -> Unit, onError: (Exception) -> Unit){
 
-        HTTP.request("$serverURL?o=1&a=${a.uuid}&b=${b.uuid}" +
+        HTTP.request("${getURL()}?o=1&a=${a.uuid}&b=${b.uuid}" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance",
 
@@ -179,31 +182,47 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun suggestRecipe(all: AllManager, a: Element, b: Element, resultName: String, resultGroup: Int, onSuccess: (text: String) -> Unit, onError: (Exception) -> Unit){
 
-        // a,b,r,g,u,t
-        tryCaptcha(all, "a=${a.uuid}&b=${b.uuid}" +
-                "&r=${URLEncoder.encode(resultName, "UTF-8")}" +
-                "&g=$resultGroup" +
-                "&u=${AllManager.customUUID}" +
-                "&$webVersionName=$webVersion" +
-                "&sid=$serverInstance", onSuccess, onError)
+        if(isExternalSource()){
+            HTTP.request("a=${a.uuid}&b=${b.uuid}" +
+                    "&r=${URLEncoder.encode(resultName, "UTF-8")}" +
+                    "&g=$resultGroup" +
+                    "&u=${AllManager.customUUID}" +
+                    "&$webVersionName=$webVersion" +
+                    "&sid=$serverInstance", onSuccess, onError)
+        } else {
+            // a,b,r,g,u,t
+            tryCaptcha(all, "a=${a.uuid}&b=${b.uuid}" +
+                    "&r=${URLEncoder.encode(resultName, "UTF-8")}" +
+                    "&g=$resultGroup" +
+                    "&u=${AllManager.customUUID}" +
+                    "&$webVersionName=$webVersion" +
+                    "&sid=$serverInstance", onSuccess, onError)
+        }
+
 
     }
 
     override fun likeRecipe(all: AllManager, uuid: Long, onSuccess: () -> Unit, onError: (Exception) -> Unit){
 
-        tryCaptcha(all, "s=$uuid&r=1&u=${AllManager.customUUID}", { onSuccess() }, onError)
+        if(isExternalSource()){
+            HTTP.request("${getURL()}?s=$uuid&r=1&u=${AllManager.customUUID}", { onSuccess() }, onError)
+        } else {
+            tryCaptcha(all, "s=$uuid&r=1&u=${AllManager.customUUID}", { onSuccess() }, onError)
+        }
 
     }
 
     override fun dislikeRecipe(all: AllManager, uuid: Long, onSuccess: () -> Unit, onError: (Exception) -> Unit){
-
-        tryCaptcha(all, "s=$uuid&r=-1&u=${AllManager.customUUID}", { onSuccess() }, onError)
-
+        if(isExternalSource()){
+            HTTP.request("${getURL()}?s=$uuid&r=-1&u=${AllManager.customUUID}", { onSuccess() }, onError)
+        } else {
+            tryCaptcha(all, "s=$uuid&r=-1&u=${AllManager.customUUID}", { onSuccess() }, onError)
+        }
     }
 
     override fun askRecipes(name: String, onSuccess: (raw: String) -> Unit, onError: (Exception) -> Unit){
 
-        HTTP.request("$serverURL?qr=$name" +
+        HTTP.request("${getURL()}?qr=$name" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance", onSuccess, onError)
 
@@ -211,7 +230,7 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun updateGroupSizesAndNames(){
 
-        HTTP.request("$serverURL?l3" +
+        HTTP.request("${getURL()}?l3" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance", {
 

@@ -33,9 +33,9 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
     var treeY = 0
 
     var lcName = name.toLowerCase()
-    var hashLong = hashLong()
+    var hashLong = calcHashLong()
 
-    fun hashLong(): Long {
+    fun calcHashLong(): Long {
         val lcName = lcName
         var x = 0L
         for(i in 0 until min(9, lcName.length)){
