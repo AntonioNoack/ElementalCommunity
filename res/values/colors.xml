@@ -5,6 +5,8 @@
     <color name="colorPrimaryText">#004268</color>
     <color name="colorDiamond">#674280</color>
     <color name="colorDiamond2">#D1ADEC</color>
+    <color name="colorGreen">#285518</color>
+    <color name="colorGreen2">#B5ECAD</color>
     <color name="colorAccent">#F1C190</color>
     <color name="colorAccent2">#F37A02</color>
 </resources>

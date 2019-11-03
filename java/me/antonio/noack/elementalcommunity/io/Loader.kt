@@ -2,6 +2,7 @@ package me.antonio.noack.elementalcommunity.io
 
 import android.content.SharedPreferences
 import java.lang.Exception
+import java.util.*
 
 object Loader {
 
@@ -25,7 +26,38 @@ object Loader {
                 val valueType = entry[commaIndex+1+keyNameLength]
                 val rawValue = entry.substring(commaIndex+1+keyNameLength+1)
 
-                loadObject(rawValue, valueType, keyName, edit)
+                if(keyName == "unlocked" && !overrideEverything){
+
+                    val set = TreeSet<Int>()
+                    // edit.putString("unlocked", unlockedIds.joinToString(","))
+
+                    val oldEntries = preferences.getString("unlocked", "")!!.split(',')
+                    for(id in oldEntries){
+                        val id2 = id.trim()
+                        val value = id2.toIntOrNull()
+                        if(value != null){
+                            set.add(value)
+                        }
+                    }
+
+                    val newEntries = unescape(rawValue).split(',')
+                    for(id in newEntries){
+                        val id2 = id.trim()
+                        val value = id2.toIntOrNull()
+                        if(value != null){
+                            set.add(value)
+                        }
+                    }
+
+                    if(set.isNotEmpty()){
+
+                        edit.putString("unlocked", set.joinToString(","))
+
+                    }
+
+                } else {
+                    loadObject(rawValue, valueType, keyName, edit)
+                }
 
             } catch (e: Exception){
                 e.printStackTrace()

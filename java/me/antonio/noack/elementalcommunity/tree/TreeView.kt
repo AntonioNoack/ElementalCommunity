@@ -64,11 +64,13 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                 maxX = 0
                 maxY = 0
 
-                for(element in tree.elements){
-                    minX = min(minX, element.treeX)
-                    maxX = max(maxX, element.treeX)
-                    minY = min(minY, element.treeY)
-                    maxY = max(maxY, element.treeY)
+                synchronized(tree.elements){
+                    for(element in tree.elements){
+                        minX = min(minX, element.treeX)
+                        maxX = max(maxX, element.treeX)
+                        minY = min(minY, element.treeY)
+                        maxY = max(maxY, element.treeY)
+                    }
                 }
 
                 minXf = minX.toFloat()

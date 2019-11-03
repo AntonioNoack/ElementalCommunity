@@ -264,7 +264,7 @@ object GroupsEtc {
 
             val textSize = clamp(textPaint.textSize * widthPerNode * 0.8f / width1, widthPerNode*0.02f, widthPerNode * (0.8f - spacingFactorX2 * countSize) / max(1, list.size))
             textPaint.textSize = textSize
-            val textDy = (widthPerNode - (textPaint.ascent() + textPaint.descent()))/2 - if(craftingCount > -1) 0.5f * widthPerNode * countSize else 0f
+            val textDy = (widthPerNode - (textPaint.ascent() + textPaint.descent()))/2 - if(craftingCount > minimumCraftingCount) 0.5f * widthPerNode * countSize else 0f
 
             entry = CacheEntry(textSize, textDy, color, list)
 
@@ -291,7 +291,7 @@ object GroupsEtc {
 
         drawElementRaw(canvas, x0, y0, delta, widthPerNode, margin, group, bgPaint, opacity)
 
-        val cacheKey = if(craftingCount < minimumCraftingCount) rawName else "$rawName ($craftingCount)"
+        val cacheKey = if(craftingCount <= minimumCraftingCount) rawName else "$rawName ($craftingCount)"
         val cacheEntry = getCacheEntry(rawName, cacheKey, craftingCount, widthPerNode, textPaint, bgPaint)
         val color = cacheEntry.color
         textPaint.color = color
@@ -319,7 +319,7 @@ object GroupsEtc {
             canvas.drawText(text, x, y0 + dys[index], textPaint)
         }
 
-        if(craftingCount >= minimumCraftingCount){
+        if(craftingCount > minimumCraftingCount){
             textPaint.color = multiplyAlpha(color, 0.3f)
             textPaint.textSize = widthPerNode * countSize
             canvas.drawText("($craftingCount)", x, y0 + max(dys.last() + spacingFactor * countSize * widthPerNode, widthPerNode * counterOffset), textPaint)

@@ -132,8 +132,10 @@ object BasicOperations {
                         val rUUID = str.substring(0, index1).toIntOrNull() ?: return@suggestRecipe
                         val rGroup = str.substring(index1 + 1, index2).toIntOrNull() ?: return@suggestRecipe
                         val rName = str.substring(index2 + 1)
-                        val secondaryData = lines.getOrNull(1)?.split(':')
-                        val rCraftingCount = secondaryData?.getOrNull(0)?.toIntOrNull() ?: -1
+                        // val secondaryData = lines.getOrNull(1)?.split(':')
+                        // removed, because it's rather expensive to compute and not that important
+                        // maybe we should save that information on per-instance basis in the database...
+                        val rCraftingCount = -1
                         val element = Element.get(rName, rUUID, rGroup, rCraftingCount)
                         unlockElement(element)
                     }

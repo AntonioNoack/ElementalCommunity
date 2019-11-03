@@ -25,6 +25,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.children
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import me.antonio.noack.elementalcommunity.help.RecipeHelper
+import me.antonio.noack.elementalcommunity.help.SettingsInit
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.utils.Maths
@@ -121,6 +122,7 @@ class AllManager: AppCompatActivity() {
     lateinit var newsView: NewsView
     lateinit var freqSlider: SeekBar
     lateinit var freqTitle: TextView
+    lateinit var switchServerButton: View
     lateinit var craftingCountsSwitch: SwitchCompat
 
     val diamondViews = ArrayList<TextView>()
@@ -153,6 +155,7 @@ class AllManager: AppCompatActivity() {
         freqSlider = findViewById(R.id.frequencySlider)!!
         freqTitle = findViewById(R.id.frequencyTitle)!!
         craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch)!!
+        switchServerButton = findViewById(R.id.switchServer)!!
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -216,6 +219,9 @@ class AllManager: AppCompatActivity() {
         clickSound = Sound(R.raw.click, this)
         // askingSound = So
 
+        WebServices.serverInstance = pref.getInt("serverInstance", 0)
+        WebServices.serverName = pref.getString("serverName", "Default")!!
+
         staticRunOnUIThread = {
             runOnUiThread(it)
         }
@@ -242,13 +248,6 @@ class AllManager: AppCompatActivity() {
             combiner.invalidateSearch()
             flipper.displayedChild = 3
         }
-        settingButton.setOnClickListener {
-            favTitle.text = resources.getString(R.string.favourites).replace("#count", FAVOURITE_COUNT.toString())
-            favSlider.progress = if(FAVOURITE_COUNT == 0) 0 else FAVOURITE_COUNT - 2
-            freqSlider.progress = askFrequency.ordinal
-            freqTitle.text = resources.getString(R.string.frequency_of_asking_title).replace("#frequency", askFrequency.displayName)
-            flipper.displayedChild = 4
-        }
         back1.setOnClickListener { flipper.displayedChild = 0 }
         back2.setOnClickListener { flipper.displayedChild = 0 }
         backArrow3.setOnClickListener { flipper.displayedChild = 0 }
@@ -256,81 +255,7 @@ class AllManager: AppCompatActivity() {
         addSearchListeners(back1, backArrow2, searchButton2, search2, combiner)
         randomButton.setOnClickListener { RandomSuggestion.make(this) }
 
-        val spaceSliderOffset = 1
-        spaceSlider.max = 5 + spaceSliderOffset
-        spaceSlider.progress = treeView.tree.multiplierX - spaceSliderOffset
-        spaceSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val tree = treeView.tree
-                val value = spaceSliderOffset + progress
-                tree.multiplierX = value
-                tree.multiplierY = value
-                invalidate()
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-
-        favSlider.max = 10
-        favSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                var value = progress
-                if(value != 0) value += 2
-                FAVOURITE_COUNT = value
-                favTitle.text = resources.getString(R.string.favourites).replace("#count", FAVOURITE_COUNT.toString())
-                resizeFavourites(pref)
-                save()
-                invalidate()
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-
-        freqSlider.max = AskFrequencyOption.values().lastIndex
-        freqSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                askFrequency = AskFrequencyOption.values().getOrNull(progress) ?: AskFrequencyOption.ALWAYS
-                freqTitle.text = resources.getString(R.string.frequency_of_asking_title).replace("#frequency", askFrequency.displayName)
-                askFrequency.store(pref)
-                freqSlider.invalidate()
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-
-        craftingCountsSwitch.isChecked = showCraftingCounts
-        craftingCountsSwitch.setOnCheckedChangeListener { _, isChecked ->
-            showCraftingCounts = isChecked
-            pref.edit().putBoolean("showCraftingCounts", isChecked).apply()
-            invalidate()
-        }
-
-        resetEverythingButton.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle(R.string.are_you_sure_reset_everything)
-                .setPositiveButton(android.R.string.yes){ _, _ ->
-                    pref.edit().clear().putLong("customUUID", customUUID).apply()
-                    unlockedIds = hashSetOf(1, 2, 3, 4)
-                    for(list in unlockeds){ list.removeAll(list.filter { it.uuid > 4 }) }
-                    for(i in 0 until favourites.size) favourites[i] = null
-                    FAVOURITE_COUNT = 5
-                    resizeFavourites(pref)
-                    favSlider.progress = FAVOURITE_COUNT-2
-                    combiner.invalidateSearch()
-                    unlocked.invalidateSearch()
-                    save()
-                    invalidate()
-                }
-                .setNegativeButton(android.R.string.no, null)
-                .setCancelable(true)
-                .show()
-        }
-
-        resetEverythingButton.setOnLongClickListener {
-            // generate 100 diamonds over 10 long clicks
-            spendDiamonds(if(Maths.random() < 0.1) -250 else 15)
-            true
-        }
+        SettingsInit.init(this)
 
         save = {
             val edit = pref.edit()

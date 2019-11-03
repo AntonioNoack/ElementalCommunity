@@ -11,11 +11,12 @@ import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.getMargin
 import me.antonio.noack.elementalcommunity.api.WebServices
+import me.antonio.noack.elementalcommunity.api.web.Candidate
 import kotlin.math.min
 
 class CandidateView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
-    var candidate: WebServices.Candidate? = null
+    var candidate: Candidate? = null
 
     var theWidth = 350f
 

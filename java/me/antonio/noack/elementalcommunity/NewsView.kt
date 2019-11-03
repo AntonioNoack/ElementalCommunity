@@ -8,15 +8,17 @@ import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.api.WebServices
+import me.antonio.noack.elementalcommunity.api.web.News
 import java.lang.StrictMath.pow
 import java.util.*
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sin
 
 class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
     val noise = NoiseMap2D()
-    var news = ArrayList<WebServices.News>(10)
+    var news = ArrayList<News>(10)
 
     private val relativeWidth = 4f
 
@@ -36,6 +38,8 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
         GroupsEtc.tick()
 
+        val save0 = canvas.save()
+
         textPaint.textAlign = Paint.Align.CENTER
 
         val size = GroupColors.size
@@ -45,6 +49,8 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
         val time = sin(System.nanoTime() * 1e-10).toFloat()
 
+        val hasNews = news.isNotEmpty()
+
         for(i in 0 until max(10, news.size)){
 
             val candidate = news.getOrNull(i)
@@ -53,9 +59,12 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
             canvas.rotate((noise.getNoise(time, i)-.5f) * 50, width/2, widthPerNode/2)
 
-            drawElement(canvas, -1, 0f, 0f, 0f, widthPerNode, true, candidate?.a?.name ?: "App", candidate?.a?.group ?: (noise.getNoise(time, 78+i*100).times(size).toInt()), bgPaint, textPaint)
-            drawElement(canvas, -1, widthPerNode*(relativeWidth-1f)/2, 0f, 0f, widthPerNode, true, candidate?.b?.name ?: "No WLAN", candidate?.b?.group ?: (noise.getNoise(time, 156+i*1020).times(size).toInt()), bgPaint, textPaint)
-            drawElement(canvas, -1, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true, candidate?.result ?: "No Game", candidate?.resultGroup ?: (noise.getNoise(time, 23+i*950).times(size).toInt()), bgPaint, textPaint)
+            drawElement(canvas, -1, 0f, 0f, 0f, widthPerNode, true,
+                candidate?.a?.name ?: if(hasNews) "God" else "App", candidate?.a?.group ?: (noise.getNoise(time, 78+i*100).times(size).toInt()), bgPaint, textPaint)
+            drawElement(canvas, -1, widthPerNode*(relativeWidth-1f)/2, 0f, 0f, widthPerNode, true,
+                candidate?.b?.name ?: if(hasNews) "Magic" else "No WLAN", candidate?.b?.group ?: (noise.getNoise(time, 156+i*1020).times(size).toInt()), bgPaint, textPaint)
+            drawElement(canvas, -1, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true,
+                candidate?.result ?: if(hasNews) "Elements" else "No Game", candidate?.resultGroup ?: (noise.getNoise(time, 23+i*950).times(size).toInt()), bgPaint, textPaint)
 
             textPaint.textAlign = Paint.Align.CENTER
             textPaint.textSize = widthPerNode*.5f
@@ -80,6 +89,19 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
         }
 
+        canvas.restoreToCount(save0)
+
+        textPaint.color = -1
+        textPaint.textSize = widthPerNode * 0.2f
+        textPaint.textAlign = Paint.Align.CENTER
+        val padding = textPaint.descent()
+        val text = "Server: ${WebServices.serverName}"
+        val x0 = min(padding * 3f + 0.5f * textPaint.measureText(text), measuredWidth * 0.5f)
+        val y0 = padding * 2 + 0.5f * (textPaint.textSize - (textPaint.ascent() + textPaint.descent()))
+        bgPaint.color = 0xff000000.toInt()
+        canvas.drawRect(padding, padding, x0*2-padding, padding*3+textPaint.textSize, bgPaint)
+        canvas.drawText(text, x0, y0, textPaint)
+
     }
 
     fun darken(rgb: Int): Int {
@@ -88,7 +110,6 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         val b = rgb and 255
         return 0xff000000.toInt() or ((r / 2) shl 16) or ((g / 2) shl 8) or (b/2)
     }
-
 
     fun timeString(sec: Int): String {
         return if(sec < 30){

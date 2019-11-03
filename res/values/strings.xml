@@ -49,4 +49,15 @@
     <string name="save_progress_to_name">Save progress to #name</string>
     <string name="load_progress_from_name">Load progress from #name</string>
     <string name="please_select_a_file">Please select a file!</string>
+    <string name="switch_server">Switch Server</string>
+    <string name="settings_help">Hold down long on a button to get more information.</string>
+    <string name="switch_to_default">Switch to default</string>
+    <string name="join_that_server">Join that server</string>
+    <string name="server_name">Server Name</string>
+    <string name="community">Community</string>
+    <string name="create_your_own_server">Create your own server</string>
+    <string name="create_your_own_server2">Create your own server!</string>
+    <string name="server_creation_message">Creating your own server allows you to have different recipes than on the
+        default server. It might be useful for your own community, like your YouTube channel.
+    </string>
 </resources>

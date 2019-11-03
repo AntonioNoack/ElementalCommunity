@@ -36,7 +36,7 @@ class Tree {
             allRecipes.add(Triple(src.first, src.second, dst))
         }
 
-        elements = ArrayList(max(4, AllManager.unlockeds.sumBy { it.size }))
+        val elements = ArrayList<Element>(max(4, AllManager.unlockeds.sumBy { it.size }))
         val todo = HashSet<Element>(elements.size)
 
         for(elementRow in AllManager.unlockeds){
@@ -159,6 +159,7 @@ class Tree {
 
         }
 
+        this.elements = elements
         bottom = ((positionY - 1) * multiplierY).toFloat()
 
     }
