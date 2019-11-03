@@ -161,8 +161,9 @@ object SettingsInit {
             if(name.isNotEmpty()){
                 checkServerName(name) ?: return@setOnClickListener
                 val pass = dialog.findViewById<TextView>(R.id.password)!!.text.trim().toString()
-                val passInt = if(pass.isEmpty()) 0L else hashPassword(name)
+                val passInt = if(pass.isEmpty()) 0L else hashPassword(pass)
                 WebServices.requestServerInstance(this, name, passInt, { realName, id ->
+
                     if(realName == null || realName.isEmpty()){
                         when(id){
                             -1 -> {
@@ -191,7 +192,7 @@ object SettingsInit {
                             .apply()
                         // shows the server
                         newsView.postInvalidate()
-                        AllManager.toast(R.string.success, false)
+                        AllManager.toast("Success! You probably want to backup your save, and start from 0 to enjoy that server to its fullest.", false)
                         dialog.dismiss()
                     }
                 })
@@ -234,7 +235,7 @@ object SettingsInit {
             if(name.isNotEmpty()) {
                 checkServerName(name) ?: return@setOnClickListener
                 val pass = dialog.findViewById<TextView>(R.id.password)!!.text.trim().toString()
-                val passInt = if(pass.isEmpty()) 0L else hashPassword(name)
+                val passInt = if(pass.isEmpty()) 0L else hashPassword(pass)
                 WebServices.createServerInstance(this, name, passInt, { realName, id ->
                     if(realName == null || realName.isEmpty()){
                         when(id){
@@ -280,7 +281,7 @@ object SettingsInit {
         val big = BigInteger(seed.toString())
         val prime = BigInteger("51163516513147")
         val pow = big.modPow(prime, BigInteger("2").pow(64).minus(BigInteger.ONE))
-        return pow.toLong() and Long.MAX_VALUE
+        return pow.toLong()
     }
 
 }

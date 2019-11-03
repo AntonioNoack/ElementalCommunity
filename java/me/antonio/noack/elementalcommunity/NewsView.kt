@@ -98,7 +98,7 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         val text = "Server: ${WebServices.serverName}"
         val x0 = min(padding * 3f + 0.5f * textPaint.measureText(text), measuredWidth * 0.5f)
         val y0 = padding * 2 + 0.5f * (textPaint.textSize - (textPaint.ascent() + textPaint.descent()))
-        bgPaint.color = 0xff000000.toInt()
+        bgPaint.color = 0xff555555.toInt()
         canvas.drawRect(padding, padding, x0*2-padding, padding*3+textPaint.textSize, bgPaint)
         canvas.drawText(text, x0, y0, textPaint)
 
