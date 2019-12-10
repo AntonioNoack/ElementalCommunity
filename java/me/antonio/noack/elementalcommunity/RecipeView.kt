@@ -47,9 +47,9 @@ class RecipeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribute
         val widthPerNode = width / relativeWidth
         textPaint.textAlign = Paint.Align.CENTER
 
-        drawElement(canvas, -1, 0f, 0f, 0f, widthPerNode, true, aName, aGroup, bgPaint, textPaint)
-        drawElement(canvas, -1, widthPerNode*(relativeWidth-1f)/2, 0f, 0f, widthPerNode, true, bName, bGroup, bgPaint, textPaint)
-        drawElement(canvas, -1, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true, rName, rGroup, bgPaint, textPaint)
+        drawElement(canvas, -1, 0f, 0f, 0f, widthPerNode, true, aName, aGroup, -1, bgPaint, textPaint)
+        drawElement(canvas, -1, widthPerNode*(relativeWidth-1f)/2, 0f, 0f, widthPerNode, true, bName, bGroup, -1, bgPaint, textPaint)
+        drawElement(canvas, -1, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true, rName, rGroup, -1, bgPaint, textPaint)
 
         textPaint.textSize = widthPerNode*.5f
         textPaint.color = 0xff777777.toInt()

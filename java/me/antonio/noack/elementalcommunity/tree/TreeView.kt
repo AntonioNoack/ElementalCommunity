@@ -355,6 +355,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         val maxY = (centerY / widthPerNode + scrollY + 0.5f).toInt()
 
         val showCraftingCounts = AllManager.showCraftingCounts
+        val showUUIDs = AllManager.showElementUUID
 
         synchronized(tree.elements){
             for(element in tree.elements){
@@ -364,19 +365,19 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                     val y0 = centerY + (element.treeY - scrollY) * widthPerNode
                     if(activeElement == element && activeness > 0f){
                         val delta = activeness * widthPerNode * 0.5f
-                        drawElement(canvas, showCraftingCounts, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
+                        drawElement(canvas, showCraftingCounts, showUUIDs, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
                     } else {
-                        drawElement(canvas, showCraftingCounts, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
+                        drawElement(canvas, showCraftingCounts, showUUIDs, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
                     }
                 }
             }
         }
 
-        drawFavourites(canvas, false, width, height, bgPaint, textPaint, allowLeftFavourites)
+        drawFavourites(canvas, false, showUUIDs, width, height, bgPaint, textPaint, allowLeftFavourites)
 
         val dragged = dragged
         if(dragged != null){
-            drawElement(canvas, false, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
+            drawElement(canvas, false, showUUIDs, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
 
         if(activeness > 0f){
             this.activeness -= deltaTime

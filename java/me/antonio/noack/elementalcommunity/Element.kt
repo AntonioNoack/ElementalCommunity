@@ -13,6 +13,8 @@ import kotlin.math.min
 class Element private constructor(var name: String, val uuid: Int, var group: Int): Comparable<Element> {
 
     override fun compareTo(other: Element): Int {
+        val y = startingNumber.compareTo(other.startingNumber)
+        if(y != 0) return y
         val x = hashLong.compareTo(other.hashLong)
         if(x != 0) return x
         else return lcName.compareTo(other.lcName)
@@ -34,6 +36,35 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
 
     var lcName = name.toLowerCase()
     var hashLong = calcHashLong()
+    var startingNumber = calcStartingNumber()
+
+    fun calcStartingNumber(): Long {
+
+        var num = 0L
+        var i = 0
+
+        val isNegative = if(lcName.startsWith("-")){
+            i++
+            true
+        } else {
+            false
+        }
+
+        val limit = if(isNegative) 20 else 19
+
+        number@ while(i < lcName.length){
+            if(i == limit) return if(isNegative) Long.MIN_VALUE else Long.MAX_VALUE
+            when(lcName[i]){
+                in '0' .. '9' -> {
+                    num = num * 10 + lcName[i].toInt() - '0'.toInt()
+                }
+                else -> break@number
+            }
+            i++
+        }
+
+        return if(isNegative) -num else num
+    }
 
     fun calcHashLong(): Long {
         val lcName = lcName
@@ -73,7 +104,8 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
             return if(old != null){
                 old.name = name
                 old.lcName = name.toLowerCase()
-                old.hashLong = old.hashLong
+                old.startingNumber = old.calcStartingNumber()
+                old.hashLong = old.calcHashLong()
                 if(craftingCount >= minimumCraftingCount){ old.craftingCount = craftingCount }
                 if(old.group != group){
                     synchronized(Unit){

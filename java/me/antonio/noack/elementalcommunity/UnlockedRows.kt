@@ -52,8 +52,12 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
             synchronized(Unit){
                 for((group, unlocked) in unlockeds.withIndex()){
                     val list = shownSymbols[group]
-                    list.clear()
-                    list.addAll(unlocked)
+                    synchronized(unlocked){
+                        synchronized(list){
+                            list.clear()
+                            list.addAll(unlocked)
+                        }
+                    }
                 }
             }
 
@@ -142,8 +146,6 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         var intX: Float
         val intY: Float
 
-
-        val entriesPerRow = entriesPerRow
         val scroll = scroll
         val widthPerNode = widthPerNode()
 
@@ -424,7 +426,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     private fun neededHeight(): Float {
         val (widthPerNode, avgMargin) = widthPerNodeNMargin()
-        return 2 * avgMargin + widthPerNode * countRows() + (if(measuredHeight > measuredWidth) measuredWidth / FAVOURITE_COUNT else 0)
+        return 2 * avgMargin + widthPerNode * countRows() + (if(measuredHeight > measuredWidth && FAVOURITE_COUNT > 0) measuredWidth / FAVOURITE_COUNT else 0)
     }
 
     private var lastTime = 0L
@@ -462,6 +464,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         textPaint.textAlign = Paint.Align.CENTER
 
         val showCraftingCounts = AllManager.showCraftingCounts
+        val showUUIDs = AllManager.showElementUUID
 
         shownSymbols.forEachIndexed { group, unlocked ->
 
@@ -483,11 +486,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                             if(activeElement == element && activeness > 0f){
 
                                 val delta = activeness * widthPerNode * 0.5f
-                                drawElement(canvas, showCraftingCounts, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
+                                drawElement(canvas, showCraftingCounts, showUUIDs, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
 
                             } else {
 
-                                drawElement(canvas, showCraftingCounts, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
+                                drawElement(canvas, showCraftingCounts, showUUIDs, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
 
                             }
                         }
@@ -506,11 +509,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
             }
         }
 
-        drawFavourites(canvas, false, width, height, bgPaint, textPaint, allowLeftFavourites)
+        drawFavourites(canvas, false, showUUIDs, width, height, bgPaint, textPaint, allowLeftFavourites)
 
         val dragged = dragged
         if(dragged != null){
-            drawElement(canvas, false, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
+            drawElement(canvas, false, showUUIDs, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
 
         if(activeness > 0f){
 

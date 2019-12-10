@@ -87,6 +87,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
+        <androidx.appcompat.widget.SwitchCompat
+                android:layout_marginTop="10dp"
+                android:background="@color/colorPrimary"
+                android:id="@+id/displayUUIDSwitch"
+                android:text="@string/show_element_uuids"
+                android:textSize="20sp"
+                android:textColor="@color/colorPrimaryText"
+                android:padding="10dp"
+                android:checked="true"
+                android:theme="@style/SwitchColors"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
         <Button
                 android:id="@+id/saveProgress"
                 android:textAllCaps="false"

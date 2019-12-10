@@ -8,7 +8,7 @@ import android.view.MotionEvent
 import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
-import me.antonio.noack.elementalcommunity.GroupsEtc.drawElementRaw
+import me.antonio.noack.elementalcommunity.GroupsEtc.drawElementBackground
 import me.antonio.noack.elementalcommunity.GroupsEtc.hues
 import me.antonio.noack.elementalcommunity.GroupsEtc.saturations
 
@@ -66,14 +66,14 @@ class GroupSelectorView(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
             if(debugColors){
 
                 drawElement(canvas, -1, x0, y0, 0f,
-                    widthPerNode, true, "$i", i, bgPaint, bgPaint)
+                    widthPerNode, true, "$i", i, -1, bgPaint, bgPaint)
 
             } else {
 
                 if(i == selected){
-                    drawElementRaw(canvas, x0, y0, -widthPerNode/6, widthPerNode, true, i, bgPaint)
+                    drawElementBackground(canvas, x0, y0, -widthPerNode/6, widthPerNode, true, i, bgPaint)
                 } else {
-                    drawElementRaw(canvas, x0, y0, 0f, widthPerNode, true, i, bgPaint)
+                    drawElementBackground(canvas, x0, y0, 0f, widthPerNode, true, i, bgPaint)
                 }
 
             }

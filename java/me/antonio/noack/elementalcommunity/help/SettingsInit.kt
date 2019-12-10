@@ -95,6 +95,17 @@ object SettingsInit {
                 AllManager.invalidate()
             }
 
+            displayUUIDSwitch.setOnLongClickListener {
+                AllManager.toast("Enable/disable whether the uuid of an element will be displayed below the element name.", true)
+                true
+            }
+            displayUUIDSwitch.isChecked = AllManager.showElementUUID
+            displayUUIDSwitch.setOnCheckedChangeListener { _, isChecked ->
+                AllManager.showElementUUID = isChecked
+                pref.edit().putBoolean("showElementUUID", isChecked).apply()
+                AllManager.invalidate()
+            }
+
             switchServerButton.setOnLongClickListener {
                 AllManager.toast("Switch to a different server: different recipes, however your elements will stay yours.", true)
                 true
@@ -295,7 +306,17 @@ object SettingsInit {
         val big = BigInteger(seed.toString())
         val prime = BigInteger("51163516513147")
         val pow = big.modPow(prime, BigInteger("2").pow(64).minus(BigInteger("1")))
-        return pow.toLong().toLong() and 0x7fffffffffffffffL
+        return pow.toLong().toLong2() and 0x7fffffffffffffffL
+    }
+
+    fun Long.toLong2() = this
+
+    fun String.toLong2(): Long {
+        var value = 0L
+        for(char in this){
+            value = value * 10 + char.toInt() - '0'.toInt()
+        }
+        return value
     }
 
 

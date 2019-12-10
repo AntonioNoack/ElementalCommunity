@@ -60,4 +60,5 @@
     <string name="server_creation_message">Creating your own server allows you to have different recipes than on the
         default server. It might be useful for your own community, like your YouTube channel.
     </string>
+    <string name="show_element_uuids">Display element ids</string>
 </resources>

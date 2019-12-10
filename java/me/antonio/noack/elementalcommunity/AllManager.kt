@@ -42,6 +42,7 @@ class AllManager: AppCompatActivity() {
 
         var customUUID = 0L
         var showCraftingCounts = true
+        var showElementUUID = true
 
         var unlockedIds = hashSetOf(1, 2, 3, 4)
         var elementById = SparseArray<Element>()
@@ -121,6 +122,7 @@ class AllManager: AppCompatActivity() {
     lateinit var freqTitle: TextView
     lateinit var switchServerButton: View
     lateinit var craftingCountsSwitch: SwitchCompat
+    lateinit var displayUUIDSwitch: SwitchCompat
 
     val diamondViews = ArrayList<TextView>()
 
@@ -152,6 +154,7 @@ class AllManager: AppCompatActivity() {
         freqSlider = findViewById(R.id.frequencySlider)!!
         freqTitle = findViewById(R.id.frequencyTitle)!!
         craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch)!!
+        displayUUIDSwitch = findViewById(R.id.displayUUIDSwitch)!!
         switchServerButton = findViewById(R.id.switchServer)!!
     }
 
@@ -210,6 +213,7 @@ class AllManager: AppCompatActivity() {
 
         askFrequency = AskFrequencyOption[pref]
         showCraftingCounts = pref.getBoolean("showCraftingCounts", true)
+        showElementUUID = pref.getBoolean("showElementUUID", true)
 
         successSound = Sound(R.raw.magic, this)
         okSound = Sound(R.raw.ok, this)

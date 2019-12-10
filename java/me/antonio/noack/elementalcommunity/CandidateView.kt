@@ -104,7 +104,7 @@ class CandidateView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attrib
 
         val candidate = candidate
         val width = measuredWidth * 1f
-        drawElement(canvas, -1, 0f, 0f, 0f, width, true, candidate?.name ?: "???", candidate?.group ?: 15, bgPaint, textPaint)
+        drawElement(canvas, -1, 0f, 0f, 0f, width, true, candidate?.name ?: "???", candidate?.group ?: 15, -1, bgPaint, textPaint)
 
         val margin = getMargin(width)
         val shift = width * 0.03f
