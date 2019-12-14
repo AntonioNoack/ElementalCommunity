@@ -102,7 +102,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     private var entriesPerRow = 5
 
     var scroll = 0f
-    var scrollDest = 0f
+    var scrollDest: Element? = null
 
     private var dragged: Element? = null
     private var activeElement: Element? = null
@@ -238,7 +238,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
                 }
 
-                scrollDest = Float.NaN
+                scrollDest = null
 
                 checkScroll()
                 invalidate()
@@ -333,9 +333,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
             save()
         }
         // scroll to destination on success
-        val height = measuredHeight
-        val needed = neededHeight()
-        scrollDest = clamp((getRow(element, true) + 0.5f)/countRows() * needed - height * 0.5f, 0f, max(0f, needed - height))
+        scrollDest = element
         staticRunOnUIThread {
             invalidate()
             (if(newOne) AllManager.successSound else AllManager.okSound).play()
@@ -518,24 +516,30 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         if(dragged != null){
             drawElement(canvas, false, showUUIDs, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
 
+
+        val scrollDestY =  scrollDest?.run {
+            val needed = neededHeight()
+            clamp((getRow(this, true) + 0.5f)/countRows() * needed - height * 0.5f, 0f, max(0f, needed - height))
+        } ?: 0f
+
         if(activeness > 0f){
 
-            val x = abs(scroll - scrollDest) * 20 / min(width, height)
-            this.activeness = max(this.activeness - deltaTime, min(1f, if(scrollDest.isNaN()) -1f else ln(x) * 50 / widthPerNode))
+            val distance = abs(scroll - scrollDestY) * 20 / min(width, height)
+            this.activeness = max(this.activeness - deltaTime, min(1f, if(scrollDest == null) -1f else ln(distance) * 50 / widthPerNode))
             invalidate()
 
         }
 
-        if(!scrollDest.isNaN()){
+        if(scrollDest != null){
 
-            scroll = mix(scroll, scrollDest, clamp(3f * deltaTime, 0f, 1f))
+            scroll = mix(scroll, scrollDestY, clamp(3f * deltaTime, 0f, 1f))
             when {
                 scroll.isNaN() -> {
-                    scrollDest = Float.NaN
+                    scrollDest = null
                     scroll = 0f
                 }
-                abs(scroll - scrollDest) < widthPerNode * 0.05f -> {
-                    scrollDest = Float.NaN
+                abs(scroll - scrollDestY) < widthPerNode * 0.05f -> {
+                    scrollDest = null
                 }
                 else -> {
                     invalidate()

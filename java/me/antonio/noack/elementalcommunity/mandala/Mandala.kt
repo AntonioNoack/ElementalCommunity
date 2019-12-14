@@ -14,8 +14,8 @@ class Mandala(val element: Element, oldTree: Mandala?){
     val toThisSet = HashSet<Recipe>()
     val fromThisSet = HashSet<Recipe>()
 
-    var toSize = 1f
-    var fromSize = 1f
+    var outherSize = 1f
+    var innerSize = 1f
 
     fun draw(time: Float,
              drawElement: (element: Element, x: Float, y: Float, alpha: Float, size: Float) -> Unit,
@@ -60,8 +60,8 @@ class Mandala(val element: Element, oldTree: Mandala?){
                 val by = bl.getY(time)
                 val rx = rl.getX(time)
                 val ry = rl.getY(time)
-                drawElement(a, ax, ay, al.getZ(time), toSize)
-                if(a != b) drawElement(b, bx, by, bl.getZ(time), toSize)
+                drawElement(a, ax, ay, al.getZ(time), outherSize)
+                if(a != b) drawElement(b, bx, by, bl.getZ(time), outherSize)
                 if(abs(rx)+abs(ry) > 0.01f) drawElement(r.r, rx, ry, rl.getZ(time), 1f)
             }
         }
@@ -74,9 +74,9 @@ class Mandala(val element: Element, oldTree: Mandala?){
                 val by = bl.getY(time)
                 val rx = rl.getX(time)
                 val ry = rl.getY(time)
-                if(abs(ax)+abs(ay) > 0.01f) drawElement(a, ax, ay, al.getZ(time), fromSize)
-                if(abs(bx)+abs(by) > 0.01f) drawElement(b, bx, by, bl.getZ(time), fromSize)
-                drawElement(r.r, rx, ry, rl.getZ(time), fromSize)
+                if(abs(ax)+abs(ay) > 0.01f) drawElement(a, ax, ay, al.getZ(time), innerSize)
+                if(abs(bx)+abs(by) > 0.01f) drawElement(b, bx, by, bl.getZ(time), innerSize)
+                drawElement(r.r, rx, ry, rl.getZ(time), outherSize)
             }
         }
     }
@@ -99,7 +99,7 @@ class Mandala(val element: Element, oldTree: Mandala?){
         toThisSet.addAll(toThisElement)
         fromThisSet.addAll(fromThisElement)
 
-        // todo calculate locations, and move the elements
+        // calculate locations, and move the elements
         /*for(r in toThisElement){
             r.rl.targetX = 0f
             r.rl.sourceX = 0f
@@ -113,8 +113,8 @@ class Mandala(val element: Element, oldTree: Mandala?){
         val fromArea = 2f * fromCount.toFloat() / sumCount
 
         val scale = min(1f, 20f / sumCount)
-        toSize = scale
-        fromSize = scale
+        outherSize = scale
+        innerSize = scale
 
         val toDifHalf = (toCount-1) * 0.5f
         val toDif = (toArea * PI/max(1,toCount-1)).toFloat()
@@ -122,7 +122,9 @@ class Mandala(val element: Element, oldTree: Mandala?){
         val fromDif = (fromArea * PI/max(1, fromCount-1)).toFloat()
 
         val outher = 1f
-        val inner = 0.667f
+        val inner0 = 0.75f
+        val inner1 = 0.6f
+        val inner = listOf(inner0, inner1)
 
         var ctr = 0
         toThisElement.forEach { r ->
@@ -134,8 +136,8 @@ class Mandala(val element: Element, oldTree: Mandala?){
 
         ctr = 0
         fromThisElement.forEach { r ->
-            if(r.a != element) r.al = getLocation(ctr - fromDifHalf, fromDif, inner, true)
-            else r.bl = getLocation(ctr - fromDifHalf, fromDif, inner, true)
+            if(r.a != element) r.al = getLocation(ctr - fromDifHalf, fromDif, inner[ctr and 1], true)
+            else r.bl = getLocation(ctr - fromDifHalf, fromDif, inner[ctr and 1], true)
             r.rl = getLocation(ctr - fromDifHalf, fromDif, outher, true)
             ctr++
         }

@@ -82,21 +82,16 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
     fun getElementAt(x: Float, y: Float): Element? {
         var minElement = tree.element
         var minDistance = sq(x,y)
-        val fromScale = sq(tree.fromSize)
-        val toScale = sq(tree.toSize)
-        var scale = 1f
         tree.toThisElement.forEach { r ->
             val da = getDistanceSq(r.al, x, y)
             if(da < minDistance){
                 minDistance = da
                 minElement = r.a
-                scale = fromScale
             }
             val db = getDistanceSq(r.bl, x, y)
             if(db < minDistance){
                 minDistance = db
                 minElement = r.b
-                scale = fromScale
             }
         }
         tree.fromThisElement.forEach { r ->
@@ -104,22 +99,19 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
             if(da < minDistance){
                 minDistance = da
                 minElement = r.a
-                scale = toScale
             }
             val db = getDistanceSq(r.bl, x, y)
             if(db < minDistance){
                 minDistance = db
                 minElement = r.b
-                scale = toScale
             }
             val dr = getDistanceSq(r.rl, x, y)
             if(dr < minDistance){
                 minDistance = dr
                 minElement = r.r
-                scale = toScale
             }
         }
-        return if(minDistance < 1.5f * scale) minElement else null
+        return minElement
     }
 
     fun getScale(): Pair<Float, Float> {
@@ -258,8 +250,8 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
         super.draw(canvas)
         canvas ?: return
 
-        if(!hasTree || isInvalidated){
-            buildTree(AllManager.elementById[1])
+        if(!hasTree){
+            buildTree(AllManager.elementById[1]!!)
         }
 
         GroupsEtc.tick()
@@ -351,9 +343,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
             AllManager.save()
         }
 
-        if(element != tree.element){
-            switchTo(element)
-        }
+        switchTo(element)
 
         AllManager.staticRunOnUIThread {
             invalidate()
