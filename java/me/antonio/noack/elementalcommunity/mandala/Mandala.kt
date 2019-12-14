@@ -1,4 +1,4 @@
-package me.antonio.noack.elementalcommunity.tree2
+package me.antonio.noack.elementalcommunity.mandala
 
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.Element
@@ -6,7 +6,7 @@ import kotlin.math.*
 
 // todo reload news on swipe down
 
-class Tree2(val element: Element, oldTree: Tree2?){
+class Mandala(val element: Element, oldTree: Mandala?){
 
     val toThisElement = ArrayList<Recipe>()
     val fromThisElement = ArrayList<Recipe>()

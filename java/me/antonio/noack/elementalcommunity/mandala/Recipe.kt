@@ -1,4 +1,4 @@
-package me.antonio.noack.elementalcommunity.tree2
+package me.antonio.noack.elementalcommunity.mandala
 
 import me.antonio.noack.elementalcommunity.Element
 

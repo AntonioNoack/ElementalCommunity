@@ -27,7 +27,7 @@ import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.help.SettingsInit
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.tree.TreeView
-import me.antonio.noack.elementalcommunity.tree2.TreeView2
+import me.antonio.noack.elementalcommunity.mandala.MandalaView
 import kotlin.math.abs
 
 // Sounds:
@@ -123,7 +123,7 @@ class AllManager: AppCompatActivity() {
 
     var treeView: TreeView? = null
     var spaceSlider: SeekBar? = null
-    var treeView2: TreeView2? = null
+    var mandalaView: MandalaView? = null
 
     val diamondViews = ArrayList<TextView>()
 
@@ -131,7 +131,7 @@ class AllManager: AppCompatActivity() {
         combiner = findViewById(R.id.combiner)!!
         unlocked = findViewById(R.id.unlocked)!!
         treeView = findViewById(R.id.tree) ?: null
-        treeView2 = findViewById(R.id.tree2) ?: null
+        mandalaView = findViewById(R.id.tree2) ?: null
         startButton = findViewById(R.id.start)!!
         flipper = findViewById(R.id.flipper)!!
         treeViewButton = findViewById(R.id.treeButton)!!
@@ -205,7 +205,7 @@ class AllManager: AppCompatActivity() {
         unlocked.all = this
         combiner.all = this
         treeView?.all = this
-        treeView2?.all = this
+        mandalaView?.all = this
 
         pref = BetterPreferences(getPreferences(Context.MODE_PRIVATE))
 
@@ -241,8 +241,8 @@ class AllManager: AppCompatActivity() {
             unlocked.postInvalidate()
             treeView?.hasTree = false
             treeView?.postInvalidate()
-            treeView2?.isInvalidated = true
-            treeView2?.postInvalidate()
+            mandalaView?.isInvalidated = true
+            mandalaView?.postInvalidate()
 
         }
         

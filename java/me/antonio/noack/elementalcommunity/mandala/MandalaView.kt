@@ -1,4 +1,4 @@
-package me.antonio.noack.elementalcommunity.tree2
+package me.antonio.noack.elementalcommunity.mandala
 
 import android.content.Context
 import android.graphics.Canvas
@@ -15,21 +15,21 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
 import kotlin.math.*
 
-class TreeView2(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet){
+class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet){
 
     var allowLeftFavourites = true
 
     lateinit var all: AllManager
     var unlockeds = AllManager.unlockeds
 
-    lateinit var tree: Tree2
+    lateinit var tree: Mandala
     var hasTree = false
     var isInvalidated = true
 
     // measured border coordinates for prevention of scrolling further away
 
     private fun buildTree(e: Element){
-        tree = Tree2(e, if(hasTree) tree else null)
+        tree = Mandala(e, if(hasTree) tree else null)
         hasTree = true
         isInvalidated = false
     }
@@ -41,7 +41,7 @@ class TreeView2(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
         val (sx, sy) = getScale()
         val x = event.x - measuredWidth * 0.5f
         val y = event.y - measuredHeight * 0.5f
-        var intX = x / sx + scrollX
+        var intX = x / sx
 
         var isSpecial = false
         if(AllManager.FAVOURITE_COUNT > 0){
@@ -70,7 +70,7 @@ class TreeView2(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
             }
         }
 
-        val intY = y / sy + scrollY
+        val intY = y / sy
         // we have no scroll section -> we are fine with always being valid
         return Triple(if(isSpecial) if(intX-floor(intX) > 0.5f) AreaType.FAVOURITES_TOP else AreaType.FAVOURITES_BOTTOM else AreaType.ELEMENTS, intX, intY)
     }
@@ -125,7 +125,8 @@ class TreeView2(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeS
     fun getScale(): Pair<Float, Float> {
         val min = min(measuredWidth, measuredHeight)
         val sc = if(min > widthPerNode){
-            (min-widthPerNode*0.5f) * 0.495f
+            // w/n or w/n*0.5 is seldom important
+            (min-widthPerNode) * 0.495f
         } else {
             min * 0.45f
         }
