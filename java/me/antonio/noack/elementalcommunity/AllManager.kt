@@ -15,7 +15,6 @@ import kotlin.collections.HashMap
 import kotlin.concurrent.thread
 import android.view.View
 import android.view.View.*
-import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.api.WebServices
 import android.os.VibrationEffect
@@ -28,7 +27,7 @@ import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.help.SettingsInit
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.tree.TreeView
-import me.antonio.noack.elementalcommunity.utils.Maths
+import me.antonio.noack.elementalcommunity.tree2.TreeView2
 import kotlin.math.abs
 
 // Sounds:
@@ -96,7 +95,6 @@ class AllManager: AppCompatActivity() {
     lateinit var pref: SharedPreferences
     lateinit var combiner: Combiner
     lateinit var unlocked: UnlockedRows
-    lateinit var treeView: TreeView
     lateinit var startButton: View
     lateinit var flipper: ViewFlipper
     lateinit var treeViewButton: View
@@ -115,7 +113,6 @@ class AllManager: AppCompatActivity() {
     lateinit var searchButton1: View
     lateinit var searchButton2: View
     lateinit var randomButton: View
-    lateinit var spaceSlider: SeekBar
     lateinit var resetEverythingButton: View
     lateinit var newsView: NewsView
     lateinit var freqSlider: SeekBar
@@ -124,12 +121,17 @@ class AllManager: AppCompatActivity() {
     lateinit var craftingCountsSwitch: SwitchCompat
     lateinit var displayUUIDSwitch: SwitchCompat
 
+    var treeView: TreeView? = null
+    var spaceSlider: SeekBar? = null
+    var treeView2: TreeView2? = null
+
     val diamondViews = ArrayList<TextView>()
 
     fun initViews(){
         combiner = findViewById(R.id.combiner)!!
         unlocked = findViewById(R.id.unlocked)!!
-        treeView = findViewById(R.id.tree)!!
+        treeView = findViewById(R.id.tree) ?: null
+        treeView2 = findViewById(R.id.tree2) ?: null
         startButton = findViewById(R.id.start)!!
         flipper = findViewById(R.id.flipper)!!
         treeViewButton = findViewById(R.id.treeButton)!!
@@ -148,7 +150,7 @@ class AllManager: AppCompatActivity() {
         searchButton1 = findViewById(R.id.searchButton1)!!
         searchButton2 = findViewById(R.id.searchButton2)!!
         randomButton = findViewById(R.id.randomButton)!!
-        spaceSlider = findViewById(R.id.spaceSlider)!!
+        spaceSlider = findViewById(R.id.spaceSlider) ?: null
         resetEverythingButton = findViewById(R.id.resetEverythingButton)!!
         newsView = findViewById(R.id.newsView)!!
         freqSlider = findViewById(R.id.frequencySlider)!!
@@ -202,7 +204,8 @@ class AllManager: AppCompatActivity() {
 
         unlocked.all = this
         combiner.all = this
-        treeView.all = this
+        treeView?.all = this
+        treeView2?.all = this
 
         pref = BetterPreferences(getPreferences(Context.MODE_PRIVATE))
 
@@ -236,8 +239,10 @@ class AllManager: AppCompatActivity() {
 
             combiner.postInvalidate()
             unlocked.postInvalidate()
-            treeView.hasTree = false
-            treeView.postInvalidate()
+            treeView?.hasTree = false
+            treeView?.postInvalidate()
+            treeView2?.isInvalidated = true
+            treeView2?.postInvalidate()
 
         }
         

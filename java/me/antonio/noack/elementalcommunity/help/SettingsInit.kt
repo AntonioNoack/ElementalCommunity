@@ -29,25 +29,30 @@ object SettingsInit {
                 flipper.displayedChild = 4
             }
 
-            spaceSlider.setOnLongClickListener {
-                AllManager.toast("Change the offset between the elements.", true)
-                true
-            }
+            val treeView = treeView
+            treeView?.apply {
+                val spaceSlider = spaceSlider!!
 
-            val spaceSliderOffset = 1
-            spaceSlider.max = 5 + spaceSliderOffset
-            spaceSlider.progress = treeView.tree.multiplierX - spaceSliderOffset
-            spaceSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    val tree = treeView.tree
-                    val value = spaceSliderOffset + progress
-                    tree.multiplierX = value
-                    tree.multiplierY = value
-                    AllManager.invalidate()
+                spaceSlider.setOnLongClickListener {
+                    AllManager.toast("Change the offset between the elements.", true)
+                    true
                 }
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-            })
+
+                val spaceSliderOffset = 1
+                spaceSlider.max = 5 + spaceSliderOffset
+                spaceSlider.progress = tree.multiplierX - spaceSliderOffset
+                spaceSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                        val tree = tree
+                        val value = spaceSliderOffset + progress
+                        tree.multiplierX = value
+                        tree.multiplierY = value
+                        AllManager.invalidate()
+                    }
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                })
+            }
 
             favSlider.setOnLongClickListener {
                 AllManager.toast("How many favourites for crafting shall be displayed?", true)

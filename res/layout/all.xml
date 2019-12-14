@@ -12,7 +12,7 @@
 
     <include layout="@layout/game"/>
 
-    <include layout="@layout/tree"/>
+    <include layout="@layout/tree2"/>
 
     <include layout="@layout/combiner"/>
 

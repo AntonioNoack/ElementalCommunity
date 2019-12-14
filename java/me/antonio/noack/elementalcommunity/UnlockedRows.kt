@@ -482,6 +482,9 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                             if(y0 >= height) break
                             if(y0 < -widthPerNode) continue
 
+                            textPaint.alpha = 255
+                            bgPaint.alpha = 255
+
                             val x0 = avgMargin + (index % entriesPerRow) * widthPerNode
                             if(activeElement == element && activeness > 0f){
 

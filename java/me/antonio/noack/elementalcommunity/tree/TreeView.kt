@@ -301,7 +301,10 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         super.draw(canvas)
         canvas ?: return
 
-        if(!hasTree || oldMultiplier != tree.multiplierX) buildTree()
+        if(!hasTree || oldMultiplier != tree.multiplierX){
+            buildTree()
+            oldMultiplier = tree.multiplierX
+        }
 
         GroupsEtc.tick()
 

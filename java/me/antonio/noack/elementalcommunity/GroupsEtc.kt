@@ -112,28 +112,31 @@ object GroupsEtc {
     fun getMargin(widthPerNode: Float): Float = widthPerNode * marginFactor
 
     fun drawElement(canvas: Canvas, drawCount: Boolean, drawUUID: Boolean, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, element: Element,
-                    bgPaint: Paint, textPaint: Paint, opacity: Float = 1f){
+                    bgPaint: Paint, textPaint: Paint){
         drawElement(canvas,
             if(drawCount) element.craftingCount else -1,
             x0, y0, delta, widthPerNode, margin, element.name, element.group,
             if(drawUUID) element.uuid else -1,
-            bgPaint, textPaint, opacity)
+            bgPaint, textPaint)
     }
 
     fun drawFavourites(canvas: Canvas, drawCount: Boolean, drawUUID: Boolean, width: Float, height: Float, bgPaint: Paint, textPaint: Paint, allowLeftFavourites: Boolean){
-        val opacity = 0.5f
+
+        textPaint.alpha = 127
+        bgPaint.alpha = 127
+
         if(width > height && allowLeftFavourites){// on the left
             val fWidth = min(height / AllManager.FAVOURITE_COUNT, width * AllManager.MAX_FAVOURITES_RATIO)
             for((index, favourite) in AllManager.favourites.withIndex()){
-                if(favourite != null) drawElement(canvas, drawCount, drawUUID, 0f,index*fWidth, 0f, fWidth, true, favourite, bgPaint, textPaint, opacity)
-                else drawElement(canvas, -1, 0f, index*fWidth, 0f, fWidth, true, "", -1, -1, bgPaint, textPaint, opacity)
+                if(favourite != null) drawElement(canvas, drawCount, drawUUID, 0f,index*fWidth, 0f, fWidth, true, favourite, bgPaint, textPaint)
+                else drawElement(canvas, -1, 0f, index*fWidth, 0f, fWidth, true, "", -1, -1, bgPaint, textPaint)
             }
         } else {// on the bottom
             val fWidth = min(width / AllManager.FAVOURITE_COUNT, height * AllManager.MAX_FAVOURITES_RATIO)
             val baseY = height - fWidth
             for((index, favourite) in AllManager.favourites.withIndex()){
-                if(favourite != null) drawElement(canvas, drawCount, drawUUID, index*fWidth, baseY, 0f, fWidth, true, favourite, bgPaint, textPaint, opacity)
-                else drawElement(canvas, -1, index*fWidth, baseY, 0f, fWidth, true, "", -1, -1, bgPaint, textPaint, opacity)
+                if(favourite != null) drawElement(canvas, drawCount, drawUUID, index*fWidth, baseY, 0f, fWidth, true, favourite, bgPaint, textPaint)
+                else drawElement(canvas, -1, index*fWidth, baseY, 0f, fWidth, true, "", -1, -1, bgPaint, textPaint)
             }
         }
     }
@@ -295,16 +298,16 @@ object GroupsEtc {
     fun drawElement(canvas: Canvas, craftingCount: Int, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean,
                     rawName: String,
                     group: Int, uuid: Int,
-                    bgPaint: Paint, textPaint: Paint,
-                    opacity: Float = 1f){
+                    bgPaint: Paint, textPaint: Paint){
 
-        drawElementBackground(canvas, x0, y0, delta, widthPerNode, margin, group, bgPaint, opacity)
+        drawElementBackground(canvas, x0, y0, delta, widthPerNode, margin, group, bgPaint)
 
+        val alpha = textPaint.alpha
         val cacheKey = if(craftingCount <= minimumCraftingCount) rawName else "$rawName ($craftingCount)"
         val cacheEntry = getCacheEntry(rawName, cacheKey, craftingCount, widthPerNode, textPaint, bgPaint)
         val color = cacheEntry.color
         textPaint.color = color
-        if(opacity < 1f) textPaint.color = textPaint.color.and(0xffffff) or ((opacity * 255).toInt().shl(24))
+        textPaint.alpha = alpha
 
         var save = -1
         if(delta != 0f) {
@@ -358,8 +361,11 @@ object GroupsEtc {
     const val relativeRoundness = 0.1f
     fun drawElementBackground(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Float, group: Int, bgPaint: Paint, opacity: Float = 1f){
 
+        val alpha = bgPaint.alpha
+
         val color = GroupColors.getOrNull(group) ?: 0xff000000.toInt()
         bgPaint.color = color
+        bgPaint.alpha = alpha
 
         if(opacity < 1f) bgPaint.color = bgPaint.color.and(0xffffff) or ((opacity * 255).toInt().shl(24))
         val roundness = widthPerNode * relativeRoundness

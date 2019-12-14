@@ -8,6 +8,7 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.invalidate
 import me.antonio.noack.elementalcommunity.AllManager.Companion.save
 import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockeds
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
+import me.antonio.noack.elementalcommunity.tree2.MovingLocation
 import kotlin.math.min
 
 class Element private constructor(var name: String, val uuid: Int, var group: Int): Comparable<Element> {

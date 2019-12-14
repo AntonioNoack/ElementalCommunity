@@ -19,7 +19,9 @@ object Captcha {
                     }
                 }
             }
-            .addOnFailureListener(onError)
+            .addOnFailureListener {
+                onError(RuntimeException("Captcha-API: ${it.message}"))
+            }
 
     }
 
