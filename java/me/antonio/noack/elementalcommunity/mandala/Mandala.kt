@@ -121,7 +121,7 @@ class Mandala(val element: Element, oldTree: Mandala?){
         val fromDifHalf = (fromCount-1) * 0.5f
         val fromDif = (fromArea * PI/max(1, fromCount-1)).toFloat()
 
-        val many = sumCount > 10
+        val many = sumCount > 20
 
         val outher = 1f
         val inner0 = if(many) 0.75f else 0.667f

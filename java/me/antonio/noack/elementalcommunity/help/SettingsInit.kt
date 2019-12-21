@@ -121,17 +121,7 @@ object SettingsInit {
                 AlertDialog.Builder(this)
                     .setTitle(R.string.are_you_sure_reset_everything)
                     .setPositiveButton(android.R.string.yes){ _, _ ->
-                        pref.edit().clear().putLong("customUUID", AllManager.customUUID).apply()
-                        AllManager.unlockedIds = hashSetOf(1, 2, 3, 4)
-                        for(list in AllManager.unlockeds){ list.removeAll(list.filter { it.uuid > 4 }) }
-                        for(i in 0 until AllManager.favourites.size) AllManager.favourites[i] = null
-                        AllManager.FAVOURITE_COUNT = 5
-                        resizeFavourites(pref)
-                        favSlider.progress = AllManager.FAVOURITE_COUNT -2
-                        combiner.invalidateSearch()
-                        unlocked.invalidateSearch()
-                        AllManager.save()
-                        AllManager.invalidate()
+                        resetEverything()
                     }
                     .setNegativeButton(android.R.string.no, null)
                     .setCancelable(true)
@@ -146,6 +136,23 @@ object SettingsInit {
 
 
         }
+    }
+
+    fun AllManager.resetEverything(){
+        pref.edit().clear().putLong("customUUID", AllManager.customUUID).apply()
+        AllManager.unlockedIds = hashSetOf(1, 2, 3, 4)
+        for(list in AllManager.unlockeds){ list.removeAll(list.filter { it.uuid > 4 }) }
+        for(i in 0 until AllManager.favourites.size) AllManager.favourites[i] = null
+        AllManager.elementByRecipe.clear()
+        AllManager.FAVOURITE_COUNT = 5
+        resizeFavourites(pref)
+        favSlider.progress = AllManager.FAVOURITE_COUNT - 2
+        combiner.invalidateSearch()
+        unlocked.invalidateSearch()
+        updateDiamondCount()
+        mandalaView?.hasTree = false
+        AllManager.save()
+        AllManager.invalidate()
     }
 
     fun AllManager.switchServer(){

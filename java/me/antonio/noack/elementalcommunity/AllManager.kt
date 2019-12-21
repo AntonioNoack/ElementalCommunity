@@ -28,6 +28,7 @@ import me.antonio.noack.elementalcommunity.help.SettingsInit
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 
 // Sounds:
@@ -44,7 +45,7 @@ class AllManager: AppCompatActivity() {
         var showElementUUID = true
 
         var unlockedIds = hashSetOf(1, 2, 3, 4)
-        var elementById = SparseArray<Element>()
+        var elementById = ConcurrentHashMap<Int, Element>()
 
         var elementsByGroup = Array(GroupColors.size + 12){
             TreeSet<Element>()
@@ -247,9 +248,7 @@ class AllManager: AppCompatActivity() {
         }
         
         startButton.setOnClickListener { flipper.displayedChild = 1 }
-        treeViewButton.setOnClickListener {
-            flipper.displayedChild = 2
-        }
+        treeViewButton.setOnClickListener { flipper.displayedChild = 2 }
         suggestButton.setOnClickListener {
             combiner.invalidateSearch()
             flipper.displayedChild = 3

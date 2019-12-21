@@ -9,6 +9,7 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.core.math.MathUtils.clamp
+import androidx.core.util.isEmpty
 import me.antonio.noack.elementalcommunity.*
 import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
@@ -251,6 +252,10 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
         canvas ?: return
 
         if(!hasTree){
+            if(AllManager.elementById.isEmpty()){
+                invalidate()
+                return
+            }
             buildTree(AllManager.elementById[1]!!)
         }
 
