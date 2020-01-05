@@ -82,4 +82,11 @@ interface ServerService {
         )
     })
 
+    fun askAllRecipesOfGroup(group: Int, onSuccess: (raw: String) -> Unit, onError: (Exception) -> Unit = {
+        AllManager.toast(
+            "${it.javaClass.simpleName}: ${it.message}",
+            true
+        )
+    })
+
 }

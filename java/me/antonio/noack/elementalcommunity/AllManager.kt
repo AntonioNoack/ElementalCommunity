@@ -23,6 +23,7 @@ import android.widget.*
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.children
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
+import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.help.SettingsInit
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
@@ -69,6 +70,11 @@ class AllManager: AppCompatActivity() {
             elementByRecipe[a to b] = r
             invalidate()
             all.updateDiamondCount()
+        }
+
+        fun getRecipe(a: Element, b: Element): Element? {
+            if(a.uuid > b.uuid) return getRecipe(b, a)
+            return elementByRecipe[a to b]
         }
 
         fun toast(message: String, isLong: Boolean) = staticToast1(message, isLong)
@@ -283,6 +289,7 @@ class AllManager: AppCompatActivity() {
                     edit.putInt("favourites[$i]", favourite.uuid)
                 }
             }
+            CombinationCache.save(edit)
             edit.apply()
         }
 
@@ -352,6 +359,8 @@ class AllManager: AppCompatActivity() {
         }
 
         updateDiamondCount()
+
+        CombinationCache.init(pref)
 
         SaveLoadLogic.init(this)
 

@@ -18,7 +18,7 @@ object GroupsEtc {
         val timeout = 5 * 1000000000L
         for((_, cache) in cacheBySize.entries){
             if(cache.map.isNotEmpty() && abs(cache.lastTime - time) > timeout){
-                println("cleared ${cache.size}")
+                // println("cleared ${cache.size}")
                 cache.map.clear()
             }// else println("${abs(cache.lastTime - time)}")
         }

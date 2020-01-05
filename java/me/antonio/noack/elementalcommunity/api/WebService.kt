@@ -5,14 +5,22 @@ import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.GroupsEtc
 import me.antonio.noack.elementalcommunity.api.web.Candidate
 import me.antonio.noack.elementalcommunity.api.web.News
+import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.webdroid.Captcha
 import me.antonio.noack.webdroid.HTTP
 import java.lang.Exception
 import java.net.URLEncoder
 
-// done require less Captchas...
-
 open class WebService(private val serverURL: String): ServerService {
+
+    val ms = 1000000L
+    val deadlyReactionTime = 500 * ms
+    // a cache is not only built when the connection is slow, but also when it's fast -> for using it in bad times
+    val goodReactionTime = 60 * ms
+    val reactionResetCounter = 30
+
+    fun hasGoodConnection() = lastReactionTime < goodReactionTime
+    fun hasSlowConnection() = lastReactionTime > deadlyReactionTime
 
     /**
      * the id of the server portion,
@@ -89,13 +97,37 @@ open class WebService(private val serverURL: String): ServerService {
 
     }
 
+    var lastReactionTime = 0L
+    var lastReactionCtr = 0
+
     override fun askRecipe(a: Element, b: Element, all: AllManager, onSuccess: (Element?) -> Unit, onError: (Exception) -> Unit){
 
         val url = "${getURL()}?a=${a.uuid}&b=${b.uuid}" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance"
 
+        if(hasSlowConnection() && lastReactionCtr > 0){
+            lastReactionCtr--
+            CombinationCache.askRegularly(all, a, b, onSuccess)
+            println("[CCache] used cached answer")
+            return
+        }
+
+        val reactionStart = System.nanoTime()
+
         HTTP.request(url, { text ->
+
+            // register ourselves for cache updates instead of real time ones, if the connection is slow
+            val reactionEnd = System.nanoTime()
+            lastReactionTime = reactionEnd - reactionStart
+            lastReactionCtr = reactionResetCounter
+
+            println("[CCache] connection speed: ${lastReactionTime/ms}ms")
+
+            if(hasGoodConnection()){
+                CombinationCache.updateInWealth(a, b)
+            }
+
             val data = text.split(';')
             if(data.size > 1){
                 val id = data[0].toInt()
@@ -113,7 +145,16 @@ open class WebService(private val serverURL: String): ServerService {
             } else {
                 onSuccess(null)
             }
-        }, onError)
+
+        }, {
+            // a network exception -> offline?
+            // send a warning? once only?
+            lastReactionTime = 30000L * ms
+            lastReactionCtr = reactionResetCounter
+            CombinationCache.askInEmergency(all, a, b, onSuccess)
+            // onError(it)
+            it.printStackTrace()
+        })
 
     }
 
@@ -182,6 +223,8 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun suggestRecipe(all: AllManager, a: Element, b: Element, resultName: String, resultGroup: Int, onSuccess: (text: String) -> Unit, onError: (Exception) -> Unit){
 
+        CombinationCache.invalidate()
+
         if(isExternalSource()){
             HTTP.request("a=${a.uuid}&b=${b.uuid}" +
                     "&r=${URLEncoder.encode(resultName, "UTF-8")}" +
@@ -204,6 +247,8 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun likeRecipe(all: AllManager, uuid: Long, onSuccess: () -> Unit, onError: (Exception) -> Unit){
 
+        CombinationCache.invalidate()
+
         if(isExternalSource()){
             HTTP.request("${getURL()}?s=$uuid&r=1&u=${AllManager.customUUID}", { onSuccess() }, onError)
         } else {
@@ -213,6 +258,9 @@ open class WebService(private val serverURL: String): ServerService {
     }
 
     override fun dislikeRecipe(all: AllManager, uuid: Long, onSuccess: () -> Unit, onError: (Exception) -> Unit){
+
+        CombinationCache.invalidate()
+
         if(isExternalSource()){
             HTTP.request("${getURL()}?s=$uuid&r=-1&u=${AllManager.customUUID}", { onSuccess() }, onError)
         } else {
@@ -223,6 +271,15 @@ open class WebService(private val serverURL: String): ServerService {
     override fun askRecipes(name: String, onSuccess: (raw: String) -> Unit, onError: (Exception) -> Unit){
 
         HTTP.request("${getURL()}?qr=$name" +
+                "&$webVersionName=$webVersion" +
+                "&sid=$serverInstance", onSuccess, onError)
+
+    }
+
+    override fun askAllRecipesOfGroup(group: Int, onSuccess: (raw: String) -> Unit, onError: (Exception) -> Unit){
+
+        // query group recipes
+        HTTP.request("${getURL()}?qgr=$group" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance", onSuccess, onError)
 
