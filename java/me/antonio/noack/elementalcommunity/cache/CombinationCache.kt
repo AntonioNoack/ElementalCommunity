@@ -92,7 +92,7 @@ object CombinationCache {
             data[a to b] = r
         }
 
-        fun isValid(date: Long) = abs(date - validationDate) < 3600 * 1000 * ms // 1h
+        fun isValid(date: Long) = data.isNotEmpty() && abs(date - validationDate) < 3600 * 1000 * ms // 1h
 
         fun askRegularly(all: AllManager, a: Element, b: Element, callback: (Element?) -> Unit){
             val date = System.currentTimeMillis()

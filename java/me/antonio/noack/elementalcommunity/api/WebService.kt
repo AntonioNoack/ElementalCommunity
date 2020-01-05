@@ -14,7 +14,7 @@ import java.net.URLEncoder
 open class WebService(private val serverURL: String): ServerService {
 
     val ms = 1000000L
-    val deadlyReactionTime = 500 * ms
+    val deadlyReactionTime = 200 * ms
     // a cache is not only built when the connection is slow, but also when it's fast -> for using it in bad times
     val goodReactionTime = 60 * ms
     val reactionResetCounter = 30
