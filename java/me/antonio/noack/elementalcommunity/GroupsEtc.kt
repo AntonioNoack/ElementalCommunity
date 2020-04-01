@@ -150,9 +150,30 @@ object GroupsEtc {
         return listOf(join(parts, 0, index), join(parts, index))
     }
 
+    /**
+     * splits a string at the delimiter, or anywhere, it it's too long
+     * */
+    fun String.longSplitUntilCount(delimiter: Char, limit: Int, count: Int): List<String> {
+        var parts = split(delimiter)
+        while(parts.size < count){
+            val maxPart = parts.withIndex().maxBy { it.value.length }!!
+            // todo split preferably at .,*- or something like that?
+            val maxString = maxPart.value
+            if(maxString.length > limit){
+                // println("gonna split this string, $maxString")
+                val centerIndex = maxString.length/(count+1-parts.size)
+                parts = parts.subList(0, maxPart.index) + listOf(
+                    maxString.substring(0, centerIndex), maxString.substring(centerIndex)
+                ) + parts.subList(maxPart.index+1, parts.size)
+            } else break
+        }
+        // println("split $this into $parts")
+        return parts
+    }
+
     fun splitText(text: String, sideRatio: Float, textPaint: Paint): List<String> {
-        if(sideRatio < 4f || !text.contains(' ')) return listOf(text)
-        val parts = text.split(' ')
+        if(sideRatio < 4f) return listOf(text)
+        val parts = text.longSplitUntilCount(' ', 32, 3)
         if(parts.size < 3) return parts
         val partSizes = parts.map { part -> textPaint.measureText(part) }
         if(sideRatio < 10f){// 2

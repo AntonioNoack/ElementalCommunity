@@ -27,7 +27,7 @@ object CombinationCache {
     }
 
     fun String.loadMultipleFromString(){
-        println("[CCache] loaded ${this.length}: '$this'")
+        // println("[CCache] loaded ${this.length}: '$this'")
         for(abr in split(';')){
             if(abr.length >= 5){ // 1,2,3
                 val abrElements = abr
@@ -61,9 +61,10 @@ object CombinationCache {
         }
     }
 
-    fun invalidate(){
-        for(list in hiddenRecipes){
-            list.invalidate()
+    fun invalidate(edit: SharedPreferences.Editor){
+        for((i, group) in hiddenRecipes.withIndex()){
+            group.invalidate()
+            edit.putLong("cache.$i.date", group.validationDate)
         }
     }
 
@@ -92,14 +93,16 @@ object CombinationCache {
             data[a to b] = r
         }
 
-        fun isValid(date: Long) = data.isNotEmpty() && abs(date - validationDate) < 3600 * 1000 * ms // 1h
+        fun isValid(date: Long) = data.isNotEmpty() && abs(date - validationDate) < 3_600_000 // 1h
 
         fun askRegularly(all: AllManager, a: Element, b: Element, callback: (Element?) -> Unit){
             val date = System.currentTimeMillis()
             if(isValid(date)){
+                println("cache is still valid")
                 // valid -> return
                 askDirectly(all, a, b, callback)
             } else {
+                println("cache has become invalid")
                 // invalid -> ask server
                 WebServices.askAllRecipesOfGroup(a.group, {
                     validationDate = date
@@ -117,10 +120,12 @@ object CombinationCache {
          * doesn't care about validation
          * */
         fun askInEmergency(all: AllManager, a: Element, b: Element, callback: (Element?) -> Unit){
+            println("asking cache in emergency")
             askDirectly(all, a, b, callback)
         }
 
         fun askDirectly(all: AllManager, a: Element, b: Element, callback: (Element?) -> Unit){
+            println("asking cache directly, ${data[a to b]}, ${AllManager.getRecipe(a, b)}")
             callback(data[a to b] ?: AllManager.getRecipe(a, b))
         }
 

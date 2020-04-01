@@ -61,4 +61,5 @@
         default server. It might be useful for your own community, like your YouTube channel.
     </string>
     <string name="show_element_uuids">Display element ids</string>
+    <string name="clear_recipe_cache">Clear Recipe Cache</string>
 </resources>

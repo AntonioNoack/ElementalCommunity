@@ -102,6 +102,8 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun askRecipe(a: Element, b: Element, all: AllManager, onSuccess: (Element?) -> Unit, onError: (Exception) -> Unit){
 
+        println("asking for $a + $b = ?")
+
         val url = "${getURL()}?a=${a.uuid}&b=${b.uuid}" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance"
@@ -143,6 +145,7 @@ open class WebService(private val serverURL: String): ServerService {
                 AllManager.addRecipe(a, b, element, all)
                 onSuccess(element)
             } else {
+                println("found no result, data = $data by $text")
                 onSuccess(null)
             }
 
@@ -223,7 +226,9 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun suggestRecipe(all: AllManager, a: Element, b: Element, resultName: String, resultGroup: Int, onSuccess: (text: String) -> Unit, onError: (Exception) -> Unit){
 
-        CombinationCache.invalidate()
+        val edit = all.pref.edit()
+        CombinationCache.invalidate(edit)
+        edit.apply()
 
         if(isExternalSource()){
             HTTP.request("a=${a.uuid}&b=${b.uuid}" +
@@ -247,7 +252,9 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun likeRecipe(all: AllManager, uuid: Long, onSuccess: () -> Unit, onError: (Exception) -> Unit){
 
-        CombinationCache.invalidate()
+        val edit = all.pref.edit()
+        CombinationCache.invalidate(edit)
+        edit.apply()
 
         if(isExternalSource()){
             HTTP.request("${getURL()}?s=$uuid&r=1&u=${AllManager.customUUID}", { onSuccess() }, onError)
@@ -259,7 +266,9 @@ open class WebService(private val serverURL: String): ServerService {
 
     override fun dislikeRecipe(all: AllManager, uuid: Long, onSuccess: () -> Unit, onError: (Exception) -> Unit){
 
-        CombinationCache.invalidate()
+        val edit = all.pref.edit()
+        CombinationCache.invalidate(edit)
+        edit.apply()
 
         if(isExternalSource()){
             HTTP.request("${getURL()}?s=$uuid&r=-1&u=${AllManager.customUUID}", { onSuccess() }, onError)

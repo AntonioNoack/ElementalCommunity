@@ -10,6 +10,7 @@ import java.net.URLEncoder
 import kotlin.concurrent.thread
 import android.os.Build
 import android.os.Environment
+import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
 
@@ -21,6 +22,19 @@ object SaveLoadLogic {
     }
 
     fun init(all: AllManager){
+
+        val clearRecipeCacheView = all.findViewById<View>(R.id.clearRecipeCache)
+        clearRecipeCacheView?.setOnLongClickListener {
+            AllManager.toast("The cache is updated automatically after one hour.", false)
+            true
+        }
+
+        clearRecipeCacheView?.setOnClickListener {
+            val edit = all.pref.edit()
+            CombinationCache.invalidate(edit)
+            edit.apply()
+            AllManager.toast("Cleared Recipe Cache!", false)
+        }
 
         all.findViewById<View>(R.id.saveProgress)?.setOnClickListener {
 
