@@ -256,7 +256,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                             AreaType.FAVOURITES_BOTTOM -> {
                                 // set it here
                                 AllManager.favourites[internalX] = first
-                                AllManager.save()
+                                AllManager.saveFavourites()
                                 AllManager.clickSound.play()
                                 invalidate()
                                 null
@@ -493,10 +493,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
         //  add to achieved :D
         val newOne = add(sa, sb, element)
         synchronized(Unit){
-            AllManager.unlockedIds.add(element.uuid)
             activeElement = element
             activeness = 1f
-            AllManager.save()
         }
 
         scrollDest = element

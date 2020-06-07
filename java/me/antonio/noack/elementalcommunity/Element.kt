@@ -1,11 +1,13 @@
 package me.antonio.noack.elementalcommunity
 
 import androidx.core.math.MathUtils.clamp
+import me.antonio.noack.elementalcommunity.AllManager.Companion.edit
 import me.antonio.noack.elementalcommunity.AllManager.Companion.elementById
 import me.antonio.noack.elementalcommunity.AllManager.Companion.elementByName
 import me.antonio.noack.elementalcommunity.AllManager.Companion.elementsByGroup
 import me.antonio.noack.elementalcommunity.AllManager.Companion.invalidate
-import me.antonio.noack.elementalcommunity.AllManager.Companion.save
+import me.antonio.noack.elementalcommunity.AllManager.Companion.saveElement
+import me.antonio.noack.elementalcommunity.AllManager.Companion.saveElement2
 import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockeds
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import kotlin.math.min
@@ -102,23 +104,34 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
         fun get(name: String, uuid: Int, group: Int, craftingCount: Int): Element {
             val old = elementById[uuid]
             return if(old != null){
-                old.name = name
-                old.lcName = name.toLowerCase()
-                old.startingNumber = old.calcStartingNumber()
-                old.hashLong = old.calcHashLong()
-                if(craftingCount >= minimumCraftingCount){ old.craftingCount = craftingCount }
+                var needsSave = old.name != name
+                if(needsSave){
+                    old.name = name
+                    old.lcName = name.toLowerCase()
+                    old.startingNumber = old.calcStartingNumber()
+                    old.hashLong = old.calcHashLong()
+                }
+                if(craftingCount >= minimumCraftingCount){
+                    old.craftingCount = craftingCount
+                    needsSave = true
+                }
                 if(old.group != group){
                     synchronized(Unit){
-                        println("group for $name: $group")
+                        // println("group for $name: $group")
                         val newGroup = clamp(group, 0, elementsByGroup.size-1)
                         elementsByGroup[old.group].remove(old)
                         unlockeds[old.group].remove(old)
                         elementsByGroup[newGroup].add(old)
                         unlockeds[newGroup].add(old)
                         old.group = newGroup
-                        save()
+                        // there is the issue:
+                        // saving is done inefficiently
+                        needsSave = true
                     }
                     invalidate()
+                }
+                if(needsSave){
+                    saveElement2(old)
                 }
                 old
             } else Element(name, uuid, group)

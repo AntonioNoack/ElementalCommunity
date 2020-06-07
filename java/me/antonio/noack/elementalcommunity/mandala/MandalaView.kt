@@ -9,7 +9,6 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.core.math.MathUtils.clamp
-import androidx.core.util.isEmpty
 import me.antonio.noack.elementalcommunity.*
 import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
@@ -200,7 +199,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
                             AreaType.FAVOURITES_BOTTOM -> {
                                 // set it here
                                 AllManager.favourites[internalX.toInt()] = first
-                                AllManager.save()
+                                AllManager.saveFavourites()
                                 AllManager.clickSound.play()
                                 invalidate()
                                 null
@@ -212,7 +211,8 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
                                 // AllManager.okSound.play()
                                 switchTo(first)
                             } else {
-                                BasicOperations.onRecipeRequest(first, second, all, measuredWidth, measuredHeight, { unlockElement(first, second, it) }, { add(first, second, it) })
+                                BasicOperations.onRecipeRequest(first, second, all, measuredWidth, measuredHeight, { unlockElement(first, second, it) }, {
+                                    add(first, second, it) })
                             }
                         }
                     }
@@ -337,18 +337,16 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
         } else false
     }
 
-    fun unlockElement(sa: Element, sb: Element, element: Element){
+    fun unlockElement(componentA: Element, componentB: Element, result: Element){
 
         //  add to achieved :D
-        val newOne = add(sa, sb, element)
+        val newOne = add(componentA, componentB, result)
         synchronized(Unit){
-            AllManager.unlockedIds.add(element.uuid)
-            activeElement = element
+            activeElement = result
             activeness = 1f
-            AllManager.save()
         }
 
-        switchTo(element)
+        switchTo(result)
 
         AllManager.staticRunOnUIThread {
             invalidate()

@@ -11,7 +11,7 @@ import android.view.View
 import androidx.core.math.MathUtils.clamp
 import me.antonio.noack.elementalcommunity.AllManager.Companion.FAVOURITE_COUNT
 import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
-import me.antonio.noack.elementalcommunity.AllManager.Companion.save
+import me.antonio.noack.elementalcommunity.AllManager.Companion.saveElement2
 import me.antonio.noack.elementalcommunity.AllManager.Companion.staticRunOnUIThread
 import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockedIds
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupSizes
@@ -295,7 +295,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                                 if(internalX in 0 until FAVOURITE_COUNT){
                                     // set it here
                                     AllManager.favourites[internalX] = first
-                                    AllManager.save()
+                                    AllManager.saveFavourites()
                                     AllManager.clickSound.play()
                                     invalidate()
                                     null
@@ -327,10 +327,8 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         //  add to achieved :D
         val newOne = add(sa, sb, element)
         synchronized(Unit){
-            unlockedIds.add(element.uuid)
             activeElement = element
             activeness = 1f
-            save()
         }
         // scroll to destination on success
         scrollDest = element

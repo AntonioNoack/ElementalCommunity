@@ -146,7 +146,6 @@ object RecipeHelper {
                                         recipeView.rGroup = r.group
                                         recipeView.overlay = 0
                                         AllManager.addRecipe(a, b, r, all)
-                                        AllManager.save()
                                         recipeView.invalidate()
                                         dialog.findViewById<TextView>(R.id.diamonds)?.text = all.getDiamondCount().toString()
                                     }
