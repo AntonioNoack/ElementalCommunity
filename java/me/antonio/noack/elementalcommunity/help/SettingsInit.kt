@@ -66,7 +66,7 @@ object SettingsInit {
                     AllManager.FAVOURITE_COUNT = value
                     favTitle.text = resources.getString(R.string.favourites).replace("#count", AllManager.FAVOURITE_COUNT.toString())
                     resizeFavourites(pref)
-                    AllManager.save()
+                    AllManager.saveFavourites()
                     AllManager.invalidate()
                 }
                 override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -151,7 +151,7 @@ object SettingsInit {
         unlocked.invalidateSearch()
         updateDiamondCount()
         mandalaView?.hasTree = false
-        AllManager.save()
+        // AllManager.save()
         AllManager.invalidate()
     }
 

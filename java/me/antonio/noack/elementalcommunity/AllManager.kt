@@ -22,6 +22,7 @@ import android.os.Vibrator
 import android.widget.*
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.children
+import kotlinx.android.synthetic.main.settings.*
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.elementalcommunity.help.RecipeHelper
@@ -61,15 +62,25 @@ class AllManager: AppCompatActivity() {
         var favourites = arrayOfNulls<Element>(FAVOURITE_COUNT)
 
         var elementByRecipe = HashMap<Pair<Element, Element>, Element>()
+        val recipesByElement = HashMap<Element, MutableList<Pair<Element, Element>>>()
 
         val elementByName = HashMap<String, Element>()
 
         // for the tree
-        fun addRecipe(a: Element, b: Element, r: Element, all: AllManager){
-            if(a.uuid > b.uuid) return addRecipe(b, a, r, all)
-            elementByRecipe[a to b] = r
+        fun addRecipe(a: Element, b: Element, r: Element, all: AllManager, save: Boolean = true){
+            if(a.uuid > b.uuid) return addRecipe(b, a, r, all, save)
+            val pair = a to b
+            unlockedIds.add(r.uuid)
+            elementByRecipe[pair] = r
+            val list = recipesByElement[r]
+            if(list == null){
+                recipesByElement[r] = arrayListOf(a to b)
+            } else if(pair !in list){
+                list.add(pair)
+            }
             invalidate()
             all.updateDiamondCount()
+            if(save) saveElement2(r)
         }
 
         fun getRecipe(a: Element, b: Element): Element? {
@@ -83,7 +94,11 @@ class AllManager: AppCompatActivity() {
         lateinit var staticToast1: (message: String, isLong: Boolean) -> Unit
         lateinit var staticToast2: (message: Int, isLong: Boolean) -> Unit
         lateinit var staticRunOnUIThread: (() -> Unit) -> Unit
-        lateinit var save: () -> Unit
+        lateinit var edit: () -> SharedPreferences.Editor
+        lateinit var saveElement2: (Element) -> Unit
+        lateinit var saveElement: (SharedPreferences.Editor, Element) -> Unit
+        lateinit var saveFavourites: () -> Unit
+        // lateinit var save: () -> Unit
         lateinit var invalidate: () -> Unit
 
         lateinit var successSound: Sound
@@ -268,20 +283,34 @@ class AllManager: AppCompatActivity() {
 
         SettingsInit.init(this)
 
-        save = {
-            val edit = pref.edit()
-            edit.putString("unlocked", unlockedIds.joinToString(","))
-            for((_, element) in elementByName){
-                val id = element.uuid
-                edit.putString("$id.name", element.name)
-                edit.putInt("$id.group", element.group)
-                if(element.craftingCount >= minimumCraftingCount){
-                    edit.putInt("$id.crafted", element.craftingCount)
+        edit = {
+            pref.edit()
+        }
+
+        saveElement = { edit, element ->
+            val id = element.uuid
+            var value = "${element.name};${element.group};${element.craftingCount}"
+            val unlockedRecipes = recipesByElement[element]
+            val unlocked = id in unlockedIds || unlockedRecipes?.isNotEmpty() == true
+            if(unlocked){
+                value += ";${if(unlocked) 1 else 0}"
+                if(unlockedRecipes?.isEmpty() == false){
+                    value += ";${unlockedRecipes.joinToString(","){ (a, b) -> "${a.uuid}-${b.uuid}" }}"
                 }
             }
-            for((src, dst) in elementByRecipe){
-                edit.putInt("recipe.${src.first.uuid}.${src.second.uuid}", dst.uuid)
-            }
+            // println("saved $id to $value")
+            edit.putString(id.toString(), value)
+        }
+
+        saveElement2 = { element ->
+            val edit = pref.edit()
+            saveElement(edit, element)
+            edit.apply()
+        }
+
+        saveFavourites = {
+            val edit = pref.edit()
+            edit.putInt("favourites.length", FAVOURITE_COUNT)
             for((i, favourite) in favourites.withIndex()){
                 if(favourite == null){
                     edit.remove("favourites[$i]")
@@ -289,11 +318,107 @@ class AllManager: AppCompatActivity() {
                     edit.putInt("favourites[$i]", favourite.uuid)
                 }
             }
-            CombinationCache.save(edit)
             edit.apply()
         }
 
-        unlockedIds.addAll(pref.getString("unlocked", "1,2,3,4")!!.split(',').map { x -> x.toInt() })
+        /*save = {
+            val edit = pref.edit()
+            edit.remove("unlocked")
+            //edit.putString("unlocked", unlockedIds.joinToString(","))
+            for((_, element) in elementByName){
+                val id = element.uuid
+                saveElement(edit, element)
+                edit.remove("$id.name")
+                edit.remove("$id.group")
+                edit.remove("$id.crafted")
+                /*edit.putString("$id.name", element.name)
+                edit.putInt("$id.group", element.group)
+                if(element.craftingCount >= minimumCraftingCount){
+                    edit.putInt("$id.crafted", element.craftingCount)
+                }*/
+            }
+            for((src, dst) in elementByRecipe){
+                edit.putInt("recipe.${src.first.uuid}.${src.second.uuid}", dst.uuid)
+            }
+
+            CombinationCache.save(edit)
+            edit.apply()
+        }*/
+
+        // old
+        val unlockedIdsString = pref.getString("unlocked", null) ?: null
+        if(unlockedIdsString != null){
+            unlockedIds.addAll(pref.getString("unlocked", "1,2,3,4")!!.split(',').map { x -> x.toInt() })
+        } else unlockedIds.addAll(listOf(1,2,3,4))
+
+
+        val names = arrayOf("???", "Earth", "Air", "Water", "Fire")
+        val groups = intArrayOf(20, 5, 12, 20, 4)
+        for(id in unlockedIds){// after a restart, this should be only 4
+            val name = pref.getString("$id.name", names.getOrNull(id) ?: names[0])!!
+            val group = pref.getInt("$id.group", groups.getOrNull(id) ?: groups[0])
+            val craftingCount = pref.getInt("$id.crafted", -1)
+            val element = Element.get(name, id, group, craftingCount)
+            unlockeds[element.group].add(element)
+        }
+
+        val recipeMemory = HashMap<Element, List<Pair<Int, Int>>>()
+        val edit = pref.edit()
+        for((key, value) in pref.all){
+            val id = key.toIntOrNull()
+            if(id != null){
+                val parts = value.toString()?.split(';')
+                if(parts.size > 1){
+                    val name = parts[0]
+                    val group = parts[1].toIntOrNull() ?: continue
+                    val craftCount = parts.getOrNull(2)?.toIntOrNull() ?: 0
+                    val wasCrafted = parts.getOrNull(3)?.toIntOrNull() == 1
+                    val element = Element.get(name, id, group, craftCount)
+                    if(wasCrafted){
+                        unlockedIds.add(id)
+                        unlockeds[group].add(element)
+                    }
+                    val recipePart = parts.getOrNull(4)
+                    if(recipePart != null && recipePart.isNotEmpty()){
+                        val unlockedRecipes = (recipePart ?: "").split(',')
+                        val list = ArrayList<Pair<Int, Int>>()
+                        recipeMemory[element] = list
+                        unlockedRecipes.filter { it.isNotEmpty() }.forEach { ab ->
+                            val ab2 = ab.split('-')
+                            val a = ab2[0].toIntOrNull() ?: return@forEach
+                            val b = ab2[1].toIntOrNull() ?: return@forEach
+                            list.add(a to b)
+                            // println("$a + $b = $name")
+                        }
+                    }
+                }
+            }
+            if(key.endsWith(".name")){
+                // println("processing $key")
+                // an element
+                val id = key.split('.')[0].toIntOrNull() ?: continue
+                val name = value.toString()
+                val group = pref.getInt("$id.group", -1)
+                if(group < 0) continue
+                val craftingCount = pref.getInt("$id.crafted", -1)
+                val element = Element.get(name, id, group, craftingCount)
+                saveElement(edit, element)
+                edit.remove("$id.name")
+                edit.remove("$id.group")
+                edit.remove("$id.crafted")
+            }
+        }
+        edit.apply()
+
+        for((element, abs) in recipeMemory){
+            for((a, b) in abs){
+                val ea = elementById[a]
+                val eb = elementById[b]
+                if(ea != null && eb != null){
+                    addRecipe(ea, eb, element, this, false)
+                }
+            }
+        }
 
         // for identification <3 :D
         var ci = pref.getLong("customUUID", -1)
@@ -304,16 +429,6 @@ class AllManager: AppCompatActivity() {
 
         customUUID = ci
 
-        val names = arrayOf("???", "Earth", "Air", "Water", "Fire")
-        val groups = intArrayOf(20, 5, 12, 20, 4)
-        for(id in unlockedIds){
-            val name = pref.getString("$id.name", names.getOrNull(id) ?: names[0])!!
-            val group = pref.getInt("$id.group", groups.getOrNull(id) ?: groups[0])
-            val craftingCount = pref.getInt("$id.crafted", -1)
-            val element = Element.get(name, id, group, craftingCount)
-            unlockeds[element.group].add(element)
-        }
-
         FAVOURITE_COUNT = pref.getInt("favourites.length", FAVOURITE_COUNT)
         resizeFavourites(pref)
 
@@ -323,18 +438,7 @@ class AllManager: AppCompatActivity() {
 
         askNews()
 
-        for((key, value) in pref.all){
-            if(key.endsWith(".name")){
-                // an element
-                val id = key.split('.')[0].toIntOrNull() ?: continue
-                val name = value.toString()
-                val group = pref.getInt("$id.group", -1)
-                if(group < 0) continue
-                val craftingCount = pref.getInt("$id.crafted", -1)
-                Element.get(name, id, group, craftingCount)
-            }
-        }
-
+        val edit2 = pref.edit()
         for((key, value) in pref.all){
             if(key.startsWith("recipe.") && (value is Int || value.toString().toIntOrNull() != null)){
                 val parts = key.split('.')
@@ -342,8 +446,10 @@ class AllManager: AppCompatActivity() {
                 val b = elementById[parts[2].toIntOrNull() ?: continue] ?: continue
                 val c = elementById[if(value is Int) value else value.toString().toInt()] ?: continue
                 addRecipe(a, b, c, this)
+                edit2.remove(key)
             }
         }
+        edit2.apply()
 
         diamondViews.clear()
 
@@ -363,6 +469,9 @@ class AllManager: AppCompatActivity() {
         CombinationCache.init(pref)
 
         SaveLoadLogic.init(this)
+
+        // todo everything is saved, isn't it?
+        // todo then clear the cache :D
 
     }
 

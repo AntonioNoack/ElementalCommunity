@@ -55,10 +55,15 @@ object CombinationCache {
     }
 
     fun save(edit: SharedPreferences.Editor){
-        for((i, group) in hiddenRecipes.withIndex()){
-            edit.putString("cache.$i", group.save())
-            edit.putLong("cache.$i.date", group.validationDate)
+        for(i in hiddenRecipes.indices){
+            saveGroup(edit, i)
         }
+    }
+
+    fun saveGroup(edit: SharedPreferences.Editor, i: Int){
+        val group = hiddenRecipes.getOrNull(i) ?: return
+        edit.putString("cache.$i", group.save())
+        edit.putLong("cache.$i.date", group.validationDate)
     }
 
     fun invalidate(edit: SharedPreferences.Editor){
@@ -93,7 +98,7 @@ object CombinationCache {
             data[a to b] = r
         }
 
-        fun isValid(date: Long) = data.isNotEmpty() && abs(date - validationDate) < 3_600_000 // 1h
+        fun isValid(date: Long) = data.isNotEmpty() && kotlin.math.abs(date - validationDate) < 3_600_000 // 1h
 
         fun askRegularly(all: AllManager, a: Element, b: Element, callback: (Element?) -> Unit){
             val date = System.currentTimeMillis()
@@ -108,7 +113,9 @@ object CombinationCache {
                     validationDate = date
                     it.loadMultipleFromString()
                     askDirectly(all, a, b, callback)
-                    AllManager.save()
+                    val edit = all.pref.edit()
+                    saveGroup(edit, a.group)
+                    edit.apply()
                 }, {
                     askInEmergency(all, a, b, callback)
                     it.printStackTrace()
@@ -145,7 +152,9 @@ object CombinationCache {
                 validationDate = date // optimistic
                 WebServices.askAllRecipesOfGroup(a.group, {
                     it.loadMultipleFromString()
-                    AllManager.save()
+                    val edit = AllManager.edit()
+                    saveGroup(edit, a.group)
+                    edit.apply()
                 }, {
                     validationDate = oldDate // failure
                     it.printStackTrace()

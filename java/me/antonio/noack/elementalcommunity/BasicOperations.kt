@@ -23,9 +23,9 @@ object BasicOperations {
                         WebServices.askRecipe(first, second, all, { result2 ->
                             if(result2 != null){// remove in the future, when the least amount of support is 2 or sth like that
                                 synchronized(Unit){
-                                    add(result2)
                                     AllManager.unlockedIds.add(result2.uuid)
-                                    AllManager.save()
+                                    AllManager.saveElement2(result2)
+                                    add(result2)
                                 }
                             }
                         }, {})

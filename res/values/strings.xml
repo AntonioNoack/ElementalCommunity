@@ -49,7 +49,7 @@
     <string name="save_progress_to_name">Save progress to #name</string>
     <string name="load_progress_from_name">Load progress from #name</string>
     <string name="please_select_a_file">Please select a file!</string>
-    <string name="switch_server">Switch Server</string>
+    <string name="switch_server">Switch Server (kind of deprecated)</string>
     <string name="settings_help">Hold down long on a button to get more information.</string>
     <string name="switch_to_default">Switch to default</string>
     <string name="join_that_server">Join that server</string>
