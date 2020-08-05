@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.AskFrequencyOption
+import me.antonio.noack.elementalcommunity.FlipperContent
 import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.api.WebServices
 import me.antonio.noack.elementalcommunity.utils.Maths
@@ -26,7 +27,7 @@ object SettingsInit {
                 favSlider.progress = if(AllManager.FAVOURITE_COUNT == 0) 0 else AllManager.FAVOURITE_COUNT - 2
                 freqSlider.progress = AllManager.askFrequency.ordinal
                 freqTitle.text = resources.getString(R.string.frequency_of_asking_title).replace("#frequency", AllManager.askFrequency.displayName)
-                flipper.displayedChild = 4
+                FlipperContent.SETTINGS.bind(all)
             }
 
             val treeView = treeView

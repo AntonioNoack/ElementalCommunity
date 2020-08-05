@@ -17,7 +17,7 @@
     <string name="reset_everything">Reset Everything</string>
     <string name="settings">Settings</string>
     <string name="are_you_sure_reset_everything">Are you sure that you want to delete all your progress?</string>
-    <string name="tree_view">Mandala View</string>
+    <string name="tree_view">Tree View</string>
     <string name="random_suggestion">Random Suggestion</string>
     <string name="component_a">Component A</string>
     <string name="component_b">Component B</string>
@@ -62,4 +62,5 @@
     </string>
     <string name="show_element_uuids">Display element ids</string>
     <string name="clear_recipe_cache">Clear Recipe Cache</string>
+    <string name="mandala_view">Mandala View</string>
 </resources>

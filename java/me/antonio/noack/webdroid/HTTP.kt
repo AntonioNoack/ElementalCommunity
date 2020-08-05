@@ -42,8 +42,14 @@ object HTTP {
                 synchronized(this){
                     if(!hasWarned){
                         hasWarned = true
-                        AllManager.toast("HTTPS is somehow not available :/.\n" +
-                                "The app will probably work fine anyways.", true)
+                        try {
+                            AllManager.toast("HTTPS is somehow not available :/.\n" +
+                                    "The app will probably work fine anyways.", true)
+                        } catch (e: Exception){
+                            // if this throws, e.g. by nullpointer, idc;
+                            // getting the data is more important
+                            e.printStackTrace()
+                        }
                     }
                 }
                 try {

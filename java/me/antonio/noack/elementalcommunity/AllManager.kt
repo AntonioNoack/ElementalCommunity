@@ -30,6 +30,7 @@ import me.antonio.noack.elementalcommunity.help.SettingsInit
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
+import java.lang.Exception
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 
@@ -120,6 +121,7 @@ class AllManager: AppCompatActivity() {
     lateinit var startButton: View
     lateinit var flipper: ViewFlipper
     lateinit var treeViewButton: View
+    lateinit var mandalaViewButton: View
     lateinit var suggestButton: View
     lateinit var settingButton: View
     lateinit var back1: View
@@ -128,6 +130,7 @@ class AllManager: AppCompatActivity() {
     lateinit var backArrow1: View
     lateinit var backArrow2: View
     lateinit var backArrow3: View
+    lateinit var backArrow4: View
     lateinit var favTitle: TextView
     lateinit var favSlider: SeekBar
     lateinit var search1: EditText
@@ -157,6 +160,7 @@ class AllManager: AppCompatActivity() {
         startButton = findViewById(R.id.start)!!
         flipper = findViewById(R.id.flipper)!!
         treeViewButton = findViewById(R.id.treeButton)!!
+        mandalaViewButton = findViewById(R.id.mandalaButton)!!
         suggestButton = findViewById(R.id.suggest)!!
         settingButton = findViewById(R.id.settingsButton)!!
         back1 = findViewById(R.id.back1)!!
@@ -167,6 +171,7 @@ class AllManager: AppCompatActivity() {
         backArrow1 = findViewById(R.id.backArrow1)!!
         backArrow2 = findViewById(R.id.backArrow2)!!
         backArrow3 = findViewById(R.id.backArrow3)!!
+        backArrow4 = findViewById(R.id.backArrow4)!!
         search1 = findViewById(R.id.search1)!!
         search2 = findViewById(R.id.search2)!!
         searchButton1 = findViewById(R.id.searchButton1)!!
@@ -249,7 +254,13 @@ class AllManager: AppCompatActivity() {
         WebServices.serverName = pref.getString("serverName", "Default")!!
 
         staticRunOnUIThread = {
-            runOnUiThread(it)
+            runOnUiThread {
+                try {
+                    it()
+                } catch (e: Exception){
+                    staticToast1(e.message ?: e.localizedMessage ?: e.toString(), true)
+                }
+            }
         }
 
         staticToast1 = { msg, isLong -> runOnUiThread { Toast.makeText(this, msg, if(isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show() } }
@@ -268,15 +279,17 @@ class AllManager: AppCompatActivity() {
 
         }
         
-        startButton.setOnClickListener { flipper.displayedChild = 1 }
-        treeViewButton.setOnClickListener { flipper.displayedChild = 2 }
+        startButton.setOnClickListener { FlipperContent.GAME.bind(this) }
+        treeViewButton.setOnClickListener { FlipperContent.TREE.bind(this) }
         suggestButton.setOnClickListener {
             combiner.invalidateSearch()
-            flipper.displayedChild = 3
-        }
-        back1.setOnClickListener { flipper.displayedChild = 0 }
-        back2.setOnClickListener { flipper.displayedChild = 0 }
-        backArrow3.setOnClickListener { flipper.displayedChild = 0 }
+            FlipperContent.COMBINER.bind(this) }
+        mandalaViewButton.setOnClickListener {
+            FlipperContent.MANDALA.bind(this) }
+        back1.setOnClickListener { FlipperContent.MENU.bind(this) }
+        back2.setOnClickListener { FlipperContent.MENU.bind(this) }
+        backArrow3.setOnClickListener { FlipperContent.MENU.bind(this) }
+        backArrow4.setOnClickListener { FlipperContent.MENU.bind(this) }
         addSearchListeners(back3, backArrow1, searchButton1, search1, unlocked)
         addSearchListeners(back1, backArrow2, searchButton2, search2, combiner)
         randomButton.setOnClickListener { RandomSuggestion.make(this) }

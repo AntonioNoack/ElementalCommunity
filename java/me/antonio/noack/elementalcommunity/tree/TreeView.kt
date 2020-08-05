@@ -366,6 +366,9 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                 if(element.treeX in minX .. maxX && element.treeY in minY .. maxY){
                     val x0 = centerX + (element.treeX - scrollX) * widthPerNode
                     val y0 = centerY + (element.treeY - scrollY) * widthPerNode
+                    bgPaint.alpha = 255
+                    textPaint.alpha = 255
+                    linePaint.alpha = 255
                     if(activeElement == element && activeness > 0f){
                         val delta = activeness * widthPerNode * 0.5f
                         drawElement(canvas, showCraftingCounts, showUUIDs, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
@@ -375,6 +378,10 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
                 }
             }
         }
+
+        bgPaint.alpha = 255
+        textPaint.alpha = 255
+        linePaint.alpha = 255
 
         drawFavourites(canvas, false, showUUIDs, width, height, bgPaint, textPaint, allowLeftFavourites)
 
