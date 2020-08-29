@@ -9,3 +9,4 @@ Not only that, because we had that before, but also suggest your own things,
 which then will be approved by the community! :D
 
 [Download for free in the Play Store!](https://play.google.com/store/apps/details?id=me.antonio.noack.elementalcommunity)
+[Or play in your browser!](https://elemental.phychi.com)
