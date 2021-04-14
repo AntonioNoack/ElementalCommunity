@@ -1,37 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <me.antonio.noack.elementalcommunity.LoadingBarView
+        android:layout_width="match_parent"
+        android:layout_height="5dp" />
 
     <LinearLayout
-            android:orientation="horizontal"
-            android:background="@color/colorPrimary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:orientation="horizontal">
 
         <ImageView
-                android:id="@+id/backArrow3"
-                android:src="@drawable/ic_arrow_back_black_24dp"
-                android:layout_width="50sp"
-                android:layout_height="50sp"/>
+            android:id="@+id/backArrow3"
+            android:layout_width="50sp"
+            android:layout_height="50sp"
+            android:contentDescription="@string/back"
+            android:src="@drawable/ic_arrow_back_black_24dp" />
 
         <SeekBar
-                android:id="@+id/spaceSlider"
-                android:thumbTint="@color/colorPrimaryDark"
-                android:progressTint="@color/colorPrimaryDark"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="50dp"/>
+            android:id="@+id/spaceSlider"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:progressTint="@color/colorPrimaryDark"
+            android:thumbTint="@color/colorPrimaryDark" />
 
-        <include layout="@layout/diamond_bar"/>
+        <include layout="@layout/diamond_bar" />
 
     </LinearLayout>
 
     <me.antonio.noack.elementalcommunity.tree.TreeView
-            android:id="@+id/tree"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+        android:id="@+id/tree"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 
 </LinearLayout>

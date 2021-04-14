@@ -7,33 +7,40 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.api.WebServices
 import java.lang.IllegalArgumentException
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.math.min
 
 object BasicOperations {
 
+    val todo = AtomicInteger(0)
+    val done = AtomicInteger(0)
+
     fun onRecipeRequest(first: Element, second: Element, all: AllManager, measuredWidth: Int, measuredHeight: Int, unlockElement: (Element) -> Unit, add: (Element) -> Unit){
+        todo.incrementAndGet()
         thread(true){
             WebServices.askRecipe(first, second, all, { result ->
-                if(result != null){
-                    unlockElement(result)
-                } else if(AllManager.askFrequency.isTrue()){
-                    // staticRunOnUIThread { AllManager.askingSound.play() }
-                    askForRecipe(first, second, all, measuredWidth, measuredHeight, unlockElement){
-                        WebServices.askRecipe(first, second, all, { result2 ->
-                            if(result2 != null){// remove in the future, when the least amount of support is 2 or sth like that
-                                synchronized(Unit){
-                                    AllManager.unlockedIds.add(result2.uuid)
-                                    AllManager.saveElement2(result2)
-                                    add(result2)
+                done.incrementAndGet()
+                when {
+                    result != null -> unlockElement(result)
+                    AllManager.askFrequency.isTrue() -> {
+                        // staticRunOnUIThread { AllManager.askingSound.play() }
+                        askForRecipe(first, second, all, measuredWidth, measuredHeight, unlockElement){
+                            WebServices.askRecipe(first, second, all, { result2 ->
+                                if(result2 != null){// remove in the future, when the least amount of support is 2 or sth like that
+                                    synchronized(Unit){
+                                        AllManager.unlockedIds.add(result2.uuid)
+                                        AllManager.saveElement2(result2)
+                                        add(result2)
+                                    }
                                 }
-                            }
-                        }, {})
+                            }, {})
+                        }
                     }
-                } else {
-                    AllManager.toast(R.string.no_result_found, false)
+                    else -> AllManager.toast(R.string.no_result_found, false)
                 }
             }, {
+                done.incrementAndGet()
                 AllManager.toast("${it.javaClass.simpleName}: ${it.message}", true)
             })
         }
@@ -42,7 +49,9 @@ object BasicOperations {
     fun askForRecipe(a: Element, b: Element, all: AllManager, measuredWidth: Int, measuredHeight: Int, unlockElement: (Element) -> Unit, onSuccess: () -> Unit){
         // ask for recipe to add :)
         // todo show that we are loading
+        todo.incrementAndGet()
         WebServices.getCandidates(a, b, { candidates ->
+            done.incrementAndGet()
             AllManager.staticRunOnUIThread {
                 val dialog: Dialog = AlertDialog.Builder(all)
                     .setView(R.layout.add_recipe)
@@ -91,6 +100,7 @@ object BasicOperations {
                 }
             }
         }, {
+            done.incrementAndGet()
             AllManager.toast("${it.javaClass.simpleName}: ${it.message}", true)
         })
     }
@@ -113,8 +123,10 @@ object BasicOperations {
                     return@setOnClickListener
                 }
             }
+            todo.incrementAndGet()
             thread {
                 WebServices.suggestRecipe(all, getComponentA(), getComponentB(), name, group, {
+                    done.incrementAndGet()
                     val lines = it.split('\n')
                     val str = lines[0]
                     val index1 = str.indexOf(':')
@@ -139,6 +151,8 @@ object BasicOperations {
                         val element = Element.get(rName, rUUID, rGroup, rCraftingCount)
                         unlockElement(element)
                     }
+                }, {
+                    done.incrementAndGet()
                 })
             }
         }

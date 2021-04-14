@@ -3,6 +3,7 @@ package me.antonio.noack.webdroid
 import me.antonio.noack.elementalcommunity.AllManager
 import java.io.IOException
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 import kotlin.concurrent.thread
 
@@ -26,7 +27,10 @@ object HTTP {
         if(url.startsWith("http://" )) return requestInternal(url.substring(7), type, largeArgs, onSuccess, onError)
         thread {
             try {
+                println(url)
                 val con = URL("https://$url").openConnection() as HttpURLConnection
+                con.connectTimeout = 10000
+                con.readTimeout = 20000
                 // idc, working app > privacy
                 // con as? HttpsURLConnection ?: throw IOException("Connection wasn't https!")
                 con.requestMethod = type
@@ -38,6 +42,20 @@ object HTTP {
                     out.flush()
                 }
                 onSuccess(String(con.inputStream.buffered().readBytes()))
+            } catch (e: SocketTimeoutException){
+                synchronized(this){
+                    if(!hasWarned){
+                        hasWarned = true
+                        try {
+                            AllManager.toast("The connection seems slow...", true)
+                        } catch (e: Exception){
+                            // if this throws, e.g. by nullpointer, idc;
+                            // getting the data is more important
+                            e.printStackTrace()
+                        }
+                    }
+                }
+                onError(e)
             } catch (e: IOException){
                 synchronized(this){
                     if(!hasWarned){
@@ -75,7 +93,7 @@ object HTTP {
     }
 
     fun requestLarge(url: String, largeArgs: String, onSuccess: (String) -> Unit, onError: (IOException) -> Unit, https: Boolean) {
-        requestInternal(url, "POST", null, onSuccess, onError)
+        requestInternal(url, "POST", largeArgs, onSuccess, onError)
     }
 
 }

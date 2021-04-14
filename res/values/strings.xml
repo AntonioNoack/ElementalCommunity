@@ -63,4 +63,6 @@
     <string name="show_element_uuids">Display element ids</string>
     <string name="clear_recipe_cache">Clear Recipe Cache</string>
     <string name="mandala_view">Mandala View</string>
+    <string name="search">Search</string>
+    <string name="what_you_are_searching">What you are searching</string>
 </resources>
