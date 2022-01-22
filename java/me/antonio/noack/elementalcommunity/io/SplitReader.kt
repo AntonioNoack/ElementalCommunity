@@ -3,17 +3,23 @@ package me.antonio.noack.elementalcommunity.io
 import java.io.InputStream
 
 class SplitReader(
-    private val format: List<ElementType>,
+    val format: List<ElementType>,
     primary: Char,
     secondary: Char,
-    private val input: InputStream
+    input: InputStream
 ) {
+
+    var input = input
+        set(value) {
+            field = value
+            hasRemaining = true
+        }
 
     private val primary = primary.code
     private val secondary = secondary.code
 
-    private val ints = IntArray(format.size)
-    private val strings = Array(format.size) { "" }
+    private val ints = IntArray(format.lastIndexOf(ElementType.INT) + 1)
+    private val strings = Array(format.lastIndexOf(ElementType.STRING) + 1) { "" }
 
     private val builder = StringBuilder()
 
@@ -22,6 +28,10 @@ class SplitReader(
 
     var hasRemaining = true
         private set
+
+    fun reset() {
+        hasRemaining = true
+    }
 
     fun read(): Int {
         // read until primary or -1

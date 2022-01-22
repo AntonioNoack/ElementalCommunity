@@ -96,7 +96,7 @@ object SaveLoadLogic {
         }
     }
 
-    val WRITE_EXT_STORAGE_CODE = 1561
+    const val WRITE_EXT_STORAGE_CODE = 1561
     var onWriteAllowed: (() -> Unit)? = null
 
     fun save(all: AllManager, mimeType: String, displayName: String) {

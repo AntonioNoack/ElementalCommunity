@@ -50,7 +50,7 @@ object FileChooser {
         dialog.findViewById<View>(R.id.back)?.setOnClickListener { dialog.dismiss() }
         dialog.findViewById<TextView>(R.id.title)?.setText(R.string.please_select_the_file)
 
-        folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         //all.getExternalFilesDir(Environment.DIRECTORY_DCIM)!!
 
         val button = dialog.findViewById<TextView>(R.id.select)!!

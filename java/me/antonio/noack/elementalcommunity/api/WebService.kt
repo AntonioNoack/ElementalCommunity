@@ -173,12 +173,7 @@ open class WebService(private val serverURL: String) : ServerService {
                 val group = data[1].toInt()
                 val name = data[2]
                 val craftingCounter = -1
-                val element = Element.get(
-                    name,
-                    id,
-                    group,
-                    craftingCounter
-                )
+                val element = Element.get(name, id, group, craftingCounter, true)
                 AllManager.addRecipe(a, b, element, all)
                 onSuccess(element)
             } else {
@@ -219,11 +214,11 @@ open class WebService(private val serverURL: String) : ServerService {
                         val aId = data[1].toIntOrNull() ?: continue
                         val aName = data[2]
                         val aGroup = data[3].toIntOrNull() ?: continue
-                        val a = Element.get(aName, aId, aGroup, -1)
+                        val a = Element.get(aName, aId, aGroup, -1, true)
                         val bId = data[4].toIntOrNull() ?: continue
                         val bName = data[5]
                         val bGroup = data[6].toIntOrNull() ?: continue
-                        val b = Element.get(bName, bId, bGroup, -1)
+                        val b = Element.get(bName, bId, bGroup, -1, true)
                         val result = data[7]
                         val resultGroup = data[8].toIntOrNull() ?: continue
                         val weight = data[9].toIntOrNull() ?: continue
@@ -408,7 +403,7 @@ open class WebService(private val serverURL: String) : ServerService {
                     }
                     val name = data.getString(2)
                     val craftingCount = data.getInt(3)
-                    Element.get(name, uuid, group, craftingCount)
+                    Element.get(name, uuid, group, craftingCount, true)
                 }
             }
 

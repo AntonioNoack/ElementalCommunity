@@ -11,8 +11,15 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import java.util.*
 import kotlin.math.min
 
-class Element private constructor(var name: String, val uuid: Int, var group: Int) :
-    Comparable<Element> {
+class Element private constructor(
+    var name: String,
+    val uuid: Int,
+    var group: Int,
+    /**
+     * how often it was created, roughly
+     * */
+    var craftingCount: Int
+) : Comparable<Element> {
 
     override fun compareTo(other: Element): Int {
         val y = startingNumber.compareTo(other.startingNumber)
@@ -24,10 +31,6 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
 
     var rank = -1
 
-    /**
-     * how often it was created, roughly
-     * */
-    var craftingCount = -1
 
     var srcA: Element? = null
     var srcB: Element? = null
@@ -101,41 +104,41 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
     }
 
     companion object {
-        fun get(name: String, uuid: Int, group: Int, craftingCount: Int): Element {
-            val old = elementById[uuid]
-            return if (old != null) {
-                var needsSave = old.name != name
-                if (needsSave) {
-                    old.name = name
-                    old.lcName = name.lowercase(Locale.getDefault())
-                    old.startingNumber = old.calcStartingNumber()
-                    old.hashLong = old.calcHashLong()
-                }
-                if (craftingCount >= minimumCraftingCount && old.craftingCount != craftingCount) {
-                    old.craftingCount = craftingCount
-                    needsSave = true
-                }
-                if (old.group != group) {
-                    synchronized(Unit) {
+        fun get(name: String, uuid: Int, group: Int, craftingCount: Int, save: Boolean): Element {
+            synchronized(Unit) {
+                val element = elementById[uuid]
+                return if (element != null) {
+                    var needsSave = false
+                    if (element.name != name) {
+                        element.name = name
+                        element.lcName = name.lowercase(Locale.getDefault())
+                        element.startingNumber = element.calcStartingNumber()
+                        element.hashLong = element.calcHashLong()
+                        needsSave = true
+                    }
+                    if (craftingCount >= minimumCraftingCount && element.craftingCount != craftingCount) {
+                        element.craftingCount = craftingCount
+                        needsSave = true
+                    }
+                    if (element.group != group) {
                         // println("group for $name: $group")
                         val newGroup = clamp(group, 0, elementsByGroup.size - 1)
-                        elementsByGroup[old.group].remove(old)
-                        unlockeds[old.group].remove(old)
-                        elementsByGroup[newGroup].add(old)
-                        unlockeds[newGroup].add(old)
-                        old.group = newGroup
+                        elementsByGroup[element.group].remove(element)
+                        unlockeds[element.group].remove(element)
+                        elementsByGroup[newGroup].add(element)
+                        unlockeds[newGroup].add(element)
+                        element.group = newGroup
                         // there is the issue:
                         // saving is done inefficiently
                         needsSave = true
+                        invalidate()
                     }
-                    invalidate()
-                }
-                if (needsSave) {
-                    println("saving $old")
-                    saveElement2(old)
-                }
-                old
-            } else Element(name, uuid, group)
+                    if (save && needsSave) {
+                        saveElement2(element)
+                    }
+                    element
+                } else Element(name, uuid, group, craftingCount)
+            }
         }
     }
 

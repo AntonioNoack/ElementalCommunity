@@ -21,13 +21,19 @@ import androidx.core.view.children
 import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.help.SettingsInit
+import me.antonio.noack.elementalcommunity.io.ElementType
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
+import me.antonio.noack.elementalcommunity.io.SplitReader
+import me.antonio.noack.elementalcommunity.io.SplitReader2
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
 import java.lang.Exception
 import java.lang.StringBuilder
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
+import me.antonio.noack.elementalcommunity.utils.IntArrayList
+import me.antonio.noack.webdroid.files.FileSaver
+
 
 // Sounds:
 // magic: https://freesound.org/people/suntemple/sounds/241809/
@@ -193,6 +199,9 @@ class AllManager : AppCompatActivity() {
             SaveLoadLogic.IMAGE_SELECTED -> {
                 println("got answer :) $data")
             }
+            SaveLoadLogic.WRITE_EXT_STORAGE_CODE -> {
+                FileSaver.continueSave(this, resultCode, data)
+            }
             else -> {
                 super.onActivityResult(requestCode, resultCode, data)
             }
@@ -333,14 +342,15 @@ class AllManager : AppCompatActivity() {
                     }
                 }
             }
-            // println("saved $id to $value")
             edit.putString(id.toString(), value.toString())
         }
 
         saveElement2 = { element ->
-            val edit = pref.edit()
-            saveElement(edit, element)
-            edit.apply()
+            synchronized(Unit) {
+                val edit = pref.edit()
+                saveElement(edit, element)
+                edit.apply()
+            }
         }
 
         saveFavourites = {
@@ -380,90 +390,18 @@ class AllManager : AppCompatActivity() {
             edit.apply()
         }*/
 
-        // old
-        val unlockedIdsString = pref.getString("unlocked", null)
-        if (unlockedIdsString != null) {
-            unlockedIds.addAll(
-                pref.getString("unlocked", "1,2,3,4")!!.split(',').map { x -> x.toInt() })
-        } else unlockedIds.addAll(listOf(1, 2, 3, 4))
+        readUnlockedElementsLegacy()
 
+        registerBaseElements()
 
-        val names = arrayOf("???", "Earth", "Air", "Water", "Fire")
-        val groups = intArrayOf(20, 5, 12, 20, 4)
-        for (id in unlockedIds.keys) {// after a restart, this should be only 4
-            val name = pref.getString("$id.name", names.getOrNull(id) ?: names[0])!!
-            val group = pref.getInt("$id.group", groups.getOrNull(id) ?: groups[0])
-            val craftingCount = pref.getInt("$id.crafted", -1)
-            val element = Element.get(name, id, group, craftingCount)
-            unlockeds[element.group].add(element)
-        }
+        val t0 = System.nanoTime()
+        // readUnlockedElements1() // 0.13s
+        // readUnlockedElements2() // 0.13s
+        readUnlockedElements3() // 0.058s
+        val t1 = System.nanoTime()
+        println("Used ${(t1 - t0) * 1e-9}s to query elements")
 
-        val recipeMemory = HashMap<Element, List<Pair<Int, Int>>>()
-        val edit = pref.edit()
-        for ((key, value) in pref.all) {
-            val id = key.toIntOrNull()
-            if (id != null) {
-                val parts = value.toString().split(';')
-                if (parts.size > 1) {
-                    val name = parts[0]
-                    val group = parts[1].toIntOrNull() ?: continue
-                    val craftCount = parts.getOrNull(2)?.toIntOrNull() ?: 0
-                    val wasCrafted = parts.getOrNull(3)?.toIntOrNull() == 1
-                    val element = Element.get(name, id, group, craftCount)
-                    if (wasCrafted) {
-                        unlockedIds.put(id)
-                        unlockeds[group].add(element)
-                    }
-                    val recipePart = parts.getOrNull(4)
-                    if (recipePart != null && recipePart.isNotEmpty()) {
-                        val unlockedRecipes = (recipePart ?: "").split(',')
-                        val list = ArrayList<Pair<Int, Int>>()
-                        recipeMemory[element] = list
-                        unlockedRecipes.filter { it.isNotEmpty() }.forEach { ab ->
-                            val ab2 = ab.split('-')
-                            val a = ab2[0].toIntOrNull() ?: return@forEach
-                            val b = ab2[1].toIntOrNull() ?: return@forEach
-                            list.add(a to b)
-                            // println("$a + $b = $name")
-                        }
-                    }
-                }
-            }
-            if (key.endsWith(".name")) {
-                // println("processing $key")
-                // an element
-                val id = key.split('.')[0].toIntOrNull() ?: continue
-                val name = value.toString()
-                val group = pref.getInt("$id.group", -1)
-                if (group < 0) continue
-                val craftingCount = pref.getInt("$id.crafted", -1)
-                val element = Element.get(name, id, group, craftingCount)
-                saveElement(edit, element)
-                edit.remove("$id.name")
-                edit.remove("$id.group")
-                edit.remove("$id.crafted")
-            }
-        }
-        edit.apply()
-
-        for ((element, abs) in recipeMemory) {
-            for ((a, b) in abs) {
-                val ea = elementById[a]
-                val eb = elementById[b]
-                if (ea != null && eb != null) {
-                    addRecipe(ea, eb, element, this, false)
-                }
-            }
-        }
-
-        // for identification <3 :D
-        var ci = pref.getLong("customUUID", -1)
-        if (ci < 0) {
-            ci = abs(Random().nextLong())
-            pref.edit().putLong("customUUID", ci).apply()
-        }
-
-        customUUID = ci
+        createUniqueIdentifier()
 
         FAVOURITE_COUNT = pref.getInt("favourites.length", FAVOURITE_COUNT)
         resizeFavourites(pref)
@@ -514,6 +452,224 @@ class AllManager : AppCompatActivity() {
 
     }
 
+    private fun readUnlockedElementsLegacy() {
+        /** legacy */
+        val unlockedIdsString = pref.getString("unlocked", null)
+        if (unlockedIdsString != null) {
+            unlockedIds.addAll(unlockedIdsString
+                .split(',')
+                .mapNotNull { x -> x.toIntOrNull() })
+        } else unlockedIds.addAll(listOf(1, 2, 3, 4))
+    }
+
+    private fun registerBaseElements() {
+        val names = arrayOf("???", "Earth", "Air", "Water", "Fire")
+        val groups = intArrayOf(20, 5, 12, 20, 4)
+        for (id in unlockedIds.keys) {// after a restart, this should be only 4
+            val name = pref.getString("$id.name", names.getOrNull(id) ?: names[0])!!
+            val group = pref.getInt("$id.group", groups.getOrNull(id) ?: groups[0])
+            val craftingCount = pref.getInt("$id.crafted", -1)
+            val element = Element.get(name, id, group, craftingCount, false)
+            unlockeds[element.group].add(element)
+        }
+    }
+
+    private fun readUnlockedElements1() {
+        val recipeMemory = HashMap<Element, List<Pair<Int, Int>>>()
+        val edit = pref.edit()
+        for ((key, value) in pref.all) {
+            val id = key.toIntOrNull()
+            if (id != null) {
+                val parts = value.toString().split(';')
+                if (parts.size > 1) {
+                    val name = parts[0]
+                    val group = parts[1].toIntOrNull() ?: continue
+                    val craftCount = parts.getOrNull(2)?.toIntOrNull() ?: 0
+                    val wasCrafted = parts.getOrNull(3)?.toIntOrNull() == 1
+                    val element = Element.get(name, id, group, craftCount, false)
+                    if (wasCrafted) {
+                        unlockedIds.put(id)
+                        unlockeds[group].add(element)
+                    }
+                    val recipePart = parts.getOrNull(4)
+                    if (recipePart != null && recipePart.isNotEmpty()) {
+                        val unlockedRecipes = (recipePart ?: "").split(',')
+                        val list = ArrayList<Pair<Int, Int>>()
+                        recipeMemory[element] = list
+                        unlockedRecipes.filter { it.isNotEmpty() }.forEach { ab ->
+                            val ab2 = ab.split('-')
+                            val a = ab2[0].toIntOrNull() ?: return@forEach
+                            val b = ab2[1].toIntOrNull() ?: return@forEach
+                            list.add(a to b)
+                            // println("$a + $b = $name")
+                        }
+                    }
+                }
+            }
+            if (key.endsWith(".name")) {
+                // println("processing $key")
+                // an element
+                val id = key.split('.')[0].toIntOrNull() ?: continue
+                val name = value.toString()
+                val group = pref.getInt("$id.group", -1)
+                if (group < 0) continue
+                val craftingCount = pref.getInt("$id.crafted", -1)
+                val element = Element.get(name, id, group, craftingCount, false)
+                saveElement(edit, element)
+                edit.remove("$id.name")
+                edit.remove("$id.group")
+                edit.remove("$id.crafted")
+            }
+        }
+        edit.apply()
+    }
+
+    private fun readUnlockedElements2() {
+        val recipeMemory = HashMap<Element, IntArrayList>()
+        val nameFormat = listOf(
+            ElementType.STRING,
+            ElementType.INT,
+            ElementType.INT,
+            ElementType.INT,
+            ElementType.STRING
+        )
+        val recipeFormat = listOf(ElementType.INT, ElementType.INT)
+        val nameReader = SplitReader(nameFormat, 0.toChar(), ';', System.`in`)
+        val recipeReader = SplitReader(recipeFormat, ',', '-', System.`in`)
+        for ((key, value) in pref.all) {
+            val id = key.toIntOrNull()
+            if (id != null) {
+                val valueStr = value.toString()
+                if (valueStr.indexOf(';') != valueStr.lastIndexOf(';')) {
+                    nameReader.input = valueStr.byteInputStream()
+                    val size = nameReader.read()
+                    val name = nameReader.getString(0)
+                    val group = if (size > 1) nameReader.getInt(1) else continue
+                    val craftCount = if (size > 2) nameReader.getInt(2) else 0
+                    val wasCrafted = if (size > 3) nameReader.getInt(3) != 0 else false
+                    val element = Element.get(name, id, group, craftCount, false)
+                    if (wasCrafted) {
+                        unlockedIds.put(id)
+                        unlockeds[group].add(element)
+                    }
+                    if (size > 4) {
+                        // still not ideal, but better than previously
+                        val unlockedRecipesPart = nameReader.getString(4)
+                        if (unlockedRecipesPart.length > 2) {
+                            val list = IntArrayList()
+                            recipeMemory[element] = list
+                            recipeReader.input = unlockedRecipesPart.byteInputStream()
+                            while (recipeReader.hasRemaining) {
+                                if (recipeReader.read() >= 2) {
+                                    val a = recipeReader.getInt(0)
+                                    val b = recipeReader.getInt(1)
+                                    list.addPair(a, b)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            /** legacy removal */
+            if (key.endsWith(".name")) {
+                // an element
+                // reading could be optimized, but it's legacy, so doesn't matter
+                val edit = pref.edit()
+                val id1 = key.split('.')[0].toIntOrNull() ?: continue
+                val name = value.toString()
+                val group = pref.getInt("$id1.group", -1)
+                if (group < 0) continue
+                val craftingCount = pref.getInt("$id1.crafted", -1)
+                val element = Element.get(name, id1, group, craftingCount, false)
+                saveElement(edit, element)
+                edit.remove("$id1.name")
+                edit.remove("$id1.group")
+                edit.remove("$id1.crafted")
+                edit.apply()
+            }
+        }
+        for ((element, abs) in recipeMemory) {
+            abs.forEachPair { a, b ->
+                val ea = elementById[a]
+                val eb = elementById[b]
+                if (ea != null && eb != null) {
+                    addRecipe(ea, eb, element, this, false)
+                }
+            }
+        }
+    }
+
+    private fun readUnlockedElements3() {
+        val reader = SplitReader2(System.`in`)
+        val recipeMemory = HashMap<Element, IntArrayList>()
+        for ((key, value) in pref.all) {
+            val id = key.toIntOrNull()
+            if (id != null) {
+                val valueStr = value.toString()
+                if (valueStr.indexOf(';') != valueStr.lastIndexOf(';')) {
+                    reader.input = valueStr.byteInputStream()
+                    val name = reader.readString(';', ';', "")
+                    val group = reader.readInt(';', ';', -1)
+                    if (group < 0) continue
+                    val craftCount = reader.readInt(';', ';', -1)
+                    val wasCrafted = reader.readInt(';', ';', 0) > 0
+                    val element = Element.get(name, id, group, craftCount, false)
+                    if (wasCrafted) {
+                        unlockedIds.put(id)
+                        unlockeds[group].add(element)
+                    }
+                    if (reader.hasRemaining) {
+                        val list = IntArrayList()
+                        recipeMemory[element] = list
+                        // still not ideal, but better than previously
+                        while (reader.hasRemaining) {
+                            val a = reader.readInt(',', '-', -1)
+                            val b = reader.readInt(',', '-', -1)
+                            if (a != -1 && b != -1) list.addPair(a, b)
+                            reader.next()
+                        }
+                    }
+                }
+            }
+            /** legacy removal */
+            if (key.endsWith(".name")) {
+                // an element
+                // reading could be optimized, but it's legacy, so doesn't matter
+                val edit = pref.edit()
+                val id1 = key.split('.')[0].toIntOrNull() ?: continue
+                val name = value.toString()
+                val group = pref.getInt("$id1.group", -1)
+                if (group < 0) continue
+                val craftingCount = pref.getInt("$id1.crafted", -1)
+                val element = Element.get(name, id1, group, craftingCount, false)
+                saveElement(edit, element)
+                edit.remove("$id1.name")
+                edit.remove("$id1.group")
+                edit.remove("$id1.crafted")
+                edit.apply()
+            }
+        }
+        for ((element, abs) in recipeMemory) {
+            abs.forEachPair { a, b ->
+                val ea = elementById[a]
+                val eb = elementById[b]
+                if (ea != null && eb != null) {
+                    addRecipe(ea, eb, element, this, false)
+                }
+            }
+        }
+    }
+
+    private fun createUniqueIdentifier() {
+        // to potentially block a user, or at least for filtering of his actions
+        var ci = pref.getLong("customUUID", -1)
+        if (ci < 0) {
+            ci = abs(Random().nextLong())
+            pref.edit().putLong("customUUID", ci).apply()
+        }
+        customUUID = ci
+    }
+
     fun acknowledgeDiamondPurchase(amount: Int) {
         pref.edit().putInt(diamondBuyKey, pref.getInt(diamondBuyKey, 0) + amount).apply()
         updateDiamondCount()
@@ -555,11 +711,11 @@ class AllManager : AppCompatActivity() {
         favourites = Array(FAVOURITE_COUNT) { favourites.getOrNull(it) }
         for (i in 0 until FAVOURITE_COUNT) {
             favourites[i] =
-                favourites.getOrNull(i) ?: elementById[pref.getInt("favourites[$i]", -1)] ?: null
+                favourites.getOrNull(i) ?: elementById[pref.getInt("favourites[$i]", -1)]
         }
     }
 
-    fun addSearchListeners(
+    private fun addSearchListeners(
         back3: View,
         backArrow: View,
         searchButton: View,
@@ -608,7 +764,7 @@ class AllManager : AppCompatActivity() {
         return super.onGenericMotionEvent(event)
     }*/
 
-    fun updateGroupSizesAndNames() {
+    private fun updateGroupSizesAndNames() {
         thread {
             WebServices.updateGroupSizesAndNames()
         }
