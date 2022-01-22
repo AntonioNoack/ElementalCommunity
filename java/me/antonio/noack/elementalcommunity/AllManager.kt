@@ -4,12 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.os.Build
+import android.os.*
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.SparseArray
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.concurrent.thread
@@ -17,13 +15,9 @@ import android.view.View
 import android.view.View.*
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.api.WebServices
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.widget.*
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.children
-import kotlinx.android.synthetic.main.settings.*
-import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.help.SettingsInit
@@ -31,6 +25,7 @@ import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
 import java.lang.Exception
+import java.lang.StringBuilder
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 
@@ -39,7 +34,7 @@ import kotlin.math.abs
 // ok: https://freesound.org/people/grunz/sounds/109663/
 // click: https://freesound.org/people/vitriolix/sounds/706/
 
-class AllManager: AppCompatActivity() {
+class AllManager : AppCompatActivity() {
 
     companion object {
 
@@ -47,14 +42,19 @@ class AllManager: AppCompatActivity() {
         var showCraftingCounts = true
         var showElementUUID = true
 
-        var unlockedIds = hashSetOf(1, 2, 3, 4)
+        var unlockedIds = ConcurrentHashSet<Int>()
+
+        init {
+            for (i in 1..4) unlockedIds.put(i)
+        }
+
         var elementById = ConcurrentHashMap<Int, Element>()
 
-        var elementsByGroup = Array(GroupColors.size + 12){
+        var elementsByGroup = Array(GroupColors.size + 12) {
             TreeSet<Element>()
         }
 
-        var unlockeds = Array(GroupColors.size + 12){
+        var unlockeds = Array(GroupColors.size + 12) {
             TreeSet<Element>()
         }
 
@@ -62,30 +62,30 @@ class AllManager: AppCompatActivity() {
         var FAVOURITE_COUNT = 5
         var favourites = arrayOfNulls<Element>(FAVOURITE_COUNT)
 
-        var elementByRecipe = HashMap<Pair<Element, Element>, Element>()
-        val recipesByElement = HashMap<Element, MutableList<Pair<Element, Element>>>()
+        var elementByRecipe = ConcurrentHashMap<Pair<Element, Element>, Element>()
+        val recipesByElement = ConcurrentHashMap<Element, MutableList<Pair<Element, Element>>>()
 
-        val elementByName = HashMap<String, Element>()
+        val elementByName = ConcurrentHashMap<String, Element>()
 
         // for the tree
-        fun addRecipe(a: Element, b: Element, r: Element, all: AllManager, save: Boolean = true){
-            if(a.uuid > b.uuid) return addRecipe(b, a, r, all, save)
+        fun addRecipe(a: Element, b: Element, r: Element, all: AllManager, save: Boolean = true) {
+            if (a.uuid > b.uuid) return addRecipe(b, a, r, all, save)
             val pair = a to b
-            unlockedIds.add(r.uuid)
+            unlockedIds.put(r.uuid)
             elementByRecipe[pair] = r
             val list = recipesByElement[r]
-            if(list == null){
+            if (list == null) {
                 recipesByElement[r] = arrayListOf(a to b)
-            } else if(pair !in list){
+            } else if (pair !in list) {
                 list.add(pair)
             }
             invalidate()
             all.updateDiamondCount()
-            if(save) saveElement2(r)
+            if (save) saveElement2(r)
         }
 
         fun getRecipe(a: Element, b: Element): Element? {
-            if(a.uuid > b.uuid) return getRecipe(b, a)
+            if (a.uuid > b.uuid) return getRecipe(b, a)
             return elementByRecipe[a to b]
         }
 
@@ -99,6 +99,7 @@ class AllManager: AppCompatActivity() {
         lateinit var saveElement2: (Element) -> Unit
         lateinit var saveElement: (SharedPreferences.Editor, Element) -> Unit
         lateinit var saveFavourites: () -> Unit
+
         // lateinit var save: () -> Unit
         lateinit var invalidate: () -> Unit
 
@@ -152,7 +153,7 @@ class AllManager: AppCompatActivity() {
 
     val diamondViews = ArrayList<TextView>()
 
-    fun initViews(){
+    fun initViews() {
         combiner = findViewById(R.id.combiner)!!
         unlocked = findViewById(R.id.unlocked)!!
         treeView = findViewById(R.id.tree) ?: null
@@ -188,7 +189,7 @@ class AllManager: AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        when(requestCode){
+        when (requestCode) {
             SaveLoadLogic.IMAGE_SELECTED -> {
                 println("got answer :) $data")
             }
@@ -198,19 +199,9 @@ class AllManager: AppCompatActivity() {
         }
     }
 
-    fun vibrate(millis: Long = 200L){
-        val v = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
-        // Vibrate for 500 milliseconds
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            v.vibrate(VibrationEffect.createOneShot(millis, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            //deprecated in API 26
-            v.vibrate(millis)
-        }
-    }
-
-    fun goFullScreen(){
-        val flags = SYSTEM_UI_FLAG_IMMERSIVE or SYSTEM_UI_FLAG_FULLSCREEN or SYSTEM_UI_FLAG_HIDE_NAVIGATION
+    fun goFullScreen() {
+        val flags =
+            SYSTEM_UI_FLAG_IMMERSIVE or SYSTEM_UI_FLAG_FULLSCREEN or SYSTEM_UI_FLAG_HIDE_NAVIGATION
         unlocked.systemUiVisibility = flags
         combiner.systemUiVisibility = flags
     }
@@ -223,7 +214,7 @@ class AllManager: AppCompatActivity() {
 
         actionBar?.hide()
 
-        if(Build.VERSION.SDK_INT >= 21){
+        if (Build.VERSION.SDK_INT >= 21) {
             window.navigationBarColor = resources.getColor(R.color.colorPrimary)
         }
 
@@ -257,14 +248,30 @@ class AllManager: AppCompatActivity() {
             runOnUiThread {
                 try {
                     it()
-                } catch (e: Exception){
+                } catch (e: Exception) {
                     staticToast1(e.message ?: e.localizedMessage ?: e.toString(), true)
                 }
             }
         }
 
-        staticToast1 = { msg, isLong -> runOnUiThread { Toast.makeText(this, msg, if(isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show() } }
-        staticToast2 = { msg, isLong -> runOnUiThread { Toast.makeText(this, msg, if(isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show() } }
+        staticToast1 = { msg, isLong ->
+            runOnUiThread {
+                Toast.makeText(
+                    this,
+                    msg,
+                    if (isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+        staticToast2 = { msg, isLong ->
+            runOnUiThread {
+                Toast.makeText(
+                    this,
+                    msg,
+                    if (isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
         invalidate = {
 
             combiner.invalidateSearch()
@@ -278,14 +285,16 @@ class AllManager: AppCompatActivity() {
             mandalaView?.postInvalidate()
 
         }
-        
+
         startButton.setOnClickListener { FlipperContent.GAME.bind(this) }
         treeViewButton.setOnClickListener { FlipperContent.TREE.bind(this) }
         suggestButton.setOnClickListener {
             combiner.invalidateSearch()
-            FlipperContent.COMBINER.bind(this) }
+            FlipperContent.COMBINER.bind(this)
+        }
         mandalaViewButton.setOnClickListener {
-            FlipperContent.MANDALA.bind(this) }
+            FlipperContent.MANDALA.bind(this)
+        }
         back1.setOnClickListener { FlipperContent.MENU.bind(this) }
         back2.setOnClickListener { FlipperContent.MENU.bind(this) }
         backArrow3.setOnClickListener { FlipperContent.MENU.bind(this) }
@@ -302,17 +311,30 @@ class AllManager: AppCompatActivity() {
 
         saveElement = { edit, element ->
             val id = element.uuid
-            var value = "${element.name};${element.group};${element.craftingCount}"
+            val value = StringBuilder()
+            value.append(element.name)
+            value.append(';')
+            value.append(element.group.toString())
+            value.append(';')
+            value.append(element.craftingCount.toString())
             val unlockedRecipes = recipesByElement[element]
-            val unlocked = id in unlockedIds || unlockedRecipes?.isNotEmpty() == true
-            if(unlocked){
-                value += ";${if(unlocked) 1 else 0}"
-                if(unlockedRecipes?.isEmpty() == false){
-                    value += ";${unlockedRecipes.joinToString(","){ (a, b) -> "${a.uuid}-${b.uuid}" }}"
+            val unlocked = id in unlockedIds.keys || unlockedRecipes?.isNotEmpty() == true
+            if (unlocked) {
+                value.append(';')
+                value.append(if (unlocked) '1' else '0')
+                if (unlockedRecipes?.isEmpty() == false) {
+                    value.append(';')
+                    for (index in unlockedRecipes.indices) {
+                        val (a, b) = unlockedRecipes[index]
+                        value.append(a.uuid.toString())
+                        value.append('-')
+                        value.append(b.uuid.toString())
+                        if (index + 1 < unlockedRecipes.size) value.append(',')
+                    }
                 }
             }
             // println("saved $id to $value")
-            edit.putString(id.toString(), value)
+            edit.putString(id.toString(), value.toString())
         }
 
         saveElement2 = { element ->
@@ -324,8 +346,8 @@ class AllManager: AppCompatActivity() {
         saveFavourites = {
             val edit = pref.edit()
             edit.putInt("favourites.length", FAVOURITE_COUNT)
-            for((i, favourite) in favourites.withIndex()){
-                if(favourite == null){
+            for ((i, favourite) in favourites.withIndex()) {
+                if (favourite == null) {
                     edit.remove("favourites[$i]")
                 } else {
                     edit.putInt("favourites[$i]", favourite.uuid)
@@ -359,15 +381,16 @@ class AllManager: AppCompatActivity() {
         }*/
 
         // old
-        val unlockedIdsString = pref.getString("unlocked", null) ?: null
-        if(unlockedIdsString != null){
-            unlockedIds.addAll(pref.getString("unlocked", "1,2,3,4")!!.split(',').map { x -> x.toInt() })
-        } else unlockedIds.addAll(listOf(1,2,3,4))
+        val unlockedIdsString = pref.getString("unlocked", null)
+        if (unlockedIdsString != null) {
+            unlockedIds.addAll(
+                pref.getString("unlocked", "1,2,3,4")!!.split(',').map { x -> x.toInt() })
+        } else unlockedIds.addAll(listOf(1, 2, 3, 4))
 
 
         val names = arrayOf("???", "Earth", "Air", "Water", "Fire")
         val groups = intArrayOf(20, 5, 12, 20, 4)
-        for(id in unlockedIds){// after a restart, this should be only 4
+        for (id in unlockedIds.keys) {// after a restart, this should be only 4
             val name = pref.getString("$id.name", names.getOrNull(id) ?: names[0])!!
             val group = pref.getInt("$id.group", groups.getOrNull(id) ?: groups[0])
             val craftingCount = pref.getInt("$id.crafted", -1)
@@ -377,22 +400,22 @@ class AllManager: AppCompatActivity() {
 
         val recipeMemory = HashMap<Element, List<Pair<Int, Int>>>()
         val edit = pref.edit()
-        for((key, value) in pref.all){
+        for ((key, value) in pref.all) {
             val id = key.toIntOrNull()
-            if(id != null){
-                val parts = value.toString()?.split(';')
-                if(parts.size > 1){
+            if (id != null) {
+                val parts = value.toString().split(';')
+                if (parts.size > 1) {
                     val name = parts[0]
                     val group = parts[1].toIntOrNull() ?: continue
                     val craftCount = parts.getOrNull(2)?.toIntOrNull() ?: 0
                     val wasCrafted = parts.getOrNull(3)?.toIntOrNull() == 1
                     val element = Element.get(name, id, group, craftCount)
-                    if(wasCrafted){
-                        unlockedIds.add(id)
+                    if (wasCrafted) {
+                        unlockedIds.put(id)
                         unlockeds[group].add(element)
                     }
                     val recipePart = parts.getOrNull(4)
-                    if(recipePart != null && recipePart.isNotEmpty()){
+                    if (recipePart != null && recipePart.isNotEmpty()) {
                         val unlockedRecipes = (recipePart ?: "").split(',')
                         val list = ArrayList<Pair<Int, Int>>()
                         recipeMemory[element] = list
@@ -406,13 +429,13 @@ class AllManager: AppCompatActivity() {
                     }
                 }
             }
-            if(key.endsWith(".name")){
+            if (key.endsWith(".name")) {
                 // println("processing $key")
                 // an element
                 val id = key.split('.')[0].toIntOrNull() ?: continue
                 val name = value.toString()
                 val group = pref.getInt("$id.group", -1)
-                if(group < 0) continue
+                if (group < 0) continue
                 val craftingCount = pref.getInt("$id.crafted", -1)
                 val element = Element.get(name, id, group, craftingCount)
                 saveElement(edit, element)
@@ -423,11 +446,11 @@ class AllManager: AppCompatActivity() {
         }
         edit.apply()
 
-        for((element, abs) in recipeMemory){
-            for((a, b) in abs){
+        for ((element, abs) in recipeMemory) {
+            for ((a, b) in abs) {
                 val ea = elementById[a]
                 val eb = elementById[b]
-                if(ea != null && eb != null){
+                if (ea != null && eb != null) {
                     addRecipe(ea, eb, element, this, false)
                 }
             }
@@ -435,7 +458,7 @@ class AllManager: AppCompatActivity() {
 
         // for identification <3 :D
         var ci = pref.getLong("customUUID", -1)
-        if(ci < 0){
+        if (ci < 0) {
             ci = abs(Random().nextLong())
             pref.edit().putLong("customUUID", ci).apply()
         }
@@ -452,12 +475,15 @@ class AllManager: AppCompatActivity() {
         askNews()
 
         val edit2 = pref.edit()
-        for((key, value) in pref.all){
-            if(key.startsWith("recipe.") && (value is Int || value.toString().toIntOrNull() != null)){
+        for ((key, value) in pref.all) {
+            if (key.startsWith("recipe.") && (value is Int || value.toString()
+                    .toIntOrNull() != null)
+            ) {
                 val parts = key.split('.')
                 val a = elementById[parts[1].toIntOrNull() ?: continue] ?: continue
                 val b = elementById[parts[2].toIntOrNull() ?: continue] ?: continue
-                val c = elementById[if(value is Int) value else value.toString().toInt()] ?: continue
+                val c =
+                    elementById[if (value is Int) value else value.toString().toInt()] ?: continue
                 addRecipe(a, b, c, this)
                 edit2.remove(key)
             }
@@ -466,7 +492,7 @@ class AllManager: AppCompatActivity() {
 
         diamondViews.clear()
 
-        for(child in flipper.children){
+        for (child in flipper.children) {
             val diamondTextView = child.findViewById<TextView>(R.id.diamonds) ?: continue
             diamondViews.add(diamondTextView)
             diamondTextView.setOnClickListener {
@@ -488,7 +514,7 @@ class AllManager: AppCompatActivity() {
 
     }
 
-    fun acknowledgeDiamondPurchase(amount: Int){
+    fun acknowledgeDiamondPurchase(amount: Int) {
         pref.edit().putInt(diamondBuyKey, pref.getInt(diamondBuyKey, 0) + amount).apply()
         updateDiamondCount()
     }
@@ -506,7 +532,7 @@ class AllManager: AppCompatActivity() {
     fun spendDiamonds(count: Int): Boolean {
         val current = getDiamondCount()
         val hasEnough = count < 0 || current >= count
-        if(hasEnough){
+        if (hasEnough) {
             successSound.play()
             pref.edit().putInt(diamondSpentKey, pref.getInt(diamondSpentKey, 0) + count).apply()
             updateDiamondCount()
@@ -516,28 +542,35 @@ class AllManager: AppCompatActivity() {
         return hasEnough
     }
 
-    fun updateDiamondCount(){
+    fun updateDiamondCount() {
         runOnUiThread {
             val count = getDiamondCount()
-            for(view in diamondViews){
+            for (view in diamondViews) {
                 view.text = count.toString()
             }
         }
     }
 
-    fun resizeFavourites(pref: SharedPreferences){
-        favourites = Array(FAVOURITE_COUNT){ favourites.getOrNull(it) }
-        for(i in 0 until FAVOURITE_COUNT){
-            favourites[i] = favourites.getOrNull(i) ?: elementById[pref.getInt("favourites[$i]", -1)] ?: null
+    fun resizeFavourites(pref: SharedPreferences) {
+        favourites = Array(FAVOURITE_COUNT) { favourites.getOrNull(it) }
+        for (i in 0 until FAVOURITE_COUNT) {
+            favourites[i] =
+                favourites.getOrNull(i) ?: elementById[pref.getInt("favourites[$i]", -1)] ?: null
         }
     }
 
-    fun addSearchListeners(back3: View, backArrow: View, searchButton: View, search: TextView, unlocked: UnlockedRows){
+    fun addSearchListeners(
+        back3: View,
+        backArrow: View,
+        searchButton: View,
+        search: TextView,
+        unlocked: UnlockedRows
+    ) {
         back3.setOnClickListener { flipper.displayedChild = 0 }
         backArrow.setOnClickListener { flipper.displayedChild = 0 }
         val diamondView = (back3.parent as? View)?.findViewById<View>(R.id.diamonds)
         searchButton.setOnClickListener {
-            if(back3.visibility == VISIBLE){
+            if (back3.visibility == VISIBLE) {
                 back3.visibility = GONE
                 diamondView?.visibility = GONE
                 search.visibility = VISIBLE
@@ -547,12 +580,13 @@ class AllManager: AppCompatActivity() {
                 search.visibility = GONE
             }
         }
-        search.addTextChangedListener(object: TextWatcher {
+        search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 unlocked.search = s.toString()
                 unlocked.invalidateSearch()
             }
+
             override fun afterTextChanged(s: Editable?) {
                 unlocked.search = s.toString()
                 unlocked.invalidateSearch()
@@ -574,13 +608,13 @@ class AllManager: AppCompatActivity() {
         return super.onGenericMotionEvent(event)
     }*/
 
-    fun updateGroupSizesAndNames(){
+    fun updateGroupSizesAndNames() {
         thread {
             WebServices.updateGroupSizesAndNames()
         }
     }
 
-    fun askNews(){
+    fun askNews() {
         thread {
             WebServices.askNews(20, {
                 newsView.news = it
@@ -590,7 +624,7 @@ class AllManager: AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if(flipper.displayedChild > 0){
+        if (flipper.displayedChild > 0) {
             flipper.displayedChild = 0
         } else {
             super.onBackPressed()
@@ -607,11 +641,15 @@ class AllManager: AppCompatActivity() {
         goFullScreen()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when(requestCode){
+        when (requestCode) {
             SaveLoadLogic.WRITE_EXT_STORAGE_CODE -> {
-                if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     SaveLoadLogic.onWriteAllowed?.invoke()
                 }
             }

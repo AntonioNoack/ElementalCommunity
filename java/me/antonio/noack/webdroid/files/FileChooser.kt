@@ -1,6 +1,7 @@
 package me.antonio.noack.webdroid.files
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Environment
@@ -15,6 +16,7 @@ import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import java.io.File
+import java.util.*
 
 object FileChooser {
 
@@ -73,6 +75,7 @@ object FileChooser {
 
     }
 
+    @SuppressLint("SetTextI18n")
     fun navigateSelect(all: AllManager, inflater: LayoutInflater, pathView: TextView, list: ViewGroup, button: TextView, buttonTemplate: String){
 
         pathView.text = folder.absolutePath
@@ -105,7 +108,7 @@ object FileChooser {
 
         }
 
-        for(file in folder.listFiles()?.sortedBy { it.name.toLowerCase() } ?: emptyList()){
+        for(file in folder.listFiles()?.sortedBy { it.name.lowercase(Locale.getDefault()) } ?: emptyList()){
 
             if(!file.name.startsWith(".")){
 

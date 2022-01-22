@@ -77,7 +77,7 @@ class Tree {
             break
         }
 
-        val maxRank = elements.maxBy { it.rank }?.rank ?: 0
+        val maxRank = elements.maxByOrNull { it.rank }?.rank ?: 0
 
         // this would iterate over all elements, however we want to use all recipes, that are possible to use
         /*loop@ while(allRecipes.isNotEmpty()){

@@ -156,7 +156,7 @@ object GroupsEtc {
     fun String.longSplitUntilCount(delimiter: Char, limit: Int, count: Int): List<String> {
         var parts = split(delimiter)
         while(parts.size < count){
-            val maxPart = parts.withIndex().maxBy { it.value.length }!!
+            val maxPart = parts.withIndex().maxByOrNull { it.value.length }!!
             // todo split preferably at .,*- or something like that?
             val maxString = maxPart.value
             if(maxString.length > limit){

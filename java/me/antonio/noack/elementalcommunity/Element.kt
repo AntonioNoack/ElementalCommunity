@@ -1,24 +1,24 @@
 package me.antonio.noack.elementalcommunity
 
 import androidx.core.math.MathUtils.clamp
-import me.antonio.noack.elementalcommunity.AllManager.Companion.edit
 import me.antonio.noack.elementalcommunity.AllManager.Companion.elementById
 import me.antonio.noack.elementalcommunity.AllManager.Companion.elementByName
 import me.antonio.noack.elementalcommunity.AllManager.Companion.elementsByGroup
 import me.antonio.noack.elementalcommunity.AllManager.Companion.invalidate
-import me.antonio.noack.elementalcommunity.AllManager.Companion.saveElement
 import me.antonio.noack.elementalcommunity.AllManager.Companion.saveElement2
 import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockeds
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
+import java.util.*
 import kotlin.math.min
 
-class Element private constructor(var name: String, val uuid: Int, var group: Int): Comparable<Element> {
+class Element private constructor(var name: String, val uuid: Int, var group: Int) :
+    Comparable<Element> {
 
     override fun compareTo(other: Element): Int {
         val y = startingNumber.compareTo(other.startingNumber)
-        if(y != 0) return y
+        if (y != 0) return y
         val x = hashLong.compareTo(other.hashLong)
-        if(x != 0) return x
+        if (x != 0) return x
         else return lcName.compareTo(other.lcName)
     }
 
@@ -36,7 +36,7 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
     var treeX = 0
     var treeY = 0
 
-    var lcName = name.toLowerCase()
+    var lcName = name.lowercase(Locale.getDefault())
     var hashLong = calcHashLong()
     var startingNumber = calcStartingNumber()
 
@@ -45,46 +45,46 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
         var num = 0L
         var i = 0
 
-        val isNegative = if(lcName.startsWith("-")){
+        val isNegative = if (lcName.startsWith("-")) {
             i++
             true
         } else {
             false
         }
 
-        val limit = if(isNegative) 20 else 19
+        val limit = if (isNegative) 20 else 19
 
-        number@ while(i < lcName.length){
-            if(i == limit) return if(isNegative) Long.MIN_VALUE else Long.MAX_VALUE
-            when(lcName[i]){
-                in '0' .. '9' -> {
-                    num = num * 10 + lcName[i].toInt() - '0'.toInt()
+        number@ while (i < lcName.length) {
+            if (i == limit) return if (isNegative) Long.MIN_VALUE else Long.MAX_VALUE
+            when (lcName[i]) {
+                in '0'..'9' -> {
+                    num = num * 10 + lcName[i].code - '0'.code
                 }
                 else -> break@number
             }
             i++
         }
 
-        return if(isNegative) -num else num
+        return if (isNegative) -num else num
     }
 
     fun calcHashLong(): Long {
         val lcName = lcName
         var x = 0L
-        for(i in 0 until min(9, lcName.length)){
-            x = x.shl(7) or lcName[i].toLong()
+        for (i in 0 until min(9, lcName.length)) {
+            x = x.shl(7) or lcName[i].code.toLong()
         }
-        for(i in min(9, lcName.length) until 9){
+        for (i in min(9, lcName.length) until 9) {
             x = x.shl(7)
         }
         return x
     }
 
     init {
-        synchronized(Unit){
-            elementById.put(uuid, this)
+        synchronized(Unit) {
+            elementById[uuid] = this
             elementByName[name] = this
-            elementsByGroup[group].add(this)
+            elementsByGroup.getOrNull(group)?.add(this)
         }
     }
 
@@ -103,22 +103,22 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
     companion object {
         fun get(name: String, uuid: Int, group: Int, craftingCount: Int): Element {
             val old = elementById[uuid]
-            return if(old != null){
+            return if (old != null) {
                 var needsSave = old.name != name
-                if(needsSave){
+                if (needsSave) {
                     old.name = name
-                    old.lcName = name.toLowerCase()
+                    old.lcName = name.lowercase(Locale.getDefault())
                     old.startingNumber = old.calcStartingNumber()
                     old.hashLong = old.calcHashLong()
                 }
-                if(craftingCount >= minimumCraftingCount){
+                if (craftingCount >= minimumCraftingCount && old.craftingCount != craftingCount) {
                     old.craftingCount = craftingCount
                     needsSave = true
                 }
-                if(old.group != group){
-                    synchronized(Unit){
+                if (old.group != group) {
+                    synchronized(Unit) {
                         // println("group for $name: $group")
-                        val newGroup = clamp(group, 0, elementsByGroup.size-1)
+                        val newGroup = clamp(group, 0, elementsByGroup.size - 1)
                         elementsByGroup[old.group].remove(old)
                         unlockeds[old.group].remove(old)
                         elementsByGroup[newGroup].add(old)
@@ -130,7 +130,8 @@ class Element private constructor(var name: String, val uuid: Int, var group: In
                     }
                     invalidate()
                 }
-                if(needsSave){
+                if (needsSave) {
+                    println("saving $old")
                     saveElement2(old)
                 }
                 old

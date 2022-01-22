@@ -3,34 +3,49 @@ package me.antonio.noack.elementalcommunity.io
 import android.content.SharedPreferences
 import java.lang.Exception
 import java.lang.RuntimeException
+import java.lang.StringBuilder
 
 object Saver {
 
     fun save(preferences: SharedPreferences, ignore: (String) -> Boolean): String {
 
-        var ret = ""
+        val all = preferences.all
+        val ret = StringBuilder(all.size * 16)
 
-        entries@ for((key, value) in preferences.all){
+        entries@ for ((key, value) in all) {
 
-            if(!ignore(key)){
+            if (!ignore(key)) {
+
+                if (value == null) continue
 
                 try {
 
                     val escapedName = escape(key)
-                    var line = "${escapedName.length};$escapedName"
-
-                    line += when(value){
-                        null -> continue@entries
-                        is Int -> "i$value"
-                        is Long -> "l$value"
-                        is Float -> "f$value"
-                        is String -> "s${escape(value)}"
+                    ret.append(escapedName.length)
+                    ret.append(';')
+                    ret.append(escapedName)
+                    when (value) {
+                        is Int -> {
+                            ret.append('i')
+                            ret.append(value.toString())
+                        }
+                        is Long -> {
+                            ret.append('l')
+                            ret.append(value.toString())
+                        }
+                        is Float -> {
+                            ret.append('f')
+                            ret.append(value.toString())
+                        }
+                        is String -> {
+                            ret.append('s')
+                            ret.append(escape(value))
+                        }
                         else -> throw RuntimeException("Unknown type of ${value.javaClass.simpleName}")
                     }
+                    ret.append('\n')
 
-                    ret += line + "\n"
-
-                } catch (e: Exception){
+                } catch (e: Exception) {
                     e.printStackTrace()
                 }
 
@@ -38,7 +53,7 @@ object Saver {
 
         }
 
-        return ret
+        return ret.toString()
 
     }
 

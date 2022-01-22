@@ -121,10 +121,10 @@ object SettingsInit {
             resetEverythingButton.setOnClickListener {
                 AlertDialog.Builder(this)
                     .setTitle(R.string.are_you_sure_reset_everything)
-                    .setPositiveButton(android.R.string.yes){ _, _ ->
+                    .setPositiveButton(android.R.string.ok){ _, _ ->
                         resetEverything()
                     }
-                    .setNegativeButton(android.R.string.no, null)
+                    .setNegativeButton(android.R.string.cancel, null)
                     .setCancelable(true)
                     .show()
             }
@@ -141,9 +141,10 @@ object SettingsInit {
 
     fun AllManager.resetEverything(){
         pref.edit().clear().putLong("customUUID", AllManager.customUUID).apply()
-        AllManager.unlockedIds = hashSetOf(1, 2, 3, 4)
+        AllManager.unlockedIds.clear()
+        AllManager.unlockedIds.addAll(listOf(1, 2, 3, 4))
         for(list in AllManager.unlockeds){ list.removeAll(list.filter { it.uuid > 4 }) }
-        for(i in 0 until AllManager.favourites.size) AllManager.favourites[i] = null
+        for(i in AllManager.favourites.indices) AllManager.favourites[i] = null
         AllManager.elementByRecipe.clear()
         AllManager.FAVOURITE_COUNT = 5
         resizeFavourites(pref)
@@ -326,8 +327,8 @@ object SettingsInit {
 
     fun String.toLong2(): Long {
         var value = 0L
-        for(char in this){
-            value = value * 10 + char.toInt() - '0'.toInt()
+        for(char in this) {
+            value = value * 10 + char.code - '0'.code
         }
         return value
     }

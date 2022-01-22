@@ -44,16 +44,16 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         searchIsInvalid = true
     }
 
-    fun validateSearch(){
+    fun validateSearch() {
 
-        search = search.toLowerCase().trim()
+        search = search.lowercase(Locale.getDefault()).trim()
 
-        if(search.isEmpty()){
-            synchronized(Unit){
-                for((group, unlocked) in unlockeds.withIndex()){
+        if (search.isEmpty()) {
+            synchronized(Unit) {
+                for ((group, unlocked) in unlockeds.withIndex()) {
                     val list = shownSymbols[group]
-                    synchronized(unlocked){
-                        synchronized(list){
+                    synchronized(unlocked) {
+                        synchronized(list) {
                             list.clear()
                             list.addAll(unlocked)
                         }
@@ -67,20 +67,20 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         } else {
 
             val parts = search.split(',').map { it.trim() }
-            synchronized(Unit){
-                for((group, unlocked) in
-                (if(search.startsWith(lastSearch) && lastParts == parts.size) shownSymbols else unlockeds).withIndex()){
+            synchronized(Unit) {
+                for ((group, unlocked) in
+                (if (search.startsWith(lastSearch) && lastParts == parts.size) shownSymbols else unlockeds).withIndex()) {
                     val list = shownSymbols[group]
                     val filtered = unlocked.filter {
                         val name = it.lcName
-                        for(part in parts){
-                            if(name.contains(part)){
+                        for (part in parts) {
+                            if (name.contains(part)) {
                                 return@filter true
                             }
                         }
                         false
                     }
-                    if(list != filtered){
+                    if (list != filtered) {
                         list.clear()
                         list.addAll(filtered)
                     }
@@ -206,7 +206,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     init {
 
-        val scrollListener = GestureDetector(object: GestureDetector.OnGestureListener {
+        val scrollListener = GestureDetector(ctx, object: GestureDetector.OnGestureListener {
             override fun onShowPress(e: MotionEvent?) {}
             override fun onDown(event: MotionEvent?): Boolean {
                 return if(event != null){

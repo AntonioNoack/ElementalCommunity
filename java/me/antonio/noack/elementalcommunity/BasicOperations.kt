@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.api.WebServices
 import java.lang.IllegalArgumentException
+import java.lang.NumberFormatException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.math.min
@@ -16,20 +17,35 @@ object BasicOperations {
     val todo = AtomicInteger(0)
     val done = AtomicInteger(0)
 
-    fun onRecipeRequest(first: Element, second: Element, all: AllManager, measuredWidth: Int, measuredHeight: Int, unlockElement: (Element) -> Unit, add: (Element) -> Unit){
+    fun onRecipeRequest(
+        first: Element,
+        second: Element,
+        all: AllManager,
+        measuredWidth: Int,
+        measuredHeight: Int,
+        unlockElement: (Element) -> Unit,
+        add: (Element) -> Unit
+    ) {
         todo.incrementAndGet()
-        thread(true){
+        thread(true) {
             WebServices.askRecipe(first, second, all, { result ->
                 done.incrementAndGet()
                 when {
                     result != null -> unlockElement(result)
                     AllManager.askFrequency.isTrue() -> {
                         // staticRunOnUIThread { AllManager.askingSound.play() }
-                        askForRecipe(first, second, all, measuredWidth, measuredHeight, unlockElement){
+                        askForRecipe(
+                            first,
+                            second,
+                            all,
+                            measuredWidth,
+                            measuredHeight,
+                            unlockElement
+                        ) {
                             WebServices.askRecipe(first, second, all, { result2 ->
-                                if(result2 != null){// remove in the future, when the least amount of support is 2 or sth like that
-                                    synchronized(Unit){
-                                        AllManager.unlockedIds.add(result2.uuid)
+                                if (result2 != null) {// remove in the future, when the least amount of support is 2 or sth like that
+                                    synchronized(Unit) {
+                                        AllManager.unlockedIds.put(result2.uuid)
                                         AllManager.saveElement2(result2)
                                         add(result2)
                                     }
@@ -46,7 +62,15 @@ object BasicOperations {
         }
     }
 
-    fun askForRecipe(a: Element, b: Element, all: AllManager, measuredWidth: Int, measuredHeight: Int, unlockElement: (Element) -> Unit, onSuccess: () -> Unit){
+    fun askForRecipe(
+        a: Element,
+        b: Element,
+        all: AllManager,
+        measuredWidth: Int,
+        measuredHeight: Int,
+        unlockElement: (Element) -> Unit,
+        onSuccess: () -> Unit
+    ) {
         // ask for recipe to add :)
         // todo show that we are loading
         todo.incrementAndGet()
@@ -62,10 +86,17 @@ object BasicOperations {
                     } catch (e: Throwable) {
                     }
                 }
-                setSubmitAction(all, dialog.findViewById(R.id.submit)!!, dialog, true, { a }, { b }, {
-                    unlockElement(it)
-                    onSuccess()
-                })
+                setSubmitAction(
+                    all,
+                    dialog.findViewById(R.id.submit)!!,
+                    dialog,
+                    true,
+                    { a },
+                    { b },
+                    {
+                        unlockElement(it)
+                        onSuccess()
+                    })
                 if (candidates.isEmpty()) {
                     dialog.findViewById<View>(R.id.title2)!!.visibility = View.GONE
                 } else {
@@ -74,7 +105,10 @@ object BasicOperations {
                     for (candidate in candidates) {
                         val view = CandidateView(all, null)
                         view.candidate = candidate
-                        view.layoutParams = LinearLayout.LayoutParams(theWidth.toInt(), LinearLayout.LayoutParams.WRAP_CONTENT)
+                        view.layoutParams = LinearLayout.LayoutParams(
+                            theWidth.toInt(),
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
                         view.theWidth = theWidth
                         view.invalidate()
                         view.onLiked = {
@@ -105,7 +139,15 @@ object BasicOperations {
         })
     }
 
-    fun setSubmitAction(all: AllManager, submit: TextView, dialog: Dialog, allowingDismiss: Boolean, getComponentA: () -> Element, getComponentB: () -> Element, unlockElement: (Element) -> Unit){
+    fun setSubmitAction(
+        all: AllManager,
+        submit: TextView,
+        dialog: Dialog,
+        allowingDismiss: Boolean,
+        getComponentA: () -> Element,
+        getComponentB: () -> Element,
+        unlockElement: (Element) -> Unit
+    ) {
         submit.setOnClickListener {
             val name = dialog.findViewById<TextView>(R.id.name)!!.text.toString()
             val group = dialog.findViewById<GroupSelectorView>(R.id.colors)!!.selected
@@ -127,12 +169,8 @@ object BasicOperations {
             thread {
                 WebServices.suggestRecipe(all, getComponentA(), getComponentB(), name, group, {
                     done.incrementAndGet()
-                    val lines = it.split('\n')
-                    val str = lines[0]
-                    val index1 = str.indexOf(':')
-                    val index2 = str.indexOf(':', index1 + 1)
                     AllManager.toast(R.string.sent, false)
-                    if(allowingDismiss){
+                    if (allowingDismiss) {
                         AllManager.staticRunOnUIThread {
                             try {
                                 dialog.dismiss()
@@ -140,16 +178,25 @@ object BasicOperations {
                             }
                         }
                     }
+                    var lineBreakIndex = it.indexOf('\n')
+                    if (lineBreakIndex < 0) lineBreakIndex = it.length
+                    val str = it.substring(0, lineBreakIndex)
+                    val index1 = str.indexOf(':')
+                    val index2 = str.indexOf(':', index1 + 1)
                     if (index1 > 0 && index2 > 0) {
-                        val rUUID = str.substring(0, index1).toIntOrNull() ?: return@suggestRecipe
-                        val rGroup = str.substring(index1 + 1, index2).toIntOrNull() ?: return@suggestRecipe
-                        val rName = str.substring(index2 + 1)
-                        // val secondaryData = lines.getOrNull(1)?.split(':')
-                        // removed, because it's rather expensive to compute and not that important
-                        // maybe we should save that information on per-instance basis in the database...
-                        val rCraftingCount = -1
-                        val element = Element.get(rName, rUUID, rGroup, rCraftingCount)
-                        unlockElement(element)
+                        try {
+                            val rUUID = str.substring(0, index1).toInt()
+                            val rGroup = str.substring(index1 + 1, index2).toInt()
+                            val rName = str.substring(index2 + 1)
+                            // val secondaryData = lines.getOrNull(1)?.split(':')
+                            // removed, because it's rather expensive to compute and not that important
+                            // maybe we should save that information on per-instance basis in the database...
+                            val rCraftingCount = -1
+                            val element = Element.get(rName, rUUID, rGroup, rCraftingCount)
+                            unlockElement(element)
+                        } catch (e: NumberFormatException){
+
+                        }
                     }
                 }, {
                     done.incrementAndGet()
