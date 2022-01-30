@@ -16,6 +16,8 @@
 
     <include layout="@layout/tree"/>
 
+    <include layout="@layout/graph"/>
+
     <include layout="@layout/combiner"/>
 
     <include layout="@layout/settings"/>

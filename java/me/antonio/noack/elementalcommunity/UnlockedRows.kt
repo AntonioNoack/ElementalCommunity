@@ -11,9 +11,7 @@ import android.view.View
 import androidx.core.math.MathUtils.clamp
 import me.antonio.noack.elementalcommunity.AllManager.Companion.FAVOURITE_COUNT
 import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
-import me.antonio.noack.elementalcommunity.AllManager.Companion.saveElement2
 import me.antonio.noack.elementalcommunity.AllManager.Companion.staticRunOnUIThread
-import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockedIds
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupSizes
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
@@ -27,7 +25,7 @@ import kotlin.math.*
 
 // todo create a list of top-most-used/favourite elements
 
-open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
+open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeSet) {
 
     var allowLeftFavourites = false
 
@@ -40,7 +38,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     var searchIsInvalid = true
 
-    fun invalidateSearch(){
+    fun invalidateSearch() {
         searchIsInvalid = true
     }
 
@@ -96,8 +94,8 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         postInvalidate()
     }
 
-    var unlockeds = AllManager.unlockeds
-    val shownSymbols = Array(unlockeds.size){ TreeSet<Element>() }
+    var unlockeds = AllManager.unlockedElements
+    val shownSymbols = Array(unlockeds.size) { TreeSet<Element>() }
 
     private var entriesPerRow = 5
 
@@ -117,7 +115,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        entriesPerRow = (if(measuredWidth > measuredHeight) 10 * zoom else 5 * zoom).toInt()
+        entriesPerRow = (if (measuredWidth > measuredHeight) 10 * zoom else 5 * zoom).toInt()
     }
 
     fun widthPerNode(measuredWidth: Int): Float {
@@ -153,13 +151,13 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         intY = (event.y + scroll) / widthPerNode
 
         var isSpecial = false
-        if(FAVOURITE_COUNT > 0){
-            if(width > height && allowLeftFavourites){
+        if (FAVOURITE_COUNT > 0) {
+            if (width > height && allowLeftFavourites) {
                 // more width -> favourites at left
                 val favSize = min(height / FAVOURITE_COUNT, width * AllManager.MAX_FAVOURITES_RATIO)
-                if(event.x < favSize){
+                if (event.x < favSize) {
                     val maybeX = event.y / favSize
-                    if(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null){
+                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
                     } else {
                         isSpecial = true
                         intX = maybeX
@@ -168,9 +166,9 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
             } else {
                 // more height -> favourites at bottom
                 val favSize = min(width / FAVOURITE_COUNT, height * AllManager.MAX_FAVOURITES_RATIO)
-                if(event.y > height - favSize){
+                if (event.y > height - favSize) {
                     val maybeX = event.x / favSize
-                    if(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null){
+                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
                     } else {
                         isSpecial = true
                         intX = maybeX
@@ -181,19 +179,23 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
         val fraX = fract(intX)
         val fraY = fract(intY)
-        val valid = sq(fraX - 0.5f) + sq(fraY - 0.5f) < 0.15f // < fraX in 0.18f .. 0.82f && fraY in 0.18f .. 0.82f
+        val valid =
+            sq(fraX - 0.5f) + sq(fraY - 0.5f) < 0.15f // < fraX in 0.18f .. 0.82f && fraY in 0.18f .. 0.82f
         val internalX = intX.toInt()
         val internalY = intY.toInt()
 
-        return Triple(if(isSpecial) if(fraX > 0.5f) AreaType.FAVOURITES_TOP else AreaType.FAVOURITES_BOTTOM else if(valid){
-             AreaType.ELEMENTS
-        } else AreaType.IGNORE, internalX, internalY)
-
+        return Triple(
+            when {
+                isSpecial -> AreaType.FAVOURITES
+                valid -> AreaType.ELEMENTS
+                else -> AreaType.IGNORE
+            }, internalX, internalY
+        )
     }
 
-    fun sq(f: Float): Float = f*f
+    fun sq(f: Float): Float = f * f
 
-    fun setOnBorder(event: MotionEvent){
+    fun setOnBorder(event: MotionEvent) {
         // val x = event.x
         val offset = 0.08f * min(measuredWidth, measuredHeight)
         val y = event.y
@@ -206,17 +208,16 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     init {
 
-        val scrollListener = GestureDetector(ctx, object: GestureDetector.OnGestureListener {
+        val scrollListener = GestureDetector(ctx, object : GestureDetector.OnGestureListener {
             override fun onShowPress(e: MotionEvent?) {}
             override fun onDown(event: MotionEvent?): Boolean {
-                return if(event != null){
+                return if (event != null) {
 
                     val (valid, internalX, internalY) = validXY(event, true)
 
-                    dragged = when(valid){
+                    dragged = when (valid) {
                         AreaType.ELEMENTS -> getElementAt(internalX, internalY)
-                        AreaType.FAVOURITES_TOP,
-                        AreaType.FAVOURITES_BOTTOM -> AllManager.favourites[internalX]
+                        AreaType.FAVOURITES -> AllManager.favourites[internalX]
                         AreaType.IGNORE -> null
                     }
 
@@ -226,13 +227,25 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
                 } else false
             }
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean = false
-            override fun onScroll(event: MotionEvent?, e2: MotionEvent?, distanceX: Float, dy: Float): Boolean {
 
-                if(dragged == null){
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean = false
+
+            override fun onScroll(
+                event: MotionEvent?,
+                e2: MotionEvent?,
+                distanceX: Float,
+                dy: Float
+            ): Boolean {
+
+                if (dragged == null) {
 
                     val widthPerNode = widthPerNode()
-                    if(dy != 0f && dy < widthPerNode * 0.7f){
+                    if (dy != 0f && dy < widthPerNode * 0.7f) {
                         scroll += dy
                     }
 
@@ -246,26 +259,32 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                 return true
 
             }
+
             override fun onLongPress(e: MotionEvent?) {}
             override fun onSingleTapUp(event: MotionEvent?): Boolean = false
         })
 
-        val zoomListener = ScaleGestureDetector(context, object: ScaleGestureDetector.OnScaleGestureListener {
-            override fun onScale(detector: ScaleGestureDetector?): Boolean {
-                return if(detector != null && detector.scaleFactor != 1f){
-                    zoom /= detector.scaleFactor
-                    val newEntriesPerRow = max(3, (if(measuredWidth > measuredHeight) 10 * zoom else 5 * zoom).toInt())
-                    if(newEntriesPerRow != entriesPerRow){
-                        dragged = null
-                        entriesPerRow = newEntriesPerRow
-                    }
-                    invalidate()
-                    true
-                } else false
-            }
-            override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean = true
-            override fun onScaleEnd(detector: ScaleGestureDetector?) {}
-        })
+        val zoomListener =
+            ScaleGestureDetector(context, object : ScaleGestureDetector.OnScaleGestureListener {
+                override fun onScale(detector: ScaleGestureDetector?): Boolean {
+                    return if (detector != null && detector.scaleFactor != 1f) {
+                        zoom /= detector.scaleFactor
+                        val newEntriesPerRow = max(
+                            3,
+                            (if (measuredWidth > measuredHeight) 10 * zoom else 5 * zoom).toInt()
+                        )
+                        if (newEntriesPerRow != entriesPerRow) {
+                            dragged = null
+                            entriesPerRow = newEntriesPerRow
+                        }
+                        invalidate()
+                        true
+                    } else false
+                }
+
+                override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean = true
+                override fun onScaleEnd(detector: ScaleGestureDetector?) {}
+            })
 
         setOnTouchListener { _, event ->
 
@@ -281,18 +300,17 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                 else -> 0
             }
 
-            when(event.actionMasked){
+            when (event.actionMasked) {
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
 
-                    if(dragged != null){
+                    if (dragged != null) {
                         val first = dragged!!
                         dragged = null
                         val (valid, internalX, internalY) = validXY(event, false)
-                        val second = when(valid){
+                        val second = when (valid) {
                             AreaType.ELEMENTS -> getElementAt(internalX, internalY)
-                            AreaType.FAVOURITES_TOP,
-                            AreaType.FAVOURITES_BOTTOM -> {
-                                if(internalX in 0 until FAVOURITE_COUNT){
+                            AreaType.FAVOURITES -> {
+                                if (internalX in 0 until FAVOURITE_COUNT) {
                                     // set it here
                                     AllManager.favourites[internalX] = first
                                     AllManager.saveFavourites()
@@ -303,7 +321,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                             }
                             AreaType.IGNORE -> null
                         }
-                        if(second != null){
+                        if (second != null) {
                             onRecipeRequest(first, second)
                         }
                     }
@@ -323,10 +341,10 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     }
 
-    fun unlockElement(sa: Element, sb: Element, element: Element){
+    fun unlockElement(sa: Element, sb: Element, element: Element) {
         //  add to achieved :D
         val newOne = add(sa, sb, element)
-        synchronized(Unit){
+        synchronized(Unit) {
             activeElement = element
             activeness = 1f
         }
@@ -334,11 +352,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         scrollDest = element
         staticRunOnUIThread {
             invalidate()
-            (if(newOne) AllManager.successSound else AllManager.okSound).play()
+            (if (newOne) AllManager.successSound else AllManager.okSound).play()
         }
     }
 
-    open fun onRecipeRequest(first: Element, second: Element){
+    open fun onRecipeRequest(first: Element, second: Element) {
         BasicOperations.onRecipeRequest(first, second, all, measuredWidth, measuredHeight, {
             unlockElement(first, second, it)
         }, {
@@ -346,26 +364,27 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         })
     }
 
-    fun checkScroll(){
+    fun checkScroll() {
         var sum = 0
-        synchronized(Unit){
+        synchronized(Unit) {
             shownSymbols.forEach { unlocked ->
                 sum += (unlocked.size + entriesPerRow - 1) / entriesPerRow
             }
         }
         val (widthPerNode, avgMargin) = widthPerNodeNMargin()
         val favCount = FAVOURITE_COUNT
-        val maxSize = sum * widthPerNode + avgMargin + (if((measuredHeight >= measuredWidth || !allowLeftFavourites) && favCount > 0) measuredWidth / favCount else 0)
-        scroll = clamp(scroll,0f, 1f * max(0f, maxSize - measuredHeight))
+        val maxSize =
+            sum * widthPerNode + avgMargin + (if ((measuredHeight >= measuredWidth || !allowLeftFavourites) && favCount > 0) measuredWidth / favCount else 0)
+        scroll = clamp(scroll, 0f, 1f * max(0f, maxSize - measuredHeight))
     }
 
     private fun getElementAt(x: Int, y: Int): Element? {
-        if(x >= entriesPerRow) return null
+        if (x >= entriesPerRow) return null
         var sum = 0
-        synchronized(Unit){
+        synchronized(Unit) {
             shownSymbols.forEach { unlocked ->
                 val delta = (unlocked.size + entriesPerRow - 1) / entriesPerRow
-                if(delta > 0 && y-sum in 0 until delta){
+                if (delta > 0 && y - sum in 0 until delta) {
                     val indexHere = x + entriesPerRow * (y - sum)
                     return unlocked.getOrNull(indexHere)
                 }
@@ -375,20 +394,20 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         return null
     }
 
-    fun <V: Comparable<V>> TreeSet<V>.getOrNull(index: Int): V? {
+    fun <V : Comparable<V>> TreeSet<V>.getOrNull(index: Int): V? {
         return this.elementAtOrNull(index)
     }
 
     private fun getRow(element: Element, forceInAll: Boolean): Int {
         var sum = 0
-        if(forceInAll){
+        if (forceInAll) {
             search = ""
             invalidateSearch()
         }
-        synchronized(Unit){
+        synchronized(Unit) {
             shownSymbols.forEachIndexed { index, unlocked ->
                 val delta = (unlocked.size + entriesPerRow - 1) / entriesPerRow
-                if(element.group == index){
+                if (element.group == index) {
                     return sum + unlocked.indexOf(element) / entriesPerRow
                 }
                 sum += delta
@@ -399,7 +418,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     private fun countRows(): Int {
         var sum = 0
-        synchronized(Unit){
+        synchronized(Unit) {
             shownSymbols.forEach { unlocked ->
                 val delta = (unlocked.size + entriesPerRow - 1) / entriesPerRow
                 sum += delta
@@ -411,7 +430,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
     fun add(sa: Element, sb: Element, element: Element): Boolean {
         addRecipe(sa, sb, element, all)
         val unlocked = unlockeds[element.group]
-        return if(!unlocked.contains(element) && element.uuid > -1){
+        return if (!unlocked.contains(element) && element.uuid > -1) {
             unlocked.add(element)
             // unlocked.sortBy { it.uuid }
             invalidateSearch()
@@ -422,20 +441,23 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
     private fun neededHeight(): Float {
         val (widthPerNode, avgMargin) = widthPerNodeNMargin()
-        return 2 * avgMargin + widthPerNode * countRows() + (if(measuredHeight > measuredWidth && FAVOURITE_COUNT > 0) measuredWidth / FAVOURITE_COUNT else 0)
+        return 2 * avgMargin + widthPerNode * countRows() + (if (measuredHeight > measuredWidth && FAVOURITE_COUNT > 0) measuredWidth / FAVOURITE_COUNT else 0)
     }
 
     private var lastTime = 0L
 
     private val bgPaint = Paint()
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    init {textPaint.textAlign = Paint.Align.CENTER }
+
+    init {
+        textPaint.textAlign = Paint.Align.CENTER
+    }
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
-        if(canvas == null) return
+        if (canvas == null) return
 
-        if(searchIsInvalid){
+        if (searchIsInvalid) {
             validateSearch()
         }
 
@@ -464,32 +486,56 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
         shownSymbols.forEachIndexed { group, unlocked ->
 
-            if(unlocked.isNotEmpty()){
+            if (unlocked.isNotEmpty()) {
 
                 val rows = (unlocked.size + entriesPerRow - 1) / entriesPerRow
                 val endY0 = y0 + widthPerNode * rows
 
-                if(endY0 > -widthPerNode && y0 < height){
+                if (endY0 > -widthPerNode && y0 < height) {
 
-                    synchronized(Unit){
-                        for((index, element) in unlocked.withIndex()){
+                    synchronized(Unit) {
+                        for ((index, element) in unlocked.withIndex()) {
 
-                            if(index % entriesPerRow == 0) y0 += widthPerNode
-                            if(y0 >= height) break
-                            if(y0 < -widthPerNode) continue
+                            if (index % entriesPerRow == 0) y0 += widthPerNode
+                            if (y0 >= height) break
+                            if (y0 < -widthPerNode) continue
 
                             textPaint.alpha = 255
                             bgPaint.alpha = 255
 
                             val x0 = avgMargin + (index % entriesPerRow) * widthPerNode
-                            if(activeElement == element && activeness > 0f){
+                            if (activeElement == element && activeness > 0f) {
 
                                 val delta = activeness * widthPerNode * 0.5f
-                                drawElement(canvas, showCraftingCounts, showUUIDs, x0, y0, delta, widthPerNode, true, element, bgPaint, textPaint)
+                                drawElement(
+                                    canvas,
+                                    showCraftingCounts,
+                                    showUUIDs,
+                                    x0,
+                                    y0,
+                                    delta,
+                                    widthPerNode,
+                                    true,
+                                    element,
+                                    bgPaint,
+                                    textPaint
+                                )
 
                             } else {
 
-                                drawElement(canvas, showCraftingCounts, showUUIDs, x0, y0, 0f, widthPerNode, true, element, bgPaint, textPaint)
+                                drawElement(
+                                    canvas,
+                                    showCraftingCounts,
+                                    showUUIDs,
+                                    x0,
+                                    y0,
+                                    0f,
+                                    widthPerNode,
+                                    true,
+                                    element,
+                                    bgPaint,
+                                    textPaint
+                                )
 
                             }
                         }
@@ -499,7 +545,12 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
                     textPaint.textSize = widthPerNode * 0.13f
 
                     val text = "${unlocked.size}/${GroupSizes[group]}"
-                    canvas.drawText(text, width - textPaint.measureText(text), y0 + widthPerNode*2/3 - (textPaint.ascent() + textPaint.descent()), textPaint)
+                    canvas.drawText(
+                        text,
+                        width - textPaint.measureText(text),
+                        y0 + widthPerNode * 2 / 3 - (textPaint.ascent() + textPaint.descent()),
+                        textPaint
+                    )
 
                 }
 
@@ -508,27 +559,56 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
             }
         }
 
-        drawFavourites(canvas, false, showUUIDs, width, height, bgPaint, textPaint, allowLeftFavourites)
+        drawFavourites(
+            canvas,
+            false,
+            showUUIDs,
+            width,
+            height,
+            bgPaint,
+            textPaint,
+            allowLeftFavourites
+        )
 
         val dragged = dragged
-        if(dragged != null){
-            drawElement(canvas, false, showUUIDs, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
+        if (dragged != null) {
+            drawElement(
+                canvas,
+                false,
+                showUUIDs,
+                mx - widthPerNode / 2,
+                my - widthPerNode / 2,
+                0f,
+                widthPerNode,
+                true,
+                dragged,
+                bgPaint,
+                textPaint
+            )
+        }
 
 
-        val scrollDestY =  scrollDest?.run {
+        val scrollDestY = scrollDest?.run {
             val needed = neededHeight()
-            clamp((getRow(this, true) + 0.5f)/countRows() * needed - height * 0.5f, 0f, max(0f, needed - height))
+            clamp(
+                (getRow(this, true) + 0.5f) / countRows() * needed - height * 0.5f,
+                0f,
+                max(0f, needed - height)
+            )
         } ?: 0f
 
-        if(activeness > 0f){
+        if (activeness > 0f) {
 
             val distance = abs(scroll - scrollDestY) * 20 / min(width, height)
-            this.activeness = max(this.activeness - deltaTime, min(1f, if(scrollDest == null) -1f else ln(distance) * 50 / widthPerNode))
+            this.activeness = max(
+                this.activeness - deltaTime,
+                min(1f, if (scrollDest == null) -1f else ln(distance) * 50 / widthPerNode)
+            )
             invalidate()
 
         }
 
-        if(scrollDest != null){
+        if (scrollDest != null) {
 
             scroll = mix(scroll, scrollDestY, clamp(3f * deltaTime, 0f, 1f))
             when {
@@ -546,14 +626,14 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
         }
 
-        if(isOnBorderY != 0 && dragged != null){
+        if (isOnBorderY != 0 && dragged != null) {
 
             val oldScroll = scroll
             scroll += isOnBorderY * deltaTime * widthPerNode * 5f
 
             checkScroll()
 
-            if(oldScroll == scroll){
+            if (oldScroll == scroll) {
                 isOnBorderY = 0
             } else {
                 invalidate()

@@ -12,6 +12,7 @@ import me.antonio.noack.webdroid.Captcha
 import me.antonio.noack.webdroid.HTTP
 import java.lang.Exception
 import java.net.URLEncoder
+import kotlin.random.Random
 
 open class WebService(private val serverURL: String) : ServerService {
 
@@ -403,7 +404,20 @@ open class WebService(private val serverURL: String) : ServerService {
                     }
                     val name = data.getString(2)
                     val craftingCount = data.getInt(3)
-                    Element.get(name, uuid, group, craftingCount, true)
+                    val element = Element.get(name, uuid, group, craftingCount, true)
+                    // this is the ultimate test mode, and needs to be disabled
+                    /*if (element.uuid < 100) {
+                        AllManager.unlockedElements[element.group].add(element)
+                        AllManager.unlockedIds.put(element.uuid)
+                        // add fake recipes
+                        val random = Random(element.uuid)
+                        for (i in 0 until element.uuid / 5) {
+                            val ca = AllManager.elementById[random.nextInt() % element.uuid]
+                            val cb = AllManager.elementById[random.nextInt() % element.uuid]
+                            if(ca != null && cb != null)
+                                AllManager.addRecipe(ca, cb, element, null, false)
+                        }
+                    }*/
                 }
             }
 

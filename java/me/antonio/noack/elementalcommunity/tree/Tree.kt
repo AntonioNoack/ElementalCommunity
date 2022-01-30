@@ -9,12 +9,9 @@ import kotlin.math.max
 
 class Tree {
 
-    var multiplierX = 2
-    var multiplierY = 2
-
     var maxElementRadius = 10
     val maxPerRow = maxElementRadius * 2 + 1
-    var maxRadiusX = (maxElementRadius * multiplierX).toFloat()
+    var maxRadiusX = maxElementRadius.toFloat()
     var top = 0f
     var bottom = 5f
 
@@ -24,7 +21,7 @@ class Tree {
 
     fun invalidate() = build()
 
-    fun build(){
+    fun build() {
 
         // build the tree of elements
         treeMap.clear()
@@ -32,15 +29,15 @@ class Tree {
 
         val allRecipes = HashSet<Triple<Element, Element, Element>>()
 
-        for((src, dst) in AllManager.elementByRecipe){
+        for ((src, dst) in AllManager.elementByRecipe) {
             allRecipes.add(Triple(src.first, src.second, dst))
         }
 
-        val elements = ArrayList<Element>(max(4, AllManager.unlockeds.sumBy { it.size }))
+        val elements = ArrayList<Element>(max(4, AllManager.unlockedElements.sumBy { it.size }))
         val todo = HashSet<Element>(elements.size)
 
-        for(elementRow in AllManager.unlockeds){
-            for(element in elementRow){
+        for (elementRow in AllManager.unlockedElements) {
+            for (element in elementRow) {
                 elements.add(element)
                 element.hasTreeOutput = false
                 todo.add(element)
@@ -49,25 +46,25 @@ class Tree {
             }
         }
 
-        for(id in 1 .. 4){
+        for (id in 1..4) {
             val element = AllManager.elementById[id]!!
             element.rank = 0
             todo.remove(element)
         }
 
         var hasChanges = true
-        loop@ while(hasChanges){
+        loop@ while (hasChanges) {
             hasChanges = false
-            for(recipe in allRecipes){
+            for (recipe in allRecipes) {
                 val (a, b, result) = recipe
                 val firstRank = a.rank
                 val secondRank = b.rank
-                if(firstRank > -1 && secondRank > -1){
-                    val newRank = max(firstRank, secondRank)+1
-                    if(result.rank < 0 || newRank < result.rank){
+                if (firstRank > -1 && secondRank > -1) {
+                    val newRank = max(firstRank, secondRank) + 1
+                    if (result.rank < 0 || newRank < result.rank) {
                         result.srcA = a
                         result.srcB = b
-                        result.rank = max(firstRank, secondRank)+1
+                        result.rank = max(firstRank, secondRank) + 1
                     }
                     allRecipes.remove(recipe)
                     hasChanges = true
@@ -98,22 +95,22 @@ class Tree {
             break
         }*/
 
-        val byRank = Array(maxRank+2){ ArrayList<Element>() }
-        for(element in elements){
+        val byRank = Array(maxRank + 2) { ArrayList<Element>() }
+        for (element in elements) {
             val rank = element.rank
-            if(rank > -1){
+            if (rank > -1) {
                 element.srcA?.hasTreeOutput = true
                 element.srcB?.hasTreeOutput = true
             }
-            byRank[if(rank < 0) byRank.lastIndex else rank].add(element)
+            byRank[if (rank < 0) byRank.lastIndex else rank].add(element)
         }
 
-        for(unsorted in byRank){// primary sorted by group, then by uuid
+        for (unsorted in byRank) {// primary sorted by group, then by uuid
             unsorted.sortBy { sortScore(it, -10) }
         }
 
         var positionY = 0
-        for(list in byRank){
+        for (list in byRank) {
 
             // split it into chunks...
             val length = list.size
@@ -121,21 +118,20 @@ class Tree {
             val rest = length % maxPerRow
 
             val offset = (maxPerRow - rest) / 2
-            val halfOffset = if(rest.and(1) == 0) multiplierX/2 else 0
 
-            for((indexX, element) in list.withIndex()){
+            for ((indexX, element) in list.withIndex()) {
 
                 // println("${element.name}: ${element.rank}")
 
-                if(indexX < maxFull){
+                if (indexX < maxFull) {
                     // a full position
                     val rawX = indexX % maxPerRow
                     val positionX = rawX - maxElementRadius
 
-                    element.treeX = positionX * multiplierX
-                    element.treeY = positionY * multiplierY
+                    element.tx = positionX.toFloat()
+                    element.ty = positionY.toFloat()
 
-                    if(rawX == maxPerRow-1 && indexX < length - 1){
+                    if (rawX == maxPerRow - 1 && indexX < length - 1) {
                         positionY++
                     }
 
@@ -146,12 +142,12 @@ class Tree {
                     val rawX = indexX % maxPerRow
                     val positionX = rawX + offset - maxElementRadius
 
-                    element.treeX = positionX * multiplierX + halfOffset
-                    element.treeY = positionY * multiplierY
+                    element.tx = positionX.toFloat()
+                    element.ty = positionY.toFloat()
 
                 }
 
-                treeMap.put(element.treeX.shl(16) or element.treeY.and(0xffff), element)
+                treeMap.put(element.tx.toInt().shl(16) or element.ty.toInt().and(0xffff), element)
 
             }
 
@@ -160,14 +156,17 @@ class Tree {
         }
 
         this.elements = elements
-        bottom = ((positionY - 1) * multiplierY).toFloat()
+        bottom = ((positionY - 1)).toFloat()
 
     }
 
     fun sortScore(element: Element?, depth: Int): Int {
-        if(element == null || depth > 0) return 0
-        val sca = sortScore(element.srcA, depth+1)
-        return (3 * sca + if(element.srcB == element.srcA) sca else sortScore(element.srcB, depth+1)) * 3 + element.uuid
+        if (element == null || depth > 0) return 0
+        val sca = sortScore(element.srcA, depth + 1)
+        return (3 * sca + if (element.srcB == element.srcA) sca else sortScore(
+            element.srcB,
+            depth + 1
+        )) * 3 + element.uuid
     }
 
 }

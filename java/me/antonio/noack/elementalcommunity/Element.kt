@@ -6,7 +6,7 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.elementByName
 import me.antonio.noack.elementalcommunity.AllManager.Companion.elementsByGroup
 import me.antonio.noack.elementalcommunity.AllManager.Companion.invalidate
 import me.antonio.noack.elementalcommunity.AllManager.Companion.saveElement2
-import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockeds
+import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockedElements
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import java.util.*
 import kotlin.math.min
@@ -36,8 +36,19 @@ class Element private constructor(
     var srcB: Element? = null
     var hasTreeOutput = false
 
-    var treeX = 0
-    var treeY = 0
+    // tree position
+    var tx = 0f
+    var ty = 0f
+
+    // graph position
+    var px = 0f
+    var py = 0f
+
+    var vx = 0f
+    var vy = 0f
+
+    var fx = 0f
+    var fy = 0f
 
     var lcName = name.lowercase(Locale.getDefault())
     var hashLong = calcHashLong()
@@ -124,9 +135,9 @@ class Element private constructor(
                         // println("group for $name: $group")
                         val newGroup = clamp(group, 0, elementsByGroup.size - 1)
                         elementsByGroup[element.group].remove(element)
-                        unlockeds[element.group].remove(element)
+                        unlockedElements[element.group].remove(element)
                         elementsByGroup[newGroup].add(element)
-                        unlockeds[newGroup].add(element)
+                        unlockedElements[newGroup].add(element)
                         element.group = newGroup
                         // there is the issue:
                         // saving is done inefficiently

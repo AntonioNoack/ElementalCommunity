@@ -24,7 +24,7 @@ object GroupsEtc {
         }
     }
 
-    private fun brightness(color: Int): Float {
+    fun brightness(color: Int): Float {
         val r = (color shr 16) and 255
         val g = (color shr 8) and 255
         val b = color and 255

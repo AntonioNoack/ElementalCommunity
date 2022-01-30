@@ -1,5 +1,6 @@
 package me.antonio.noack.elementalcommunity.mandala
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -15,12 +16,13 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
 import kotlin.math.*
 
+@SuppressLint("ClickableViewAccessibility")
 class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet){
 
     var allowLeftFavourites = true
 
     lateinit var all: AllManager
-    var unlockeds = AllManager.unlockeds
+    var unlockeds = AllManager.unlockedElements
 
     lateinit var tree: Mandala
     var hasTree = false
@@ -72,7 +74,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
         val intY = y / sy
         // we have no scroll section -> we are fine with always being valid
-        return Triple(if(isSpecial) if(intX-floor(intX) > 0.5f) AreaType.FAVOURITES_TOP else AreaType.FAVOURITES_BOTTOM else AreaType.ELEMENTS, intX, intY)
+        return Triple(if(isSpecial) AreaType.FAVOURITES else AreaType.ELEMENTS, intX, intY)
     }
 
     fun getDistanceSq(loc: MovingLocation, x: Float, y: Float): Float {
@@ -144,8 +146,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
                     dragged = when(valid){
                         AreaType.ELEMENTS -> getElementAt(internalX, internalY)
-                        AreaType.FAVOURITES_TOP,
-                        AreaType.FAVOURITES_BOTTOM -> AllManager.favourites[internalX.toInt()]
+                        AreaType.FAVOURITES -> AllManager.favourites[internalX.toInt()]
                         AreaType.IGNORE -> null
                     }
 
@@ -195,8 +196,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
                         val (valid, internalX, internalY) = validXY(event)
                         val second = when(valid){
                             AreaType.ELEMENTS -> getElementAt(internalX, internalY)
-                            AreaType.FAVOURITES_TOP,
-                            AreaType.FAVOURITES_BOTTOM -> {
+                            AreaType.FAVOURITES -> {
                                 // set it here
                                 AllManager.favourites[internalX.toInt()] = first
                                 AllManager.saveFavourites()
@@ -253,8 +253,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
         if(!hasTree){
             if(AllManager.elementById.isEmpty()){
-                invalidate()
-                return
+                AllManager.registerBaseElements(null)
             }
             buildTree(AllManager.elementById[1]!!)
         }

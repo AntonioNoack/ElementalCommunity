@@ -30,17 +30,13 @@ class SplitReader2(input: InputStream) {
         var i = 0
         while (true) {
             when (val char = input.read()) {
+                sec -> return i
                 pri, -1 -> {
                     if (char == -1) hasRemaining = false
                     hasReachedEndOfBlock = true
                     return i
                 }
-                sec -> {
-                    return i
-                }
-                in 48..58 -> {
-                    i = i * 10 + char - 48
-                }
+                in 48..58 -> i = i * 10 + char - 48
                 else -> return readError(pri, default)
             }
         }
@@ -53,17 +49,13 @@ class SplitReader2(input: InputStream) {
         builder.clear()
         while (true) {
             when (val char = input.read()) {
+                sec -> return builder.toString()
                 pri, -1 -> {
                     if (char == -1) hasRemaining = false
                     hasReachedEndOfBlock = true
                     return builder.toString()
                 }
-                sec -> {
-                    return builder.toString()
-                }
-                else -> {
-                    builder.append(char.toChar())
-                }
+                else -> builder.append(char.toChar())
             }
         }
     }
