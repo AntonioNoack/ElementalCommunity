@@ -11,11 +11,13 @@ class GraphView(ctx: Context, attrs: AttributeSet) :
     private val grid = Grid(1, 1)
 
     override fun buildTreeAsync() {
-        Clustering.cluster(getElements(), ::getRecipes)
+        val elements = getElements()
+        Clustering.cluster(elements, getRecipes(elements))
     }
 
     override fun buildTreeIteratively() {
-        Clustering.clusterIteratively(getElements(), grid, ::getRecipes)
+        val elements = getElements()
+        Clustering.clusterIteratively(elements, grid, getRecipes(elements))
     }
 
     private fun getElements(): List<Element> {
@@ -25,16 +27,30 @@ class GraphView(ctx: Context, attrs: AttributeSet) :
         return elements
     }
 
-    private fun getRecipes(element: Element): Sequence<Element> {
-        return sequence {
-            val recipes = AllManager.recipesByElement[element]
-            if (recipes != null) {
-                for (recipe in recipes) {
-                    yield(recipe.first)
-                    yield(recipe.second)
+    private fun getRecipes(elements: List<Element>): List<Collection<Element>> {
+        for (i in elements.indices) {
+            elements[i].index = i
+        }
+        val result = Array(elements.size) { ArrayList<Element>(4) }
+        for ((re, recipes) in AllManager.recipesByElement) {
+            val rl = result[re.index]
+            for ((ae, be) in recipes) {
+
+                val al = result[ae.index]
+                if (ae !== re && ae !in rl) {
+                    rl.add(ae)
+                    al.add(re)
                 }
+
+                val bl = result[be.index]
+                if (be !== re && ae !== be && be !in rl) {
+                    rl.add(be)
+                    bl.add(re)
+                }
+
             }
         }
+        return result.toList()
     }
 
 }

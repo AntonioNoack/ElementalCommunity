@@ -69,10 +69,10 @@ class AllManager : AppCompatActivity() {
         var FAVOURITE_COUNT = 5
         var favourites = arrayOfNulls<Element>(FAVOURITE_COUNT)
 
-        val elementByRecipe = ConcurrentHashMap<Pair<Element, Element>, Element>()
-        val recipesByElement = ConcurrentHashMap<Element, MutableList<Pair<Element, Element>>>()
+        val elementByRecipe = ConcurrentHashMap<Pair<Element, Element>, Element>(2048)
+        val recipesByElement = ConcurrentHashMap<Element, MutableList<Pair<Element, Element>>>(2048)
 
-        val elementByName = ConcurrentHashMap<String, Element>()
+        val elementByName = ConcurrentHashMap<String, Element>(2048)
 
         fun registerBaseElements(pref: SharedPreferences?) {
             val names = arrayOf("???", "Earth", "Air", "Water", "Fire")
@@ -262,31 +262,17 @@ class AllManager : AppCompatActivity() {
         graphView?.all = this
         mandalaView?.all = this
 
-        pref = BetterPreferences(getPreferences(Context.MODE_PRIVATE))
-
-        loadEverythingFromPreferences()
-    }
-
-    fun loadEverythingFromPreferences() {
-
-        askFrequency = AskFrequencyOption[pref]
-        showCraftingCounts = pref.getBoolean("showCraftingCounts", true)
-        showElementUUID = pref.getBoolean("showElementUUID", true)
-
         successSound = Sound(R.raw.magic, this)
         okSound = Sound(R.raw.ok, this)
         clickSound = Sound(R.raw.click, this)
         // askingSound = So
 
-        WebServices.serverInstance = pref.getInt("serverInstance", 0)
-        WebServices.serverName = pref.getString("serverName", "Default")!!
-
-        staticRunOnUIThread = {
+        staticRunOnUIThread = { callback ->
             runOnUiThread {
                 try {
-                    it()
+                    callback()
                 } catch (e: Exception) {
-                    staticToast1(e.message ?: e.localizedMessage ?: e.toString(), true)
+                    staticToast1(e.message + e.localizedMessage, true)
                 }
             }
         }
@@ -323,6 +309,17 @@ class AllManager : AppCompatActivity() {
 
         }
 
+        pref = BetterPreferences(getPreferences(Context.MODE_PRIVATE))
+        edit = {
+            pref.edit()
+        }
+
+        addClickListeners()
+        loadEverythingFromPreferences()
+
+    }
+
+    fun addClickListeners(){
         startButton?.setOnClickListener { FlipperContent.GAME.bind(this) }
         treeViewButton?.setOnClickListener { FlipperContent.TREE.bind(this) }
         graphViewButton?.setOnClickListener { FlipperContent.GRAPH.bind(this) }
@@ -341,12 +338,18 @@ class AllManager : AppCompatActivity() {
         addSearchListeners(back3, backArrow1, searchButton1, search1, unlocked)
         addSearchListeners(back1, backArrow2, searchButton2, search2, combiner)
         randomButton?.setOnClickListener { RandomSuggestion.make(this) }
+    }
+
+    fun loadEverythingFromPreferences() {
+
+        askFrequency = AskFrequencyOption[pref]
+        showCraftingCounts = pref.getBoolean("showCraftingCounts", true)
+        showElementUUID = pref.getBoolean("showElementUUID", true)
+
+        WebServices.serverInstance = pref.getInt("serverInstance", 0)
+        WebServices.serverName = pref.getString("serverName", "Default")!!
 
         SettingsInit.init(this)
-
-        edit = {
-            pref.edit()
-        }
 
         saveElement = { edit, element ->
             val id = element.uuid
@@ -360,7 +363,7 @@ class AllManager : AppCompatActivity() {
             val unlocked = id in unlockedIds.keys || unlockedRecipes?.isNotEmpty() == true
             if (unlocked) {
                 value.append(';')
-                value.append(if (unlocked) '1' else '0')
+                value.append('1')
                 if (unlockedRecipes?.isEmpty() == false) {
                     value.append(';')
                     for (index in unlockedRecipes.indices) {
@@ -400,8 +403,6 @@ class AllManager : AppCompatActivity() {
         readUnlockedElementsLegacy()
 
         registerBaseElements(pref)
-
-        // todo unlocked elements no longer are saved???
 
         val t0 = System.nanoTime()
         // readUnlockedElements1() // 0.13s

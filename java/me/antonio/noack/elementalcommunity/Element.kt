@@ -31,7 +31,6 @@ class Element private constructor(
 
     var rank = -1
 
-
     var srcA: Element? = null
     var srcB: Element? = null
     var hasTreeOutput = false
@@ -49,6 +48,9 @@ class Element private constructor(
 
     var fx = 0f
     var fy = 0f
+
+    var index = 0
+    var lastSwitch = -1
 
     var lcName = name.lowercase(Locale.getDefault())
     var hashLong = calcHashLong()

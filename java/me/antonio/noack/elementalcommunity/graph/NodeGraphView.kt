@@ -271,19 +271,17 @@ abstract class NodeGraphView(
 
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
-                    if (iterativeTree) {
+                    if (iterativeTree && dragged == null) {
                         // push all elements
                         forAllElements { element ->
-                            if (element != dragged) {
-                                val cx = (mx - width / 2) / elementSize + scrollX
-                                val cy = (my - height / 2) / elementSize + scrollY
-                                val dx = element.px - cx
-                                val dy = element.py - cy
-                                val sca1 = 10f / (dx * dx + dy * dy + 1f)
-                                if (sca1.isFinite()) {
-                                    element.vx += dx * sca1
-                                    element.vy += dy * sca1
-                                }
+                            val cx = (mx - width / 2) / elementSize + scrollX
+                            val cy = (my - height / 2) / elementSize + scrollY
+                            val dx = element.px - cx
+                            val dy = element.py - cy
+                            val sca1 = 10f / (dx * dx + dy * dy + 1f)
+                            if (sca1.isFinite()) {
+                                element.vx += dx * sca1
+                                element.vy += dy * sca1
                             }
                         }
                     }

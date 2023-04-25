@@ -1,6 +1,5 @@
 package me.antonio.noack.elementalcommunity.paint
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -8,10 +7,10 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.math.MathUtils.clamp
-import kotlin.math.min
 import top.defaults.colorpicker.ColorPickerPopup
 import top.defaults.colorpicker.ColorPickerPopup.ColorPickerObserver
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sqrt
 
 class PaintView(ctx: Context, attributeSet: AttributeSet) : View(ctx, attributeSet) {

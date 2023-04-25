@@ -71,24 +71,13 @@ object Loader {
 
     }
 
-    fun loadObject(rawValue: String, type: Char, key: String, edit: SharedPreferences.Editor) {
-
+    private fun loadObject(rawValue: String, type: Char, key: String, edit: SharedPreferences.Editor) {
         when (type) {
-            'i' -> {
-                edit.putInt(key, rawValue.toInt())
-            }
-            'l' -> {
-                edit.putLong(key, rawValue.toLong())
-            }
-            'b' -> {
-                edit.putBoolean(key, rawValue.toBoolean())
-            }
-            'f' -> {
-                edit.putFloat(key, rawValue.toFloat())
-            }
-            's' -> {// string
-                edit.putString(key, unescape(rawValue))
-            }
+            'i' -> edit.putInt(key, rawValue.toInt())
+            'l' -> edit.putLong(key, rawValue.toLong())
+            'b' -> edit.putBoolean(key, rawValue.toBoolean())
+            'f' -> edit.putFloat(key, rawValue.toFloat())
+            's' -> edit.putString(key, unescape(rawValue))
             'S' -> {// string set
                 // not yet implemented
             }

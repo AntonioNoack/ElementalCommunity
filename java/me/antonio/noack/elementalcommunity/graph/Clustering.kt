@@ -3,6 +3,7 @@ package me.antonio.noack.elementalcommunity.graph
 import androidx.core.math.MathUtils.clamp
 import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.utils.Maths.mix
+import me.antonio.noack.elementalcommunity.utils.Maths.random
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -12,7 +13,7 @@ object Clustering {
 
     fun cluster(
         elements: List<Element>,
-        getConnections: (Element) -> Sequence<Element>,
+        connections: List<Collection<Element>>,
         numClusters: Int = sqrt(elements.size.toFloat()).toInt()
     ) {
 
@@ -20,19 +21,20 @@ object Clustering {
             return
         }
 
-        val maxIdP1 = elements.maxByOrNull { it.uuid }!!.uuid + 1
         val sorted = elements.sortedBy { it.uuid }
 
         val elementCount = sorted.size
 
         val random = Random(1234L)
-        val elementX = FloatArray(maxIdP1)
-        val elementY = FloatArray(maxIdP1)
+        val elementX = FloatArray(elementCount)
+        val elementY = FloatArray(elementCount)
 
         // assign all their random id to keep the elements consistent with their position
-        for (i in 0 until maxIdP1) {
-            elementX[i] = random.nextFloat() * 4f - 2f
-            elementY[i] = random.nextFloat() * 4f - 2f
+        for (i in 0 until elementCount) {
+            val angle = random.nextFloat() * 6.28f
+            val length = sqrt(random.nextFloat()) * 2f
+            elementX[i] = cos(angle) * length
+            elementY[i] = sin(angle) * length
         }
 
         val elementClusterIndices = IntArray(elementCount)
@@ -69,8 +71,8 @@ object Clustering {
                 val j = element.uuid
                 var px = elementX[j]
                 var py = elementY[j]
-                for (other in getConnections(element)) {
-                    val oi = other.uuid
+                for (other in connections[element.index]) {
+                    val oi = other.index
                     var ox = elementX[oi]
                     var oy = elementY[oi]
                     px = mix(px, ox, alpha)
@@ -224,7 +226,7 @@ object Clustering {
     fun clusterIteratively(
         elements: List<Element>,
         grid: Grid,
-        getConnections: (Element) -> Sequence<Element>
+        connections: List<Collection<Element>>
     ) {
 
         if (elements.isEmpty()) return
@@ -249,7 +251,7 @@ object Clustering {
         // move elements towards their partners
         for (i in 0 until elementCount) {
             val element = elements[i]
-            for (other in getConnections(element)) {
+            for (other in connections[element.index]) {
                 addForce(element, other, -1f)
             }
         }
@@ -325,6 +327,51 @@ object Clustering {
             element.py = (element.py - centerY) * rescale
         }
 
+        val oldLoss = (0 until elementCount).sumOf {
+            val ei = elements[it]
+            score(ei, connections[ei.index])
+        }
+
+        // reorder elements randomly
+        for (i in 0 until elementCount) {
+            var j = (random() * (elementCount - 1)).toInt()
+            if (j >= i) j++
+            val ei = elements[i]
+            val ej = elements[j]
+            if (ei.lastSwitch == ej.uuid || ej.lastSwitch == ei.uuid) continue
+            val ci = connections[ei.index]
+            val cj = connections[ej.index]
+            val score0 = score(ei, ci) + score(ej, cj)
+            val score1 = score(ej, ci) + score(ei, cj)
+            if (score1 * 1.5 < score0) {
+                val tx = ei.px
+                val ty = ei.py
+                ei.px = ej.px
+                ei.py = ej.py
+                ej.px = tx
+                ej.py = ty
+                ei.lastSwitch = ej.uuid
+                ej.lastSwitch = ei.uuid
+            }
+        }
+
+        val newLoss = (0 until elementCount).sumOf {
+            val ei = elements[it]
+            score(ei, connections[ei.index])
+        }
+
+        println("loss $oldLoss -> $newLoss")
+
+    }
+
+    private fun score(element: Element, neighbors: Collection<Element>): Double {
+        var sum = 0.0
+        for (neighbor in neighbors) {
+            val dx = element.px - neighbor.px
+            val dy = element.py - neighbor.py
+            sum += sqrt(dx * dx + dy * dy)
+        }
+        return sum / max(1, neighbors.size)
     }
 
     private fun resetElement(element: Element, scale: Float) {

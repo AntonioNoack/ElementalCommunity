@@ -33,7 +33,7 @@ object GroupsEtc {
 
     val hues = intArrayOf(0, 31, 51, 110, 178, 208, 233, 277, 304, -1, -2).map { x -> x * 1f }
     val saturations = intArrayOf(22, 60, 85).map { x -> x / 100f }
-    val rainbowColors: IntArray
+    private val rainbowColors: IntArray
 
     init {
 
@@ -48,14 +48,14 @@ object GroupsEtc {
         GroupSizes = IntArray(GroupColors.size)
 
         val hsv = FloatArray(3){ hue0 * 1f }
-        for(i in 0 until saturations.size){
+        for(i in saturations.indices){
             hsv[0] = hue0 * 1f
             hsv[1] = saturations[i]
             hsv[2] = values[i]
             brightness0[i] = brightness(Color.HSVToColor(hsv))
         }
 
-        for(i in 0 until hues.size){
+        for(i in hues.indices){
             hsv[0] = hues[i]
             if(hsv[0] < -1.5f){
                 val id = i * saturations.size
@@ -69,7 +69,7 @@ object GroupsEtc {
                 GroupColors[id + 1] = 0xffbbbbbb.toInt()
                 GroupColors[id + 2] = 0xff888888.toInt()
             } else {
-                for(j in 0 until saturations.size){
+                for(j in saturations.indices){
                     val id = i * saturations.size + j
                     hsv[1] = saturations[j]
                     hsv[2] = 1f - j * j * .33f * .33f + j * .33f * .25f
@@ -79,33 +79,9 @@ object GroupsEtc {
             }
         }
 
-        val hueOffset = 360f - 50f
-        val rainbowBrightness = 1f
-        val rainbowSaturation = 1f
-        val rainbowDegrees = 360f
         rainbowColors = intArrayOf(0xdd0000, 0xfe6230, 0xfef600, 0x00bb00, 0x009bfe, 0x0808a0, 0x522fa0)
-        /*IntArray(256){
-            hsv[0] = (hueOffset + it * rainbowDegrees / 255f) % 360f
-            hsv[1] = rainbowSaturation
-            hsv[2] = rainbowBrightness
-            normalizeColor(Color.HSVToColor(hsv), rainbowBrightness)
-        }*/
-
 
     }
-
-    fun normalizeColor(color: Int, brightness: Float): Int {
-        val multiplier = brightness / brightness(color)
-        return rgb(
-            (r(color) * multiplier + 0.5f).toInt(),
-            (g(color) * multiplier + 0.5f).toInt(),
-            (b(color) * multiplier + 0.5f).toInt())
-    }
-
-    fun r(c: Int) = c.shr(16).and(255)
-    fun g(c: Int) = c.shr(8).and(255)
-    fun b(c: Int) = c.and(255)
-    fun rgb(r: Int, g: Int, b: Int) = 0xff000000.toInt() or clamp(r, 0, 255).shl(16) or clamp(g, 0, 255).shl(8) or clamp(b, 0, 255)
 
     private val fRect = RectF()
 
@@ -245,15 +221,15 @@ object GroupsEtc {
 
     }
 
-    val cacheBySize = HashMap<Int, Cache>()
+    private val cacheBySize = HashMap<Int, Cache>()
     var time = System.nanoTime()
 
-    fun getCache(size: Float): HashMap<String, CacheEntry> {
+    private fun getCache(size: Float): HashMap<String, CacheEntry> {
         val index = (size * 3).toInt()
         var cache = cacheBySize[index] ?: null
         if(cache == null){
             cache = Cache(size)
-            cacheBySize.put(index, cache)
+            cacheBySize[index] = cache
         }
         cache.lastTime = time
         return cache.map
@@ -264,7 +240,7 @@ object GroupsEtc {
         var lastTime = System.nanoTime()
     }
 
-    fun getCacheEntry(rawText: String, key: String, craftingCount: Int, widthPerNode: Float, textPaint: Paint, bgPaint: Paint): CacheEntry {
+    private fun getCacheEntry(rawText: String, key: String, craftingCount: Int, widthPerNode: Float, textPaint: Paint, bgPaint: Paint): CacheEntry {
         /*if(lastCacheWidth != widthPerNode){
             println("clear cache, $lastCacheWidth != $widthPerNode")
             cacheEntries.clear()
@@ -362,14 +338,12 @@ object GroupsEtc {
         }
 
         if(delta != 0f){
-
             canvas.restoreToCount(save)
-
         }
 
     }
 
-    fun multiplyAlpha(color: Int, multiplier: Float): Int {
+    private fun multiplyAlpha(color: Int, multiplier: Float): Int {
         return color.and(0xffffff) or (clamp(color.shr(24).and(255) * multiplier, 0f, 255f).toInt().shl(24))
     }
 
@@ -377,9 +351,9 @@ object GroupsEtc {
         drawElementBackground(canvas, x0, y0, delta, widthPerNode, if(margin) getMargin(widthPerNode) else 0f, group, bgPaint, opacity)
     }
 
-    fun bowLength(float: Float) = if(float > 1f) 0f else sqrt(1f - float * float)
+    private fun bowLength(float: Float) = if(float > 1f) 0f else sqrt(1f - float * float)
 
-    const val relativeRoundness = 0.1f
+    private const val relativeRoundness = 0.1f
     fun drawElementBackground(canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Float, group: Int, bgPaint: Paint, opacity: Float = 1f){
 
         val alpha = bgPaint.alpha
@@ -458,16 +432,13 @@ object GroupsEtc {
             bgPaint.color = -1 // force black letters, those are a little better readable
 
         } else {
-
             drawRoundRect(canvas,
                 x0 + d0,
                 y0 + d0,
                 x0 + d1,
                 y0 + d1,
                 roundness, roundness, bgPaint)
-
         }
-
     }
 
     private fun drawRoundRect(canvas: Canvas, left: Float, top: Float, right: Float, bottom: Float, rx: Float, ry: Float, bgPaint: Paint){

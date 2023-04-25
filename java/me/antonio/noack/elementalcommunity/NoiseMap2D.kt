@@ -7,7 +7,7 @@ class NoiseMap2D {
 
     val random = Random()
 
-    fun getNoiseAt(x: Float, y: Float): Float {
+    fun getNoise(x: Float, y: Float): Float {
         val floorY = floor(y)
         val fractY = y - floorY
         val indexY = floorY.toInt()
