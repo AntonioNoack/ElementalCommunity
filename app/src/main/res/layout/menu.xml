@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:background="#fff"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+
+    <me.antonio.noack.elementalcommunity.NewsView
+            android:id="@+id/newsView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    <LinearLayout
+            android:id="@+id/appZoom"
+            android:orientation="vertical"
+            android:background="#70006096"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <View
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:layout_height="0dp"/>
+
+        <include layout="@layout/menu_content"/>
+
+        <View
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:layout_height="0dp"/>
+
+    </LinearLayout>
+
+</FrameLayout>

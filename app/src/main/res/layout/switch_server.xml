@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:padding="10dp"
+              android:background="@color/colorPrimaryDark"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content">
+
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <Button
+                android:id="@+id/switchToDefault"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
+                android:text="@string/switch_to_default"
+                android:gravity="center"
+                android:textSize="30sp"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+        <FrameLayout
+                android:layout_marginTop="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            <LinearLayout
+                    android:padding="5dp"
+                    android:background="@color/colorPrimaryDark"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                <FrameLayout
+                        android:background="@color/colorPrimary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                    <EditText
+                            android:id="@+id/name"
+                            android:inputType="text"
+                            android:hint="@string/server_name"
+                            android:padding="15dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                </FrameLayout>
+
+                <FrameLayout
+                        android:layout_marginTop="5dp"
+                        android:background="@color/colorPrimary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                    <EditText
+                            android:id="@+id/password"
+                            android:inputType="textPassword"
+                            android:hint="@string/password"
+                            android:padding="15dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
+
+                </FrameLayout>
+
+                <Button
+                        android:id="@+id/submit"
+                        android:layout_marginTop="5dp"
+                        android:textAllCaps="false"
+                        android:fontFamily="sans-serif"
+                        android:text="@string/join_that_server"
+                        android:gravity="center"
+                        android:textSize="30sp"
+                        android:background="@color/colorPrimary"
+                        android:textColor="@color/colorPrimaryText"
+                        android:padding="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+
+            </LinearLayout>
+
+
+        </FrameLayout>
+
+        <Button
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
+                android:id="@+id/createServer"
+                android:text="@string/create_your_own_server"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:textSize="30sp"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+        <Button
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif"
+                android:id="@+id/back"
+                android:text="@string/cancel"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:textSize="30sp"
+                android:background="@color/colorPrimary"
+                android:textColor="@color/colorPrimaryText"
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+</ScrollView>

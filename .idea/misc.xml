@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/add_recipe.xml" value="0.328804347826087" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/add_recipe_base.xml" value="0.328804347826087" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/all.xml" value="0.328804347826087" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/ask_override.xml" value="0.328804347826087" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/ask_password.xml" value="0.328804347826087" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/combiner.xml" value="0.328804347826087" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/game.xml" value="0.328804347826087" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/graph.xml" value="0.28854166666666664" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/menu.xml" value="0.328804347826087" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/menu_content.xml" value="0.28854166666666664" />
+        <entry key="..\:/Users/Antonio/Documents/IdeaProjects/ElementalCommunity2/app/src/main/res/layout/tree.xml" value="0.4119791666666667" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

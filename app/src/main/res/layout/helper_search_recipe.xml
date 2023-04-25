@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content">
+
+    <!--
+        todo of the result show as spoiler the elements you got unlocked, at max 1
+
+    -->
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <ImageView
+                android:src="@drawable/ic_search_black_24dp"
+                android:layout_width="50sp"
+                android:layout_height="50sp"/>
+
+        <EditText
+                android:id="@+id/search"
+                android:hint="@string/result_name"
+                android:maxLines="1"
+                android:layout_width="match_parent"
+                android:layout_height="50sp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/previews"
+            android:padding="10dp"
+            android:background="@color/colorPrimaryDark"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+    </LinearLayout>
+
+</LinearLayout>
