@@ -5,10 +5,7 @@ import me.antonio.noack.elementalcommunity.Element
 import kotlin.math.max
 import kotlin.math.min
 
-class Grid(
-    private var sizeX: Int,
-    private var sizeY: Int
-) {
+class Grid(private var sizeX: Int, private var sizeY: Int) {
 
     private var lists = Array(sizeX * sizeY) { ArrayList<Element>() }
 

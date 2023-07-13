@@ -1,5 +1,6 @@
 package me.antonio.noack.elementalcommunity
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -10,10 +11,10 @@ import android.view.MotionEvent
 import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.getMargin
-import me.antonio.noack.elementalcommunity.api.WebServices
 import me.antonio.noack.elementalcommunity.api.web.Candidate
 import kotlin.math.min
 
+@SuppressLint("ClickableViewAccessibility")
 class CandidateView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeSet) {
 
     var candidate: Candidate? = null
@@ -26,14 +27,12 @@ class CandidateView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attri
     var mx = 0f
     var my = 0f
 
-    val bottom = 1.3f
+    private val bottom = 1.3f
 
     var touchesLike = false
     var touchesDislike = false
 
     init {
-
-        MotionEvent.AXIS_VSCROLL
 
         val gestureDetector = GestureDetector(context, object : GestureDetector.OnGestureListener {
             override fun onScroll(
@@ -162,7 +161,7 @@ class CandidateView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attri
 
     }
 
-    fun darken(rgb: Int): Int {
+    private fun darken(rgb: Int): Int {
         val r = (rgb shr 16) and 255
         val g = (rgb shr 8) and 255
         val b = rgb and 255

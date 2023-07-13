@@ -65,4 +65,5 @@
     <string name="mandala_view">Mandala View</string>
     <string name="search">Search</string>
     <string name="what_you_are_searching">What you are searching</string>
+    <string name="offline_mode">Offline Mode</string>
 </resources>

@@ -1,20 +1,19 @@
 package me.antonio.noack.elementalcommunity.io
 
-import java.io.InputStream
+class SplitReader2 {
 
-class SplitReader2(input: InputStream) {
-
-    var input = input
+    var input = ""
         set(value) {
             field = value
-            hasRemaining = true
+            index = 0
             hasReachedEndOfBlock = false
         }
 
+    private var index = 0
+
     private val builder = StringBuilder()
 
-    var hasRemaining = true
-        private set
+    val hasRemaining get() = index < input.length
 
     var hasReachedEndOfBlock = false
         private set
@@ -23,16 +22,20 @@ class SplitReader2(input: InputStream) {
         hasReachedEndOfBlock = !hasRemaining
     }
 
+    private fun read(): Int {
+        return if (index < input.length) input[index++].code
+        else -1
+    }
+
     fun readInt(primary: Char, secondary: Char, default: Int): Int {
         if (hasReachedEndOfBlock) return default
         val pri = primary.code
         val sec = secondary.code
         var i = 0
         while (true) {
-            when (val char = input.read()) {
+            when (val char = read()) {
                 sec -> return i
                 pri, -1 -> {
-                    if (char == -1) hasRemaining = false
                     hasReachedEndOfBlock = true
                     return i
                 }
@@ -48,10 +51,9 @@ class SplitReader2(input: InputStream) {
         val sec = secondary.code
         builder.clear()
         while (true) {
-            when (val char = input.read()) {
+            when (val char = read()) {
                 sec -> return builder.toString()
                 pri, -1 -> {
-                    if (char == -1) hasRemaining = false
                     hasReachedEndOfBlock = true
                     return builder.toString()
                 }
@@ -66,9 +68,8 @@ class SplitReader2(input: InputStream) {
 
     private fun readError(pri: Int, default: Int): Int {
         while (true) {
-            when (val char = input.read()) {
+            when (read()) {
                 pri, -1 -> {
-                    if (char == -1) hasRemaining = false
                     hasReachedEndOfBlock = true
                     return default
                 }

@@ -4,14 +4,14 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.AllManager.Companion.toast
 import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.api.WebServices
-import java.net.URLEncoder
-import kotlin.concurrent.thread
-import me.antonio.noack.elementalcommunity.AllManager.Companion.toast
 import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
+import java.net.URLEncoder
+import kotlin.concurrent.thread
 
 
 object SaveLoadLogic {
@@ -82,8 +82,6 @@ object SaveLoadLogic {
 
     }
 
-    const val IMAGE_SELECTED = 17
-
     fun load(all: AllManager) {
         FileChooser.requestFile(all, "text/plain") {
             applyDownload(all, it)
@@ -108,7 +106,7 @@ object SaveLoadLogic {
         }
     }
 
-    fun download(all: AllManager) {
+    private fun download(all: AllManager) {
 
         // download from server -> ask password :D
         val dialog = AlertDialog.Builder(all)
@@ -126,7 +124,7 @@ object SaveLoadLogic {
 
     }
 
-    fun download(all: AllManager, password: String) {
+    private fun download(all: AllManager, password: String) {
 
         toast("loading...", false)
 
@@ -151,7 +149,7 @@ object SaveLoadLogic {
 
     }
 
-    fun applyDownload(all: AllManager, data: String) {
+    private fun applyDownload(all: AllManager, data: String) {
 
         all.runOnUiThread {
 
@@ -181,7 +179,7 @@ object SaveLoadLogic {
 
     }
 
-    fun upload(all: AllManager) {
+    private fun upload(all: AllManager) {
 
         thread {
 
@@ -192,7 +190,7 @@ object SaveLoadLogic {
             WebServices.tryCaptchaLarge(
                 all,
                 "save=${URLEncoder.encode(data, "UTF-8")}",
-                "?u=${AllManager.customUUID}",
+                "u=${AllManager.customUUID}",
                 { password ->
                     all.runOnUiThread {
 

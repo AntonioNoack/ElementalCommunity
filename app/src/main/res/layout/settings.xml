@@ -100,6 +100,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
+        <androidx.appcompat.widget.SwitchCompat
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:id="@+id/offlineModeSwitch"
+            android:text="@string/offline_mode"
+            android:textSize="20sp"
+            android:textColor="@color/colorPrimaryText"
+            android:padding="10dp"
+            android:checked="false"
+            android:theme="@style/SwitchColors"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
         <Button
                 android:id="@+id/clearRecipeCache"
                 android:textAllCaps="false"

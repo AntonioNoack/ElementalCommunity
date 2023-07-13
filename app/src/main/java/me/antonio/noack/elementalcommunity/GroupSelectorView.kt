@@ -1,5 +1,6 @@
 package me.antonio.noack.elementalcommunity
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -12,6 +13,7 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.drawElementBackground
 import me.antonio.noack.elementalcommunity.GroupsEtc.hues
 import me.antonio.noack.elementalcommunity.GroupsEtc.saturations
 
+@SuppressLint("ClickableViewAccessibility")
 class GroupSelectorView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
     var selected = -1
@@ -60,7 +62,7 @@ class GroupSelectorView(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
 
         val widthPerNode = measuredWidth * 1f / hues.size
 
-        for(i in 0 until GroupColors.size){
+        for(i in GroupColors.indices){
             val x0 = (i / saturations.size) * widthPerNode
             val y0 = (i % saturations.size) * widthPerNode
             if(debugColors){

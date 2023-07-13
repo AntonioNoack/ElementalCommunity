@@ -6,8 +6,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.api.WebServices
-import java.lang.IllegalArgumentException
-import java.lang.NumberFormatException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.math.min
@@ -32,12 +30,10 @@ object BasicOperations {
                 done.incrementAndGet()
                 when {
                     result != null -> unlockElement(result)
-                    AllManager.askFrequency.isTrue() -> {
+                    AllManager.offlineMode || AllManager.askFrequency.isTrue() -> {
                         // staticRunOnUIThread { AllManager.askingSound.play() }
-                        askForRecipe(
-                            first,
-                            second,
-                            all,
+                        askForCandidates(
+                            first, second, all,
                             measuredWidth,
                             measuredHeight,
                             unlockElement
@@ -62,7 +58,7 @@ object BasicOperations {
         }
     }
 
-    fun askForRecipe(
+    fun askForCandidates(
         a: Element,
         b: Element,
         all: AllManager,
@@ -72,7 +68,6 @@ object BasicOperations {
         onSuccess: () -> Unit
     ) {
         // ask for recipe to add :)
-        // todo show that we are loading
         todo.incrementAndGet()
         WebServices.getCandidates(a, b, { candidates ->
             done.incrementAndGet()
@@ -83,17 +78,13 @@ object BasicOperations {
                 dialog.findViewById<TextView>(R.id.cancel)!!.setOnClickListener {
                     try {
                         dialog.dismiss()
-                    } catch (e: Throwable) {
+                    } catch (_: Throwable) {
                     }
                 }
                 setSubmitAction(
-                    all,
-                    dialog.findViewById(R.id.submit)!!,
-                    dialog,
+                    all, dialog.findViewById(R.id.submit)!!, dialog,
                     true,
-                    { a },
-                    { b },
-                    {
+                    { a }, { b }, {
                         unlockElement(it)
                         onSuccess()
                     })
@@ -114,16 +105,33 @@ object BasicOperations {
                         view.onLiked = {
                             try {
                                 dialog.dismiss()
-                            } catch (e: IllegalArgumentException) {
+                            } catch (_: IllegalArgumentException) {
                             }
-                            WebServices.likeRecipe(all, candidate.uuid, {
-                                AllManager.toast(R.string.sent, false)
-                            })
+                            if (AllManager.offlineMode) {
+                                OfflineSuggestions.addOfflineRecipe(
+                                    all, a, b, candidate.name, candidate.group
+                                )
+                                OfflineSuggestions.storeOfflineElements()
+                                AllManager.toast("Added offline recipe", false)
+                            } else {
+                                WebServices.likeRecipe(all, candidate.uuid, {
+                                    AllManager.toast(R.string.sent, false)
+                                })
+                            }
                         }
                         view.onDisliked = {
-                            WebServices.dislikeRecipe(all, candidate.uuid, {
-                                AllManager.toast(R.string.sent, false)
-                            })
+                            if (AllManager.offlineMode) {
+                                val result = OfflineSuggestions.getOfflineRecipe(a, b)
+                                if (result?.name == candidate.name) {
+                                    AllManager.toast("Deleted offline recipe", false)
+                                } else {
+                                    AllManager.toast("Cannot dislike in offline mode", false)
+                                }
+                            } else {
+                                WebServices.dislikeRecipe(all, candidate.uuid, {
+                                    AllManager.toast(R.string.sent, false)
+                                })
+                            }
                         }
                         view.layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -167,43 +175,44 @@ object BasicOperations {
             }
             todo.incrementAndGet()
             thread {
-                WebServices.suggestRecipe(all, getComponentA(), getComponentB(), name, group, {
-                    done.incrementAndGet()
-                    AllManager.toast(R.string.sent, false)
-                    if (allowingDismiss) {
-                        AllManager.staticRunOnUIThread {
-                            try {
-                                dialog.dismiss()
-                            } catch (e: IllegalArgumentException) {
+                WebServices.suggestRecipe(
+                    all, getComponentA(), getComponentB(), name, group,
+                    { line ->
+                        done.incrementAndGet()
+                        AllManager.toast(R.string.sent, false)
+                        if (allowingDismiss) {
+                            AllManager.staticRunOnUIThread {
+                                try {
+                                    dialog.dismiss()
+                                } catch (_: IllegalArgumentException) {
+                                }
                             }
                         }
-                    }
-                    var lineBreakIndex = it.indexOf('\n')
-                    if (lineBreakIndex < 0) lineBreakIndex = it.length
-                    val str = it.substring(0, lineBreakIndex)
-                    val index1 = str.indexOf(':')
-                    val index2 = str.indexOf(':', index1 + 1)
-                    if (index1 > 0 && index2 > 0) {
-                        try {
-                            val rUUID = str.substring(0, index1).toInt()
-                            val rGroup = str.substring(index1 + 1, index2).toInt()
-                            val rName = str.substring(index2 + 1)
-                            // val secondaryData = lines.getOrNull(1)?.split(':')
-                            // removed, because it's rather expensive to compute and not that important
-                            // maybe we should save that information on per-instance basis in the database...
-                            val rCraftingCount = -1
-                            val element = Element.get(rName, rUUID, rGroup, rCraftingCount, true)
-                            unlockElement(element)
-                        } catch (e: NumberFormatException){
+                        var lineBreakIndex = line.indexOf('\n')
+                        if (lineBreakIndex < 0) lineBreakIndex = line.length
+                        val str = line.substring(0, lineBreakIndex)
+                        val index1 = str.indexOf(':')
+                        val index2 = str.indexOf(':', index1 + 1)
+                        if (index1 > 0 && index2 > 0) {
+                            try {
+                                val rUUID = str.substring(0, index1).toInt()
+                                val rGroup = str.substring(index1 + 1, index2).toInt()
+                                val rName = str.substring(index2 + 1)
+                                // val secondaryData = lines.getOrNull(1)?.split(':')
+                                // removed, because it's rather expensive to compute and not that important
+                                // maybe we should save that information on per-instance basis in the database...
+                                val rCraftingCount = -1
+                                val element =
+                                    Element.get(rName, rUUID, rGroup, rCraftingCount, true)
+                                unlockElement(element)
+                            } catch (_: NumberFormatException) {
 
+                            }
                         }
-                    }
-                }, {
-                    done.incrementAndGet()
-                })
+                    },
+                    { done.incrementAndGet() })
             }
         }
-
     }
 
 }

@@ -220,7 +220,6 @@ object Clustering {
             println("${element.name} is at ${element.px}, ${element.py}")
         }
 
-
     }
 
     fun clusterIteratively(

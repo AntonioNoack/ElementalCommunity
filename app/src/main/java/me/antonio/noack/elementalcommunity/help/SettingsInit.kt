@@ -5,10 +5,8 @@ import android.view.View
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import me.antonio.noack.elementalcommunity.AllManager
-import me.antonio.noack.elementalcommunity.AskFrequencyOption
-import me.antonio.noack.elementalcommunity.FlipperContent
-import me.antonio.noack.elementalcommunity.R
+import me.antonio.noack.elementalcommunity.*
+import me.antonio.noack.elementalcommunity.api.ServerService.Companion.defaultOnError
 import me.antonio.noack.elementalcommunity.api.WebServices
 import me.antonio.noack.elementalcommunity.utils.Maths
 import java.math.BigInteger
@@ -153,6 +151,42 @@ object SettingsInit {
                 }
             }
 
+            val offlineModeSwitch = offlineModeSwitch
+            if (offlineModeSwitch != null) {
+                offlineModeSwitch.setOnLongClickListener {
+                    AllManager.toast(
+                        "In offline mode, new recipes will be stored on disk instead of online; They can be uploaded, when you're back online.",
+                        true
+                    )
+                    true
+                }
+                offlineModeSwitch.isChecked = AllManager.offlineMode
+                offlineModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+                    AllManager.offlineMode = isChecked
+                    pref.edit().putBoolean("offlineMode", isChecked).apply()
+                    // if was checked, and there is stuff stored, ask whether to upload them
+                    if (!isChecked && OfflineSuggestions.hasRecipes()) {
+                        AlertDialog.Builder(this)
+                            .setTitle("Upload new recipes?")
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
+                                OfflineSuggestions.uploadValues(this, { uploaded, total ->
+                                    if (uploaded < total) {
+                                        AllManager.toast(
+                                            "Uploaded $uploaded/$total recipes, " +
+                                                    "toggle twice to upload more", true
+                                        )
+                                    } else {
+                                        AllManager.toast("Uploaded $uploaded/$total recipes", true)
+                                    }
+                                }, defaultOnError)
+                            }
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .setCancelable(true)
+                            .show()
+                    }
+                }
+            }
+
             switchServerButton?.setOnLongClickListener {
                 AllManager.toast(
                     "Switch to a different server: different recipes, however your elements will stay yours.",
@@ -188,7 +222,7 @@ object SettingsInit {
         AllManager.unlockedIds.clear()
         AllManager.unlockedIds.addAll(listOf(1, 2, 3, 4))
         for (list in AllManager.unlockedElements) {
-            list.removeAll(list.filter { it.uuid > 4 })
+            list.removeAll(list.filter { it.uuid > 4 }.toSet())
         }
         for (i in AllManager.favourites.indices) AllManager.favourites[i] = null
         AllManager.elementByRecipe.clear()
@@ -380,14 +414,5 @@ object SettingsInit {
     }
 
     fun Long.toLong2() = this
-
-    fun String.toLong2(): Long {
-        var value = 0L
-        for (char in this) {
-            value = value * 10 + char.code - '0'.code
-        }
-        return value
-    }
-
 
 }

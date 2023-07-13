@@ -3,6 +3,7 @@ package me.antonio.noack.elementalcommunity.api
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.GroupsEtc
+import me.antonio.noack.elementalcommunity.OfflineSuggestions
 import me.antonio.noack.elementalcommunity.api.web.Candidate
 import me.antonio.noack.elementalcommunity.api.web.News
 import me.antonio.noack.elementalcommunity.cache.CombinationCache
@@ -10,21 +11,19 @@ import me.antonio.noack.elementalcommunity.io.ElementType
 import me.antonio.noack.elementalcommunity.io.SplitReader
 import me.antonio.noack.webdroid.Captcha
 import me.antonio.noack.webdroid.HTTP
-import java.lang.Exception
 import java.net.URLEncoder
-import kotlin.random.Random
 
 open class WebService(private val serverURL: String) : ServerService {
 
-    val ms = 1000000L
-    val deadlyReactionTime = 200 * ms
+    private val ms = 1000000L
+    private val deadlyReactionTime = 200 * ms
 
     // a cache is not only built when the connection is slow, but also when it's fast -> for using it in bad times
-    val goodReactionTime = 60 * ms
-    val reactionResetCounter = 30
+    private val goodReactionTime = 60 * ms
+    private val reactionResetCounter = 30
 
-    fun hasGoodConnection() = lastReactionTime < goodReactionTime
-    fun hasSlowConnection() = lastReactionTime > deadlyReactionTime
+    private fun hasGoodConnection() = lastReactionTime < goodReactionTime
+    private fun hasSlowConnection() = lastReactionTime > deadlyReactionTime
 
     /**
      * the id of the server portion,
@@ -37,11 +36,13 @@ open class WebService(private val serverURL: String) : ServerService {
      * for security against crashes of old versions
      * webVersionName is the GET parameter
      * */
-    private val webVersion = 1
-    private val webVersionName = "v"
+    val webVersion = 1
+    val webVersionName = "v"
 
-    fun isExternalSource() = serverName.startsWith("http://") || serverName.startsWith("https://")
-    fun getURL() = if (isExternalSource()) serverName else serverURL
+    private fun isExternalSource() =
+        serverName.startsWith("http://") || serverName.startsWith("https://")
+
+    private fun getURL() = if (isExternalSource()) serverName else serverURL
 
     fun tryCaptcha(
         all: AllManager, args: String, onSuccess: (String) -> Unit, onError: (Exception) -> Unit = {
@@ -51,25 +52,22 @@ open class WebService(private val serverURL: String) : ServerService {
             )
         }
     ) {
-
         val url = "$serverURL?$args" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance"
-
         HTTP.request(url, { text ->
-            if (text.isBlank() || text.startsWith("#reauth", true) || text.startsWith(
-                    "#auth",
-                    true
-                )
+            if (text.isBlank() || text.startsWith("#reauth", true) ||
+                text.startsWith("#auth", true)
             ) {
-
                 Captcha.get(all, { token ->
-                    HTTP.request("$url&t=${URLEncoder.encode(token, "UTF-8")}", onSuccess, onError)
+                    HTTP.request(
+                        "$url&t=${URLEncoder.encode(token, "UTF-8")}",
+                        onSuccess,
+                        onError
+                    )
                 }, onError)
-
             } else onSuccess(text)
         }, onError)
-
     }
 
     fun tryCaptchaLarge(
@@ -92,14 +90,11 @@ open class WebService(private val serverURL: String) : ServerService {
                 "&sid=$serverInstance"
 
         if (largeArgs.length < 100000) {
-
             HTTP.requestLarge(url, largeArgs, { text ->
-                if (text.isBlank() || text.startsWith("#reauth", true) || text.startsWith(
-                        "#auth",
-                        true
-                    )
+                if (text.isBlank() ||
+                    text.startsWith("#reauth", true) ||
+                    text.startsWith("#auth", true)
                 ) {
-
                     Captcha.get(all, { token ->
                         HTTP.requestLarge(
                             "$url&t=${URLEncoder.encode(token, "UTF-8")}",
@@ -109,12 +104,9 @@ open class WebService(private val serverURL: String) : ServerService {
                             true
                         )
                     }, onError)
-
                 } else onSuccess(text)
             }, onError, true)
-
         } else {
-
             Captcha.get(all, { token ->
                 HTTP.requestLarge(
                     "$url&t=${URLEncoder.encode(token, "UTF-8")}",
@@ -124,7 +116,6 @@ open class WebService(private val serverURL: String) : ServerService {
                     true
                 )
             }, onError)
-
         }
 
     }
@@ -141,10 +132,12 @@ open class WebService(private val serverURL: String) : ServerService {
     ) {
 
         println("asking for $a + $b = ?")
+        println("offline? ${AllManager.offlineMode}")
 
-        val url = "${getURL()}?a=${a.uuid}&b=${b.uuid}" +
-                "&$webVersionName=$webVersion" +
-                "&sid=$serverInstance"
+        if (AllManager.offlineMode) {
+            CombinationCache.askInEmergency(all, a, b, onSuccess)
+            return
+        }
 
         if (hasSlowConnection() && lastReactionCtr > 0) {
             lastReactionCtr--
@@ -154,6 +147,9 @@ open class WebService(private val serverURL: String) : ServerService {
         }
 
         val reactionStart = System.nanoTime()
+        val url = "${getURL()}?a=${a.uuid}&b=${b.uuid}" +
+                "&$webVersionName=$webVersion" +
+                "&sid=$serverInstance"
 
         HTTP.request(url, { text ->
 
@@ -248,43 +244,48 @@ open class WebService(private val serverURL: String) : ServerService {
         onSuccess: (ArrayList<Candidate>) -> Unit,
         onError: (Exception) -> Unit
     ) {
+        if (AllManager.offlineMode) {
+            val result = OfflineSuggestions.getOfflineRecipe(a, b)
+            onSuccess(
+                if (result != null) arrayListOf(Candidate(-1, result.name, result.group))
+                else arrayListOf()
+            )
+        } else {
+            HTTP.request(
+                "${getURL()}?o=1&a=${a.uuid}&b=${b.uuid}" +
+                        "&$webVersionName=$webVersion" +
+                        "&sid=$serverInstance",
 
-        HTTP.request(
-            "${getURL()}?o=1&a=${a.uuid}&b=${b.uuid}" +
-                    "&$webVersionName=$webVersion" +
-                    "&sid=$serverInstance",
-
-            { text ->
-                val data = text.split(';')
-                var i = 0
-                val candidates = ArrayList<Candidate>(data.size / 3)
-                while (i + 2 < data.size) {
-                    val uuid = data[i++].toLong()
-                    val name = data[i++]
-                    val group = data[i++].toInt()
-                    candidates.add(Candidate(uuid, name, group))
-                }
-                onSuccess(candidates)
-            }, onError
-        )
-
+                { text ->
+                    val data = text.split(';')
+                    var i = 0
+                    val candidates = ArrayList<Candidate>(data.size / 3)
+                    while (i + 2 < data.size) {
+                        val uuid = data[i++].toLong()
+                        val name = data[i++]
+                        val group = data[i++].toInt()
+                        candidates.add(Candidate(uuid, name, group))
+                    }
+                    onSuccess(candidates)
+                }, onError
+            )
+        }
     }
 
     override fun suggestRecipe(
-        all: AllManager,
-        a: Element,
-        b: Element,
-        resultName: String,
-        resultGroup: Int,
-        onSuccess: (text: String) -> Unit,
-        onError: (Exception) -> Unit
+        all: AllManager, a: Element, b: Element, resultName: String, resultGroup: Int,
+        onSuccess: (text: String) -> Unit, onError: (Exception) -> Unit
     ) {
 
         val edit = all.pref.edit()
         CombinationCache.invalidate(edit)
         edit.apply()
 
-        if (isExternalSource()) {
+        if (AllManager.offlineMode) {
+            val element = OfflineSuggestions.addOfflineRecipe(all, a, b, resultName, resultGroup)
+            OfflineSuggestions.storeOfflineElements()
+            onSuccess("-1:${element.group}:${element.name}")
+        } else if (isExternalSource()) {
             HTTP.request(
                 "a=${a.uuid}&b=${b.uuid}" +
                         "&r=${URLEncoder.encode(resultName, "UTF-8")}" +
@@ -304,8 +305,6 @@ open class WebService(private val serverURL: String) : ServerService {
                         "&sid=$serverInstance", onSuccess, onError
             )
         }
-
-
     }
 
     override fun likeRecipe(
@@ -404,20 +403,7 @@ open class WebService(private val serverURL: String) : ServerService {
                     }
                     val name = data.getString(2)
                     val craftingCount = data.getInt(3)
-                    val element = Element.get(name, uuid, group, craftingCount, true)
-                    // this is the ultimate test mode, and needs to be disabled
-                    /*if (element.uuid < 100) {
-                        AllManager.unlockedElements[element.group].add(element)
-                        AllManager.unlockedIds.put(element.uuid)
-                        // add fake recipes
-                        val random = Random(element.uuid)
-                        for (i in 0 until element.uuid / 5) {
-                            val ca = AllManager.elementById[random.nextInt() % element.uuid]
-                            val cb = AllManager.elementById[random.nextInt() % element.uuid]
-                            if(ca != null && cb != null)
-                                AllManager.addRecipe(ca, cb, element, null, false)
-                        }
-                    }*/
+                    Element.get(name, uuid, group, craftingCount, true)
                 }
             }
 

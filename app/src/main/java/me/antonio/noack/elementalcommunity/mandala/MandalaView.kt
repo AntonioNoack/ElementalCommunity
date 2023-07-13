@@ -17,7 +17,7 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
 import kotlin.math.*
 
 @SuppressLint("ClickableViewAccessibility")
-class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet){
+class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeSet) {
 
     var allowLeftFavourites = true
 
@@ -30,15 +30,15 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
     // measured border coordinates for prevention of scrolling further away
 
-    private fun buildTree(e: Element){
-        tree = Mandala(e, if(hasTree) tree else null)
+    private fun buildTree(e: Element) {
+        tree = Mandala(e, if (hasTree) tree else null)
         hasTree = true
         isInvalidated = false
     }
 
     var widthPerNode = 100f
 
-    fun validXY(event: MotionEvent, searchIfNull: Boolean = false): Triple<AreaType, Float, Float>{
+    fun validXY(event: MotionEvent, searchIfNull: Boolean = false): Triple<AreaType, Float, Float> {
 
         val (sx, sy) = getScale()
         val x = event.x - measuredWidth * 0.5f
@@ -46,13 +46,16 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
         var intX = x / sx
 
         var isSpecial = false
-        if(AllManager.FAVOURITE_COUNT > 0){
-            if(width > height && allowLeftFavourites){
+        if (AllManager.FAVOURITE_COUNT > 0) {
+            if (width > height && allowLeftFavourites) {
                 // more width -> favourites at left
-                val favSize = min(height.toFloat() / AllManager.FAVOURITE_COUNT, width * AllManager.MAX_FAVOURITES_RATIO)
-                if(event.x < favSize){
+                val favSize = min(
+                    height.toFloat() / AllManager.FAVOURITE_COUNT,
+                    width * AllManager.MAX_FAVOURITES_RATIO
+                )
+                if (event.x < favSize) {
                     val maybeX = event.y / favSize
-                    if(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null){
+                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
                     } else {
                         isSpecial = true
                         intX = maybeX
@@ -60,10 +63,13 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
                 }
             } else {
                 // more height -> favourites at bottom
-                val favSize = min(width.toFloat() / AllManager.FAVOURITE_COUNT, height * AllManager.MAX_FAVOURITES_RATIO)
-                if(event.y > height - favSize){
+                val favSize = min(
+                    width.toFloat() / AllManager.FAVOURITE_COUNT,
+                    height * AllManager.MAX_FAVOURITES_RATIO
+                )
+                if (event.y > height - favSize) {
                     val maybeX = event.x / favSize
-                    if(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null){
+                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
                     } else {
                         isSpecial = true
                         intX = maybeX
@@ -74,7 +80,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
         val intY = y / sy
         // we have no scroll section -> we are fine with always being valid
-        return Triple(if(isSpecial) AreaType.FAVOURITES else AreaType.ELEMENTS, intX, intY)
+        return Triple(if (isSpecial) AreaType.FAVOURITES else AreaType.ELEMENTS, intX, intY)
     }
 
     fun getDistanceSq(loc: MovingLocation, x: Float, y: Float): Float {
@@ -83,32 +89,32 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
     fun getElementAt(x: Float, y: Float): Element? {
         var minElement = tree.element
-        var minDistance = sq(x,y)
+        var minDistance = sq(x, y)
         tree.toThisElement.forEach { r ->
             val da = getDistanceSq(r.al, x, y)
-            if(da < minDistance){
+            if (da < minDistance) {
                 minDistance = da
                 minElement = r.a
             }
             val db = getDistanceSq(r.bl, x, y)
-            if(db < minDistance){
+            if (db < minDistance) {
                 minDistance = db
                 minElement = r.b
             }
         }
         tree.fromThisElement.forEach { r ->
             val da = getDistanceSq(r.al, x, y)
-            if(da < minDistance){
+            if (da < minDistance) {
                 minDistance = da
                 minElement = r.a
             }
             val db = getDistanceSq(r.bl, x, y)
-            if(db < minDistance){
+            if (db < minDistance) {
                 minDistance = db
                 minElement = r.b
             }
             val dr = getDistanceSq(r.rl, x, y)
-            if(dr < minDistance){
+            if (dr < minDistance) {
                 minDistance = dr
                 minElement = r.r
             }
@@ -118,9 +124,9 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
     fun getScale(): Pair<Float, Float> {
         val min = min(measuredWidth, measuredHeight)
-        val sc = if(min > widthPerNode){
+        val sc = if (min > widthPerNode) {
             // w/n or w/n*0.5 is seldom important
-            (min-widthPerNode) * 0.495f
+            (min - widthPerNode) * 0.495f
         } else {
             min * 0.45f
         }
@@ -135,16 +141,16 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
     init {
 
-        val scrollListener = GestureDetector(object: GestureDetector.OnGestureListener {
+        val scrollListener = GestureDetector(object : GestureDetector.OnGestureListener {
             override fun onShowPress(e: MotionEvent?) {}
             override fun onDown(event: MotionEvent?): Boolean {
-                return if(event != null){
+                return if (event != null) {
 
                     md = 0f
 
                     val (valid, internalX, internalY) = validXY(event)
 
-                    dragged = when(valid){
+                    dragged = when (valid) {
                         AreaType.ELEMENTS -> getElementAt(internalX, internalY)
                         AreaType.FAVOURITES -> AllManager.favourites[internalX.toInt()]
                         AreaType.IGNORE -> null
@@ -154,25 +160,44 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
                 } else false
             }
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean = false
-            override fun onScroll(event: MotionEvent?, e2: MotionEvent?, dx: Float, dy: Float): Boolean {
-                md += sqrt(dx*dx+dy*dy)
+
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean = false
+
+            override fun onScroll(
+                event: MotionEvent?,
+                e2: MotionEvent?,
+                dx: Float,
+                dy: Float
+            ): Boolean {
+                md += sqrt(dx * dx + dy * dy)
                 return true
             }
+
             override fun onLongPress(e: MotionEvent?) {}
             override fun onSingleTapUp(event: MotionEvent?): Boolean = false
         })
 
-        val zoomListener = ScaleGestureDetector(context, object: ScaleGestureDetector.OnScaleGestureListener {
-            override fun onScale(detector: ScaleGestureDetector?): Boolean {
-                return if(detector != null && detector.scaleFactor != 1f){
-                    widthPerNode = clamp(widthPerNode * detector.scaleFactor, 10f, min(measuredWidth, measuredHeight) * 0.5f)
-                    true
-                } else false
-            }
-            override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean = true
-            override fun onScaleEnd(detector: ScaleGestureDetector?) {}
-        })
+        val zoomListener =
+            ScaleGestureDetector(context, object : ScaleGestureDetector.OnScaleGestureListener {
+                override fun onScale(detector: ScaleGestureDetector?): Boolean {
+                    return if (detector != null && detector.scaleFactor != 1f) {
+                        widthPerNode = clamp(
+                            widthPerNode * detector.scaleFactor,
+                            10f,
+                            min(measuredWidth, measuredHeight) * 0.5f
+                        )
+                        true
+                    } else false
+                }
+
+                override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean = true
+                override fun onScaleEnd(detector: ScaleGestureDetector?) {}
+            })
 
         setOnTouchListener { _, event ->
 
@@ -182,19 +207,19 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
             scrollListener.onTouchEvent(event)
             zoomListener.onTouchEvent(event)
 
-            if(dragged != null && event.pointerCount > 1){
+            if (dragged != null && event.pointerCount > 1) {
                 dragged = null
                 invalidate()
             }
 
-            when(event.actionMasked){
+            when (event.actionMasked) {
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
 
-                    if(dragged != null){
+                    if (dragged != null) {
                         val first = dragged!!
                         dragged = null
                         val (valid, internalX, internalY) = validXY(event)
-                        val second = when(valid){
+                        val second = when (valid) {
                             AreaType.ELEMENTS -> getElementAt(internalX, internalY)
                             AreaType.FAVOURITES -> {
                                 // set it here
@@ -206,13 +231,19 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
                             }
                             AreaType.IGNORE -> null
                         }
-                        if(second != null){
-                            if(second == first && md < min(measuredWidth, measuredHeight) * 0.03f && first != tree.element){
+                        if (second != null) {
+                            if (second == first &&
+                                md < min(measuredWidth, measuredHeight) * 0.03f &&
+                                first != tree.element
+                            ) {
                                 // AllManager.okSound.play()
                                 switchTo(first)
                             } else {
-                                BasicOperations.onRecipeRequest(first, second, all, measuredWidth, measuredHeight, { unlockElement(first, second, it) }, {
-                                    add(first, second, it) })
+                                BasicOperations.onRecipeRequest(first, second,
+                                    all, measuredWidth, measuredHeight,
+                                    { unlockElement(first, second, it) }, {
+                                        add(first, second, it)
+                                    })
                             }
                         }
                     }
@@ -241,7 +272,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
     var lastTime = System.nanoTime()
     var time = 0f
 
-    fun switchTo(element: Element){
+    fun switchTo(element: Element) {
         buildTree(element)
         time = 0f
         postInvalidate()
@@ -251,8 +282,8 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
         super.draw(canvas)
         canvas ?: return
 
-        if(!hasTree){
-            if(AllManager.elementById.isEmpty()){
+        if (!hasTree) {
+            if (AllManager.elementById.isEmpty()) {
                 AllManager.registerBaseElements(null)
             }
             buildTree(AllManager.elementById[1]!!)
@@ -269,8 +300,8 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
         val width = measuredWidth.toFloat()
         val height = measuredHeight.toFloat()
 
-        val centerX = width/2
-        val centerY = height/2
+        val centerX = width / 2
+        val centerY = height / 2
 
         linePaint.color = 0x30000000
         linePaint.strokeWidth = max(2f, min(width, height) * 0.005f)
@@ -284,20 +315,30 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
         val (scaleX, scaleY) = getScale()
 
         // val line0 = System.nanoTime()
-        tree.draw(time, {
-                element, x, y, alpha, sizeFactor ->
+        tree.draw(time, { element, x, y, alpha, sizeFactor ->
             val size = sizeFactor * widthPerNode
-            if(alpha > 0.01f){
-                val alphaInt = (min(1f, alpha)*255).toInt()
+            if (alpha > 0.01f) {
+                val alphaInt = (min(1f, alpha) * 255).toInt()
                 bgPaint.alpha = alphaInt
                 textPaint.alpha = alphaInt
-                drawElement(canvas, showCraftingCounts, showUUIDs, x*scaleX-size*0.5f, y*scaleY-size*0.5f, 0f, size, true, element, bgPaint, textPaint)
+                drawElement(
+                    canvas,
+                    showCraftingCounts,
+                    showUUIDs,
+                    x * scaleX - size * 0.5f,
+                    y * scaleY - size * 0.5f,
+                    0f,
+                    size,
+                    true,
+                    element,
+                    bgPaint,
+                    textPaint
+                )
             }
-        }){
-            x0, y0, x1, y1, alpha ->
-            if(alpha > 0.003f){
-                linePaint.alpha = (min(alpha*0.5f, 1f)*255).toInt()
-                canvas.drawLine(x0*scaleX, y0*scaleY, x1*scaleX, y1*scaleY, linePaint)
+        }) { x0, y0, x1, y1, alpha ->
+            if (alpha > 0.003f) {
+                linePaint.alpha = (min(alpha * 0.5f, 1f) * 255).toInt()
+                canvas.drawLine(x0 * scaleX, y0 * scaleY, x1 * scaleX, y1 * scaleY, linePaint)
             }
         }
 
@@ -307,19 +348,39 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
 
         canvas.restoreToCount(save)
 
-        drawFavourites(canvas, false, showUUIDs, width, height, bgPaint, textPaint, allowLeftFavourites)
+        drawFavourites(
+            canvas,
+            false,
+            showUUIDs,
+            width,
+            height,
+            bgPaint,
+            textPaint,
+            allowLeftFavourites
+        )
 
         val dragged = dragged
-        if(dragged != null){
-            drawElement(canvas, false, showUUIDs, mx - widthPerNode/2, my - widthPerNode/2, 0f, widthPerNode, true, dragged, bgPaint, textPaint) }
+        if (dragged != null) {
+            drawElement(
+                canvas,
+                false,
+                showUUIDs,
+                mx - widthPerNode / 2,
+                my - widthPerNode / 2,
+                0f,
+                widthPerNode,
+                true,
+                dragged,
+                bgPaint,
+                textPaint
+            )
+        }
 
-        if(time < 1f) invalidate()
+        if (time < 1f) invalidate()
 
     }
 
-    fun sq(x: Float, y: Float) = x*x+y*y
-
-    fun sq(x: Float) = x*x
+    private fun sq(x: Float, y: Float) = x * x + y * y
 
     var activeElement: Element? = null
     var activeness = 0f
@@ -327,7 +388,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
     fun add(sa: Element, sb: Element, element: Element): Boolean {
         addRecipe(sa, sb, element, all)
         val unlocked = unlockeds[element.group]
-        return if(!unlocked.contains(element) && element.uuid > -1){
+        return if (!unlocked.contains(element) && element.uuid > -1) {
             unlocked.add(element)
             // unlocked.sortBy { it.uuid }
             // invalidateSearch()
@@ -336,11 +397,11 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
         } else false
     }
 
-    fun unlockElement(componentA: Element, componentB: Element, result: Element){
+    fun unlockElement(componentA: Element, componentB: Element, result: Element) {
 
         //  add to achieved :D
         val newOne = add(componentA, componentB, result)
-        synchronized(Unit){
+        synchronized(Unit) {
             activeElement = result
             activeness = 1f
         }
@@ -353,7 +414,6 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribut
         }
 
     }
-
 
 
 }

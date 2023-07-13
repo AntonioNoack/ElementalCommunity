@@ -1,5 +1,6 @@
 package me.antonio.noack.elementalcommunity
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -25,6 +26,7 @@ import kotlin.math.*
 
 // todo create a list of top-most-used/favourite elements
 
+@SuppressLint("ClickableViewAccessibility")
 open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeSet) {
 
     var allowLeftFavourites = false
@@ -70,7 +72,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                 (if (search.startsWith(lastSearch) && lastParts == parts.size) shownSymbols else unlockeds).withIndex()) {
                     val list = shownSymbols[group]
                     val filtered = unlocked.filter {
-                        val name = it.lcName
+                        val name = it.compacted
                         for (part in parts) {
                             if (name.contains(part)) {
                                 return@filter true

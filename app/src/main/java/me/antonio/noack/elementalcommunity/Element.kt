@@ -8,10 +8,11 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.invalidate
 import me.antonio.noack.elementalcommunity.AllManager.Companion.saveElement2
 import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockedElements
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
+import me.antonio.noack.elementalcommunity.utils.Compact
 import java.util.*
 import kotlin.math.min
 
-class Element private constructor(
+class Element constructor(
     var name: String,
     val uuid: Int,
     var group: Int,
@@ -26,7 +27,7 @@ class Element private constructor(
         if (y != 0) return y
         val x = hashLong.compareTo(other.hashLong)
         if (x != 0) return x
-        else return lcName.compareTo(other.lcName)
+        return compacted.compareTo(other.compacted)
     }
 
     var rank = -1
@@ -52,7 +53,7 @@ class Element private constructor(
     var index = 0
     var lastSwitch = -1
 
-    var lcName = name.lowercase(Locale.getDefault())
+    var compacted = Compact.compacted(name)
     var hashLong = calcHashLong()
     var startingNumber = calcStartingNumber()
 
@@ -61,7 +62,7 @@ class Element private constructor(
         var num = 0L
         var i = 0
 
-        val isNegative = if (lcName.startsWith("-")) {
+        val isNegative = if (compacted.startsWith("-")) {
             i++
             true
         } else {
@@ -70,11 +71,11 @@ class Element private constructor(
 
         val limit = if (isNegative) 20 else 19
 
-        number@ while (i < lcName.length) {
+        number@ while (i < compacted.length) {
             if (i == limit) return if (isNegative) Long.MIN_VALUE else Long.MAX_VALUE
-            when (lcName[i]) {
+            when (compacted[i]) {
                 in '0'..'9' -> {
-                    num = num * 10 + lcName[i].code - '0'.code
+                    num = num * 10 + compacted[i].code - '0'.code
                 }
                 else -> break@number
             }
@@ -85,7 +86,7 @@ class Element private constructor(
     }
 
     fun calcHashLong(): Long {
-        val lcName = lcName
+        val lcName = compacted
         var x = 0L
         for (i in 0 until min(9, lcName.length)) {
             x = x.shl(7) or lcName[i].code.toLong()
@@ -100,6 +101,7 @@ class Element private constructor(
         synchronized(Unit) {
             elementById[uuid] = this
             elementByName[name] = this
+            elementByName[compacted] = this
             elementsByGroup.getOrNull(group)?.add(this)
         }
     }
@@ -124,7 +126,7 @@ class Element private constructor(
                     var needsSave = false
                     if (element.name != name) {
                         element.name = name
-                        element.lcName = name.lowercase(Locale.getDefault())
+                        element.compacted = Compact.compacted(name)
                         element.startingNumber = element.calcStartingNumber()
                         element.hashLong = element.calcHashLong()
                         needsSave = true

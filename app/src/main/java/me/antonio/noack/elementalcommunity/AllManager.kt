@@ -4,37 +4,33 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.os.*
-import androidx.appcompat.app.AppCompatActivity
+import android.os.Build
+import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import java.util.*
-import kotlin.collections.HashMap
-import kotlin.concurrent.thread
 import android.view.View
 import android.view.View.*
-import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
-import me.antonio.noack.elementalcommunity.api.WebServices
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.children
+import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
+import me.antonio.noack.elementalcommunity.OfflineSuggestions.loadOfflineElements
+import me.antonio.noack.elementalcommunity.api.WebServices
 import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.elementalcommunity.graph.GraphView
 import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.help.SettingsInit
-import me.antonio.noack.elementalcommunity.io.ElementType
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
-import me.antonio.noack.elementalcommunity.io.SplitReader
 import me.antonio.noack.elementalcommunity.io.SplitReader2
-import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
-import java.lang.Exception
-import java.lang.StringBuilder
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.abs
+import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.utils.IntArrayList
 import me.antonio.noack.webdroid.files.FileSaver
-
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.concurrent.thread
+import kotlin.math.abs
 
 // Sounds:
 // magic: https://freesound.org/people/suntemple/sounds/241809/
@@ -48,6 +44,7 @@ class AllManager : AppCompatActivity() {
         var customUUID = 0L
         var showCraftingCounts = true
         var showElementUUID = true
+        var offlineMode = false
 
         val unlockedIds = ConcurrentHashSet<Int>(512)
 
@@ -123,13 +120,11 @@ class AllManager : AppCompatActivity() {
         lateinit var saveElement: (SharedPreferences.Editor, Element) -> Unit
         lateinit var saveFavourites: () -> Unit
 
-        // lateinit var save: () -> Unit
         lateinit var invalidate: () -> Unit
 
         lateinit var successSound: Sound
         lateinit var okSound: Sound
         lateinit var clickSound: Sound
-        // lateinit var askingSound: Sound
 
         var askFrequency = AskFrequencyOption.ALWAYS
 
@@ -171,15 +166,16 @@ class AllManager : AppCompatActivity() {
     var switchServerButton: View? = null
     var craftingCountsSwitch: SwitchCompat? = null
     var displayUUIDSwitch: SwitchCompat? = null
+    var offlineModeSwitch: SwitchCompat? = null
 
     var treeView: TreeView? = null
     var graphView: GraphView? = null
     var spaceSlider: SeekBar? = null
     var mandalaView: MandalaView? = null
 
-    val diamondViews = ArrayList<TextView>()
+    private val diamondViews = ArrayList<TextView>()
 
-    fun initViews() {
+    private fun initViews() {
         combiner = findViewById(R.id.combiner) ?: null
         unlocked = findViewById(R.id.unlocked) ?: null
         treeView = findViewById(R.id.tree) ?: null
@@ -215,23 +211,19 @@ class AllManager : AppCompatActivity() {
         craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch) ?: null
         displayUUIDSwitch = findViewById(R.id.displayUUIDSwitch) ?: null
         switchServerButton = findViewById(R.id.switchServer) ?: null
+        offlineModeSwitch = findViewById(R.id.offlineModeSwitch) ?: null
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
-            SaveLoadLogic.IMAGE_SELECTED -> {
-                println("got answer :) $data")
-            }
             SaveLoadLogic.WRITE_EXT_STORAGE_CODE -> {
                 FileSaver.continueSave(this, resultCode, data)
             }
-            else -> {
-                super.onActivityResult(requestCode, resultCode, data)
-            }
+            else -> super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
-    fun goFullScreen() {
+    private fun goFullScreen() {
         val flags =
             SYSTEM_UI_FLAG_IMMERSIVE or SYSTEM_UI_FLAG_FULLSCREEN or SYSTEM_UI_FLAG_HIDE_NAVIGATION
         unlocked?.systemUiVisibility = flags
@@ -319,7 +311,7 @@ class AllManager : AppCompatActivity() {
 
     }
 
-    fun addClickListeners(){
+    private fun addClickListeners() {
         startButton?.setOnClickListener { FlipperContent.GAME.bind(this) }
         treeViewButton?.setOnClickListener { FlipperContent.TREE.bind(this) }
         graphViewButton?.setOnClickListener { FlipperContent.GRAPH.bind(this) }
@@ -345,6 +337,9 @@ class AllManager : AppCompatActivity() {
         askFrequency = AskFrequencyOption[pref]
         showCraftingCounts = pref.getBoolean("showCraftingCounts", true)
         showElementUUID = pref.getBoolean("showElementUUID", true)
+        offlineMode = pref.getBoolean("offlineMode", false)
+
+        println("offline mode? $offlineMode")
 
         WebServices.serverInstance = pref.getInt("serverInstance", 0)
         WebServices.serverName = pref.getString("serverName", "Default")!!
@@ -404,12 +399,9 @@ class AllManager : AppCompatActivity() {
 
         registerBaseElements(pref)
 
-        val t0 = System.nanoTime()
-        // readUnlockedElements1() // 0.13s
-        // readUnlockedElements2() // 0.13s
-        readUnlockedElements3() // 0.058s
-        val t1 = System.nanoTime()
-        println("Used ${(t1 - t0) * 1e-9}s to query elements")
+        readUnlockedElements()
+
+        loadOfflineElements(this, pref)
 
         createUniqueIdentifier()
 
@@ -472,147 +464,24 @@ class AllManager : AppCompatActivity() {
         } else unlockedIds.addAll(listOf(1, 2, 3, 4))
     }
 
-    private fun readUnlockedElements1() {
-        val recipeMemory = HashMap<Element, List<Pair<Int, Int>>>()
-        val edit = pref.edit()
-        for ((key, value) in pref.all) {
-            val id = key.toIntOrNull()
-            if (id != null) {
-                val parts = value.toString().split(';')
-                if (parts.size > 1) {
-                    val name = parts[0]
-                    val group = parts[1].toIntOrNull() ?: continue
-                    val craftCount = parts.getOrNull(2)?.toIntOrNull() ?: 0
-                    val wasCrafted = parts.getOrNull(3)?.toIntOrNull() == 1
-                    val element = Element.get(name, id, group, craftCount, false)
-                    if (wasCrafted) {
-                        unlockedIds.put(id)
-                        unlockedElements[group].add(element)
-                    }
-                    val recipePart = parts.getOrNull(4)
-                    if (recipePart != null && recipePart.isNotEmpty()) {
-                        val unlockedRecipes = recipePart.split(',')
-                        val list = ArrayList<Pair<Int, Int>>()
-                        recipeMemory[element] = list
-                        unlockedRecipes.filter { it.isNotEmpty() }.forEach { ab ->
-                            val ab2 = ab.split('-')
-                            val a = ab2[0].toIntOrNull() ?: return@forEach
-                            val b = ab2[1].toIntOrNull() ?: return@forEach
-                            list.add(a to b)
-                        }
-                    }
-                }
-            }
-            if (key.endsWith(".name")) {
-                // an element
-                val id2 = key.split('.')[0].toIntOrNull() ?: continue
-                val name = value.toString()
-                val group = pref.getInt("$id2.group", -1)
-                if (group < 0) continue
-                val craftingCount = pref.getInt("$id2.crafted", -1)
-                val element = Element.get(name, id2, group, craftingCount, false)
-                saveElement(edit, element)
-                edit.remove("$id2.name")
-                edit.remove("$id2.group")
-                edit.remove("$id2.crafted")
-            }
-        }
-        edit.apply()
-    }
-
-    private fun readUnlockedElements2() {
-        val recipeMemory = HashMap<Element, IntArrayList>()
-        val nameFormat = listOf(
-            ElementType.STRING,
-            ElementType.INT,
-            ElementType.INT,
-            ElementType.INT,
-            ElementType.STRING
-        )
-        val recipeFormat = listOf(ElementType.INT, ElementType.INT)
-        val nameReader = SplitReader(nameFormat, 0.toChar(), ';', System.`in`)
-        val recipeReader = SplitReader(recipeFormat, ',', '-', System.`in`)
-        for ((key, value) in pref.all) {
-            val id = key.toIntOrNull()
-            if (id != null) {
-                val valueStr = value.toString()
-                if (valueStr.indexOf(';') != valueStr.lastIndexOf(';')) {
-                    nameReader.input = valueStr.byteInputStream()
-                    val size = nameReader.read()
-                    val name = nameReader.getString(0)
-                    val group = if (size > 1) nameReader.getInt(1) else continue
-                    val craftCount = if (size > 2) nameReader.getInt(2) else 0
-                    val wasCrafted = if (size > 3) nameReader.getInt(3) != 0 else false
-                    val element = Element.get(name, id, group, craftCount, false)
-                    if (wasCrafted) {
-                        unlockedIds.put(id)
-                        unlockedElements[group].add(element)
-                    }
-                    if (size > 4) {
-                        // still not ideal, but better than previously
-                        val unlockedRecipesPart = nameReader.getString(4)
-                        if (unlockedRecipesPart.length > 2) {
-                            val list = IntArrayList()
-                            recipeMemory[element] = list
-                            recipeReader.input = unlockedRecipesPart.byteInputStream()
-                            while (recipeReader.hasRemaining) {
-                                if (recipeReader.read() >= 2) {
-                                    val a = recipeReader.getInt(0)
-                                    val b = recipeReader.getInt(1)
-                                    list.addPair(a, b)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            /** legacy removal */
-            if (key.endsWith(".name")) {
-                // an element
-                // reading could be optimized, but it's legacy, so doesn't matter
-                val edit = pref.edit()
-                val id1 = key.split('.')[0].toIntOrNull() ?: continue
-                val name = value.toString()
-                val group = pref.getInt("$id1.group", -1)
-                if (group < 0) continue
-                val craftingCount = pref.getInt("$id1.crafted", -1)
-                val element = Element.get(name, id1, group, craftingCount, false)
-                saveElement(edit, element)
-                edit.remove("$id1.name")
-                edit.remove("$id1.group")
-                edit.remove("$id1.crafted")
-                edit.apply()
-            }
-        }
-        for ((element, abs) in recipeMemory) {
-            abs.forEachPair { a, b ->
-                val ea = elementById[a]
-                val eb = elementById[b]
-                if (ea != null && eb != null) {
-                    addRecipe(ea, eb, element, this, false)
-                }
-            }
-        }
-    }
-
-    private fun readUnlockedElements3() {
-        val reader = SplitReader2(System.`in`)
+    private fun readUnlockedElements() {
+        val reader = SplitReader2()
         val recipeMemory = HashMap<Element, IntArrayList>()
         for ((key, value) in pref.all) {
             val id = key.toIntOrNull()
             if (id != null && value != null) {
                 val valueStr = value.toString()
                 if (valueStr.indexOf(';') != valueStr.lastIndexOf(';')) {
-                    reader.input = valueStr.byteInputStream()
+                    reader.input = valueStr
                     val name = reader.readString(';', ';', "")
                     val group = reader.readInt(';', ';', -1)
-                    println("parsing $valueStr for id $id -> '$name', $group")
+                    // println("parsing $valueStr for id $id -> '$name', $group")
                     if (group < 0) continue
                     val craftCount = reader.readInt(';', ';', -1)
                     val wasCrafted = reader.readInt(';', ';', 0) > 0
                     val element = Element.get(name, id, group, craftCount, false)
                     if (wasCrafted) {
-                        println("added element $name/$group/$craftCount/$wasCrafted")
+                        // println("added element $name/$group/$craftCount/$wasCrafted")
                         unlockedIds.put(id)
                         val list = unlockedElements[group]
                         synchronized(list) {
@@ -669,11 +538,6 @@ class AllManager : AppCompatActivity() {
             pref.edit().putLong("customUUID", ci).apply()
         }
         customUUID = ci
-    }
-
-    fun acknowledgeDiamondPurchase(amount: Int) {
-        pref.edit().putInt(diamondBuyKey, pref.getInt(diamondBuyKey, 0) + amount).apply()
-        updateDiamondCount()
     }
 
     fun getDiamondCount(): Int {
@@ -750,20 +614,6 @@ class AllManager : AppCompatActivity() {
             }
         })
     }
-
-    /*override fun onGenericMotionEvent(event: MotionEvent): Boolean {
-        if (0 != event.source and InputDevice.SOURCE_CLASS_POINTER) {
-            when (event.action) {
-                MotionEvent.ACTION_SCROLL -> {
-                    unlocked.scroll += event.getAxisValue(MotionEvent.AXIS_VSCROLL)
-                    unlocked.checkScroll()
-                    unlocked.invalidate()
-                    return true
-                }
-            }
-        }
-        return super.onGenericMotionEvent(event)
-    }*/
 
     private fun updateGroupSizesAndNames() {
         thread {

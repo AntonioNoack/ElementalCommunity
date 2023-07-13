@@ -31,18 +31,10 @@ object HTTP {
         onError: (IOException) -> Unit
     ) {
         if (url.startsWith("https://")) return requestInternal(
-            url.substring(8),
-            type,
-            largeArgs,
-            onSuccess,
-            onError
+            url.substring(8), type, largeArgs, onSuccess, onError
         )
         if (url.startsWith("http://")) return requestInternal(
-            url.substring(7),
-            type,
-            largeArgs,
-            onSuccess,
-            onError
+            url.substring(7), type, largeArgs, onSuccess, onError
         )
         thread {
             try {
