@@ -16,6 +16,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.children
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.OfflineSuggestions.loadOfflineElements
+import me.antonio.noack.elementalcommunity.api.ServerService
 import me.antonio.noack.elementalcommunity.api.WebServices
 import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.elementalcommunity.graph.GraphView
@@ -626,7 +627,9 @@ class AllManager : AppCompatActivity() {
             WebServices.askNews(20, {
                 newsView?.news = it
                 newsView?.postInvalidate()
-            })
+            }, if (offlineMode) {
+                { /* can be ignored */ }
+            } else ServerService.defaultOnError)
         }
     }
 

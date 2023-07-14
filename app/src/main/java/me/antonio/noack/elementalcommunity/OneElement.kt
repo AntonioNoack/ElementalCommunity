@@ -12,24 +12,23 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribute
 
     var element: Element? = null
 
-    var theWidth = 350f
+    private var calcWidth = 350f
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val mode = MeasureSpec.getMode(widthMeasureSpec)
-        when(mode){
+        when(MeasureSpec.getMode(widthMeasureSpec)){
             MeasureSpec.EXACTLY -> {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-                theWidth = measuredWidth.toFloat()
+                calcWidth = measuredWidth.toFloat()
             }
             MeasureSpec.UNSPECIFIED -> {
 
             }
             MeasureSpec.AT_MOST -> {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-                theWidth = min(measuredWidth.toFloat(), theWidth)
+                calcWidth = min(measuredWidth.toFloat(), calcWidth)
             }
         }
-        setMeasuredDimension(theWidth.toInt(), theWidth.toInt())
+        setMeasuredDimension(calcWidth.toInt(), calcWidth.toInt())
     }
 
     private val bgPaint = Paint()

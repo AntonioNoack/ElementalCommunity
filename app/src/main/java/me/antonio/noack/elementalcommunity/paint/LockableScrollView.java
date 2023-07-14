@@ -5,6 +5,9 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.ScrollView;
 
+/**
+ * Just used for experiments
+ * */
 public class LockableScrollView extends ScrollView {
 
     public boolean scrollable = false;

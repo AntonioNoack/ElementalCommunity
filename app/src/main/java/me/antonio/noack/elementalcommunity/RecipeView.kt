@@ -58,52 +58,11 @@ class RecipeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribute
         canvas.drawText("+", widthPerNode*((relativeWidth-1f)/4 + 0.5f), widthPerNode/2-dy, textPaint)
         canvas.drawText("->", widthPerNode*((relativeWidth-1f)*3/4 + 0.5f), widthPerNode/2-dy, textPaint)
 
-        /*bgPaint.color = bgPaint.color and 0x50ffffff.toInt()
-        canvas.drawRect(0f, 0f, width, widthPerNode, bgPaint)
-        */
-        /*textPaint.color = 0xff000000.toInt()
-        textPaint.textSize = widthPerNode*.21f
-        val dy2 = (textPaint.ascent() + textPaint.descent())/2
-        canvas.drawText("${timeString(candidate?.dt ?: (pow(2.0, 1.0 + 20.0 * random.nextDouble())).toInt())} ago ${if((candidate?.w ?: 0) > 0) "liked" else "disliked"}",
-            widthPerNode*relativeWidth/2,
-            widthPerNode + 1.5f * dy2, textPaint)*/
-
         if(overlay.shr(24).and(255) != 0){
             bgPaint.color = overlay
             canvas.drawRect(0f, 0f, width, measuredHeight.toFloat(), bgPaint)
         }
 
-    }
-
-    fun darken(rgb: Int): Int {
-        val r = (rgb shr 16) and 255
-        val g = (rgb shr 8) and 255
-        val b = rgb and 255
-        return 0xff000000.toInt() or ((r / 2) shl 16) or ((g / 2) shl 8) or (b/2)
-    }
-
-
-    fun timeString(sec: Int): String {
-        return if(sec < 30){
-            sec.toString()+"s"
-        } else if(sec < 180){
-            ((sec+5)/10*10).toString()+"s"
-        } else {
-            val min = (sec+30) / 60
-            if(min < 30){
-                min.toString()+"min"
-            } else if(min < 180){
-                ((min+5)/10*10).toString()+"min"
-            } else {
-                val hour = (min+30) / 60
-                if(hour < 72){
-                    hour.toString()+"h"
-                } else {
-                    val days = (hour + 12) / 24
-                    days.toString()+"d"
-                }
-            }
-        }
     }
 
 }

@@ -120,18 +120,12 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
         entriesPerRow = (if (measuredWidth > measuredHeight) 10 * zoom else 5 * zoom).toInt()
     }
 
-    fun widthPerNode(measuredWidth: Int): Float {
-        val width = measuredWidth * 1f
+    private fun widthPerNode(width: Float = this.measuredWidth * 1f): Float {
         val avgMargin = getMargin(width / entriesPerRow)
         return (width - 2 * avgMargin) / (entriesPerRow + relativeRightBorder)
     }
 
-    fun widthPerNode(width: Float = this.measuredWidth * 1f): Float {
-        val avgMargin = getMargin(width / entriesPerRow)
-        return (width - 2 * avgMargin) / (entriesPerRow + relativeRightBorder)
-    }
-
-    fun widthPerNodeNMargin(width: Float = this.measuredWidth * 1f): Pair<Float, Float> {
+    private fun widthPerNodeNMargin(width: Float = this.measuredWidth * 1f): Pair<Float, Float> {
         val avgMargin = getMargin(width / entriesPerRow)
         return (width - 2 * avgMargin) / (entriesPerRow + relativeRightBorder) to avgMargin
     }

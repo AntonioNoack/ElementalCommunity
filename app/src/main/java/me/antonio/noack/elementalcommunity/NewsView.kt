@@ -17,7 +17,7 @@ import kotlin.math.sin
 
 class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
-    val noise = NoiseMap2D()
+    private val noise = NoiseMap2D()
     var news = ArrayList<News>(10)
 
     private val relativeWidth = 4f
@@ -108,14 +108,7 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
 
     }
 
-    fun darken(rgb: Int): Int {
-        val r = (rgb shr 16) and 255
-        val g = (rgb shr 8) and 255
-        val b = rgb and 255
-        return 0xff000000.toInt() or ((r / 2) shl 16) or ((g / 2) shl 8) or (b/2)
-    }
-
-    fun timeString(sec: Int): String {
+    private fun timeString(sec: Int): String {
         return if(sec < 30){
             sec.toString()+"s"
         } else if(sec < 180){

@@ -9,7 +9,6 @@ import me.antonio.noack.elementalcommunity.AllManager.Companion.saveElement2
 import me.antonio.noack.elementalcommunity.AllManager.Companion.unlockedElements
 import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import me.antonio.noack.elementalcommunity.utils.Compact
-import java.util.*
 import kotlin.math.min
 
 class Element constructor(

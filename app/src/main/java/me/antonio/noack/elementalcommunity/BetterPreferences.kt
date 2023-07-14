@@ -74,7 +74,7 @@ class BetterPreferences(private val pref: SharedPreferences): SharedPreferences 
         pref.unregisterOnSharedPreferenceChangeListener(listener)
     }
 
-    override fun getStringSet(key: String?, defValues: MutableSet<String>?) =
+    override fun getStringSet(key: String?, defValues: MutableSet<String>?): MutableSet<String>? =
         pref.getStringSet(key, defValues)
 
     override fun getAll(): MutableMap<String, *> = pref.all

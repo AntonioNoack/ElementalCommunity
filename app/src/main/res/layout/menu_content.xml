@@ -59,7 +59,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
+        <!--
+            Not ready, and I don't want a situation like TreeView,
+            where players miss it, and I want to get rid of it
+        -->
         <Button
+            android:visibility="gone"
             android:id="@+id/graphButton"
             android:text="Graph View"
             android:layout_marginTop="10dp"

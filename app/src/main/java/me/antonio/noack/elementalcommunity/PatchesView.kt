@@ -8,12 +8,12 @@ import kotlin.math.max
 
 class PatchesView(context: Context, attributeSet: AttributeSet?): ViewGroup(context, attributeSet){
 
-    fun dpToPx(dp: Int): Float {
+    private fun dpToPx(dp: Int): Float {
         val displayMetrics = context!!.resources.displayMetrics
         return (dp * displayMetrics.density) + 0.5f
     }
 
-    fun getMargin() = dpToPx(5).toInt()
+    private fun getMargin() = dpToPx(5).toInt()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -32,7 +32,7 @@ class PatchesView(context: Context, attributeSet: AttributeSet?): ViewGroup(cont
 
     }
 
-    fun calcLayout(width: Int, margin: Int): Int {
+    private fun calcLayout(width: Int, margin: Int): Int {
 
         var maxHeight = 0
         var x = -margin

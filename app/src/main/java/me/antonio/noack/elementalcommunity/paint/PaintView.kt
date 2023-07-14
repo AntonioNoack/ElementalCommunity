@@ -13,6 +13,9 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
+/**
+ * Just used for experiments
+ * */
 class PaintView(ctx: Context, attributeSet: AttributeSet) : View(ctx, attributeSet) {
 
     fun saveToBytes() {

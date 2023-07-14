@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/combinerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
     android:orientation="vertical">
 
     <me.antonio.noack.elementalcommunity.LoadingBarView
         android:layout_width="match_parent"
-        android:layout_height="5dp"></me.antonio.noack.elementalcommunity.LoadingBarView>
+        android:layout_height="5dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -46,10 +48,10 @@
             android:layout_width="0dp"
             android:layout_height="50sp"
             android:layout_weight="3"
-            android:maxLines="1"
-            android:inputType="text"
             android:hint="@string/what_you_are_searching"
             android:importantForAutofill="no"
+            android:inputType="text"
+            android:maxLines="1"
             android:visibility="gone" />
 
         <include layout="@layout/diamond_bar" />

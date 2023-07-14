@@ -354,7 +354,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
         val centerX = width / 2
         val centerY = height / 2
 
-        linePaint.color = 0x30000000.toInt()
+        linePaint.color = 0x30000000
         linePaint.strokeWidth = max(2f, min(width, height) * 0.005f)
 
         // val line0 = System.nanoTime()
@@ -383,11 +383,10 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
 
         }*/
 
-        // x = centerX + (element.treeX - scrollX) * widthPerNode
-        val minX = -centerX / widthPerNode + scrollX - 1.5f
-        val maxX = centerX / widthPerNode + scrollX + 0.5f
-        val minY = -centerY / widthPerNode + scrollY - 1.5f
-        val maxY = centerY / widthPerNode + scrollY + 0.5f
+        val minX = (-centerX / widthPerNode + scrollX) / elementOffsetX - 0.5f
+        val maxX = (centerX / widthPerNode + scrollX) / elementOffsetX + 0.5f
+        val minY = (-centerY / widthPerNode + scrollY) / elementOffsetY - 0.5f
+        val maxY = (centerY / widthPerNode + scrollY) / elementOffsetY + 0.5f
 
         val showCraftingCounts = AllManager.showCraftingCounts
         val showUUIDs = AllManager.showElementUUID
@@ -396,6 +395,9 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
             for (element in tree.elements) {
                 // done draw the element
                 if (element.tx in minX..maxX && element.ty in minY..maxY) {
+                    // x0 = centerX + (element.tx * elementOffsetX - scrollX) * widthPerNode
+                    // (x0 / widthPerNode - centerX + scrollX) / elementOffsetX = element.tx
+                    //
                     val x0 = centerX + (element.tx * elementOffsetX - scrollX) * widthPerNode
                     val y0 = centerY + (element.ty * elementOffsetY - scrollY) * widthPerNode
                     bgPaint.alpha = 255
@@ -404,31 +406,13 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
                     if (activeElement == element && activeness > 0f) {
                         val delta = activeness * widthPerNode * 0.5f
                         drawElement(
-                            canvas,
-                            showCraftingCounts,
-                            showUUIDs,
-                            x0,
-                            y0,
-                            delta,
-                            widthPerNode,
-                            true,
-                            element,
-                            bgPaint,
-                            textPaint
+                            canvas, showCraftingCounts, showUUIDs, x0, y0, delta,
+                            widthPerNode, true, element, bgPaint, textPaint
                         )
                     } else {
                         drawElement(
-                            canvas,
-                            showCraftingCounts,
-                            showUUIDs,
-                            x0,
-                            y0,
-                            0f,
-                            widthPerNode,
-                            true,
-                            element,
-                            bgPaint,
-                            textPaint
+                            canvas, showCraftingCounts, showUUIDs, x0, y0, 0f,
+                            widthPerNode, true, element, bgPaint, textPaint
                         )
                     }
                 }
@@ -562,13 +546,9 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
             canvas.drawLine(x0, y2, x1, y3, linePaint)
         }
         // dy
-        if (down && (y1 > 0 && y3 < centerY * 2 && x1 > 0 && x1 < centerX * 2)) canvas.drawLine(
-            x1,
-            y3,
-            x1,
-            y1,
-            linePaint
-        )
+        if (down && (y1 > 0 && y3 < centerY * 2 && x1 > 0 && x1 < centerX * 2)) {
+            canvas.drawLine(x1, y3, x1, y1, linePaint)
+        }
     }
 
     var activeElement: Element? = null

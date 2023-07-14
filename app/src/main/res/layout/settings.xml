@@ -1,187 +1,188 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-              android:background="@color/colorPrimaryDark"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+    android:id="@+id/settingsLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
+    android:orientation="vertical">
 
     <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <TextView
-                android:text="@string/settings_help"
-                android:layout_marginTop="5dp"
-                android:gravity="center"
-                android:textSize="20sp"
-                android:textColor="@color/colorPrimary"
-                android:padding="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="@string/settings_help"
+            android:textColor="@color/colorPrimary"
+            android:textSize="20sp" />
 
         <Button
-                android:id="@+id/switchServer"
-                android:textAllCaps="false"
-                android:fontFamily="sans-serif"
-                android:layout_marginTop="10dp"
-                android:text="@string/switch_server"
-                android:gravity="center"
-                android:textSize="30sp"
-                android:background="@color/colorGreen2"
-                android:textColor="@color/colorGreen"
-                android:padding="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            android:id="@+id/switchServer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorGreen2"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="@string/switch_server"
+            android:textAllCaps="false"
+            android:textColor="@color/colorGreen"
+            android:textSize="30sp" />
 
         <TextView
-                android:id="@+id/favTitle"
-                android:text="@string/favourites"
-                android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:textSize="20sp"
-                android:background="@color/colorPrimary"
-                android:textColor="@color/colorPrimaryText"
-                android:paddingTop="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-        <SeekBar
-                android:id="@+id/favSlider"
-                android:thumbTint="@color/colorPrimaryDark"
-                android:progressTint="@color/colorPrimaryDark"
-                android:background="@color/colorPrimary"
-                android:layout_width="match_parent"
-                android:layout_height="20dp"/>
-
-        <TextView
-                android:id="@+id/frequencyTitle"
-                android:text="@string/frequency_of_asking_title"
-                android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:textSize="20sp"
-                android:background="@color/colorPrimary"
-                android:textColor="@color/colorPrimaryText"
-                android:paddingTop="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-        <SeekBar
-                android:id="@+id/frequencySlider"
-                android:thumbTint="@color/colorPrimaryDark"
-                android:progressTint="@color/colorPrimaryDark"
-                android:background="@color/colorPrimary"
-                android:layout_width="match_parent"
-                android:layout_height="20dp"/>
-
-        <androidx.appcompat.widget.SwitchCompat
-                android:layout_marginTop="10dp"
-                android:background="@color/colorPrimary"
-                android:id="@+id/craftingCountsSwitch"
-                android:text="@string/show_unlock_counter"
-                android:textSize="20sp"
-                android:textColor="@color/colorPrimaryText"
-                android:padding="10dp"
-                android:checked="true"
-                android:theme="@style/SwitchColors"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-        <androidx.appcompat.widget.SwitchCompat
-                android:layout_marginTop="10dp"
-                android:background="@color/colorPrimary"
-                android:id="@+id/displayUUIDSwitch"
-                android:text="@string/show_element_uuids"
-                android:textSize="20sp"
-                android:textColor="@color/colorPrimaryText"
-                android:padding="10dp"
-                android:checked="true"
-                android:theme="@style/SwitchColors"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/favTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:background="@color/colorPrimary"
-            android:id="@+id/offlineModeSwitch"
-            android:text="@string/offline_mode"
-            android:textSize="20sp"
+            android:gravity="center"
+            android:paddingTop="10dp"
+            android:text="@string/favourites"
             android:textColor="@color/colorPrimaryText"
-            android:padding="10dp"
-            android:checked="false"
-            android:theme="@style/SwitchColors"
+            android:textSize="20sp" />
+
+        <SeekBar
+            android:id="@+id/favSlider"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary"
+            android:progressTint="@color/colorPrimaryDark"
+            android:thumbTint="@color/colorPrimaryDark" />
+
+        <TextView
+            android:id="@+id/frequencyTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:paddingTop="10dp"
+            android:text="@string/frequency_of_asking_title"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="20sp" />
+
+        <SeekBar
+            android:id="@+id/frequencySlider"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary"
+            android:progressTint="@color/colorPrimaryDark"
+            android:thumbTint="@color/colorPrimaryDark" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/craftingCountsSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:checked="true"
+            android:padding="10dp"
+            android:text="@string/show_unlock_counter"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="20sp"
+            android:theme="@style/SwitchColors" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/displayUUIDSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:checked="true"
+            android:padding="10dp"
+            android:text="@string/show_element_uuids"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="20sp"
+            android:theme="@style/SwitchColors" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/offlineModeSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:checked="false"
+            android:padding="10dp"
+            android:text="@string/offline_mode"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="20sp"
+            android:theme="@style/SwitchColors" />
 
         <Button
-                android:id="@+id/clearRecipeCache"
-                android:textAllCaps="false"
-                android:fontFamily="sans-serif"
-                android:layout_marginTop="10dp"
-                android:text="@string/clear_recipe_cache"
-                android:gravity="center"
-                android:textSize="30sp"
-                android:background="@color/colorPrimary"
-                android:textColor="@color/colorPrimaryText"
-                android:padding="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            android:id="@+id/clearRecipeCache"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="@string/clear_recipe_cache"
+            android:textAllCaps="false"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="30sp" />
 
         <Button
-                android:id="@+id/saveProgress"
-                android:textAllCaps="false"
-                android:fontFamily="sans-serif"
-                android:layout_marginTop="10dp"
-                android:text="@string/save_progress"
-                android:gravity="center"
-                android:textSize="30sp"
-                android:background="@color/colorPrimary"
-                android:textColor="@color/colorPrimaryText"
-                android:padding="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            android:id="@+id/saveProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="@string/save_progress"
+            android:textAllCaps="false"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="30sp" />
 
         <Button
-                android:id="@+id/loadProgress"
-                android:textAllCaps="false"
-                android:fontFamily="sans-serif"
-                android:layout_marginTop="10dp"
-                android:text="@string/load_progress"
-                android:gravity="center"
-                android:textSize="30sp"
-                android:background="@color/colorPrimary"
-                android:textColor="@color/colorPrimaryText"
-                android:padding="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            android:id="@+id/loadProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="@string/load_progress"
+            android:textAllCaps="false"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="30sp" />
 
         <Button
-                android:textAllCaps="false"
-                android:fontFamily="sans-serif"
-                android:id="@+id/resetEverythingButton"
-                android:layout_marginTop="10dp"
-                android:text="@string/reset_everything"
-                android:gravity="center"
-                android:textSize="30sp"
-                android:background="@color/colorPrimary"
-                android:textColor="@color/colorPrimaryText"
-                android:padding="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            android:id="@+id/resetEverythingButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="@string/reset_everything"
+            android:textAllCaps="false"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="30sp" />
 
         <Button
-                android:textAllCaps="false"
-                android:fontFamily="sans-serif"
-                android:id="@+id/back2"
-                android:text="@string/back"
-                android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:textSize="30sp"
-                android:background="@color/colorGreen2"
-                android:textColor="@color/colorGreen"
-                android:padding="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+            android:id="@+id/back2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorGreen2"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="@string/back"
+            android:textAllCaps="false"
+            android:textColor="@color/colorGreen"
+            android:textSize="30sp" />
 
     </LinearLayout>
 
