@@ -2,8 +2,11 @@ package me.antonio.noack.webdroid.files
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Typeface
+import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
@@ -22,21 +25,40 @@ object FileChooser {
 
     lateinit var folder: File
 
-    fun requestFile(all: AllManager, mimeType: String, onSuccess: (String) -> Unit){
-        select(all){
-            onSuccess(it.readText())
-        }
+    val READ_REQUEST_CODE = 771
+
+    fun requestFile(all: AllManager, mimeType: String, onSuccess: (String) -> Unit) {
+        select(all, mimeType, onSuccess)
     }
 
-    fun select(all: AllManager, onSelect: (file: File) -> Unit){
+    fun select(all: AllManager, mimeType: String, onSelect: (String) -> Unit) {
 
-        if(ContextCompat.checkSelfPermission(all, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            intent.type = mimeType
+            ActivityCompat.startActivityForResult(
+                all, intent, READ_REQUEST_CODE,
+                Bundle.EMPTY
+            )
+            return
+        }
+
+        if (ContextCompat.checkSelfPermission(
+                all,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             println("granted")
         } else {
             SaveLoadLogic.onWriteAllowed = {
-                select(all, onSelect)
+                select(all, mimeType, onSelect)
             }
-            ActivityCompat.requestPermissions(all, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), SaveLoadLogic.WRITE_EXT_STORAGE_CODE)
+            ActivityCompat.requestPermissions(
+                all,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                SaveLoadLogic.WRITE_EXT_STORAGE_CODE
+            )
             return
         }
 
@@ -56,25 +78,29 @@ object FileChooser {
         val path = dialog.findViewById<TextView>(R.id.path)!!
 
         button.setOnClickListener {
-            if(button.isEnabled){
-                onSelect(folder)
+            if (button.isEnabled) {
+                onSelect(folder.readText())
                 dialog.dismiss()
             }
         }
 
         navigateSelect(
-            all,
-            all.layoutInflater,
-            path,
-            list,
-            button,
+            all, all.layoutInflater,
+            path, list, button,
             res.getString(R.string.load_progress_from_name)
         )
 
     }
 
     @SuppressLint("SetTextI18n")
-    fun navigateSelect(all: AllManager, inflater: LayoutInflater, pathView: TextView, list: ViewGroup, button: TextView, buttonTemplate: String){
+    fun navigateSelect(
+        all: AllManager,
+        inflater: LayoutInflater,
+        pathView: TextView,
+        list: ViewGroup,
+        button: TextView,
+        buttonTemplate: String
+    ) {
 
         pathView.text = folder.absolutePath
         button.setText(R.string.please_select_a_file)
@@ -82,7 +108,7 @@ object FileChooser {
 
         list.removeAllViews()
 
-        if(folder.parentFile?.listFiles() != null){
+        if (folder.parentFile?.listFiles() != null) {
 
             val entry = inflater.inflate(R.layout.select_file, list, false)
             val folder = folder
@@ -106,9 +132,10 @@ object FileChooser {
 
         }
 
-        for(file in folder.listFiles()?.sortedBy { it.name.lowercase(Locale.getDefault()) } ?: emptyList()){
+        for (file in folder.listFiles()?.sortedBy { it.name.lowercase(Locale.getDefault()) }
+            ?: emptyList()) {
 
-            if(!file.name.startsWith(".")){
+            if (!file.name.startsWith(".")) {
 
                 val entry = inflater.inflate(R.layout.select_file, list, false)
 
@@ -116,7 +143,7 @@ object FileChooser {
 
                     folder = file
 
-                    if(file.isDirectory){
+                    if (file.isDirectory) {
 
                         navigateSelect(
                             all,
@@ -139,9 +166,10 @@ object FileChooser {
                 val titleView = entry.findViewById<TextView>(R.id.title)
                 titleView?.apply {
                     text = file.name
-                    if(!file.isDirectory){
+                    if (!file.isDirectory) {
                         setTypeface(null, Typeface.ITALIC)
-                        text = "$text " // because italic is broken, and doesn't consider the extra length
+                        text =
+                            "$text " // because italic is broken, and doesn't consider the extra length
                     }
                 }
 

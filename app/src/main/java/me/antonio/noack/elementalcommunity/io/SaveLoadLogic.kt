@@ -149,7 +149,7 @@ object SaveLoadLogic {
 
     }
 
-    private fun applyDownload(all: AllManager, data: String) {
+    fun applyDownload(all: AllManager, data: String) {
 
         all.runOnUiThread {
 
@@ -171,7 +171,7 @@ object SaveLoadLogic {
                 dialog.dismiss()
             }
 
-            dialog.findViewById<View>(R.id.cancel)?.setOnClickListener {
+            dialog.findViewById<View>(R.id.back)?.setOnClickListener {
                 dialog.dismiss()
             }
 

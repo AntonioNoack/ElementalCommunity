@@ -8,6 +8,7 @@ import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.AskFrequencyOption
 import me.antonio.noack.elementalcommunity.FlipperContent
+import me.antonio.noack.elementalcommunity.MusicScheduler
 import me.antonio.noack.elementalcommunity.OfflineSuggestions
 import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.api.ServerService.Companion.defaultOnError
@@ -151,6 +152,7 @@ object SettingsInit {
                         pref.edit()
                             .putFloat("backgroundMusicVolume", AllManager.backgroundMusicVolume)
                             .apply()
+                        MusicScheduler.tick()
                         for (sound in AllManager.backgroundMusic) {
                             sound.setVolume(AllManager.backgroundMusicVolume)
                         }

@@ -27,6 +27,7 @@ import me.antonio.noack.elementalcommunity.io.SplitReader2
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.utils.IntArrayList
+import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -227,6 +228,19 @@ class AllManager : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             SaveLoadLogic.WRITE_EXT_STORAGE_CODE -> {
+                FileSaver.continueSave(this, resultCode, data)
+            }
+            FileChooser.READ_REQUEST_CODE -> {
+                if (resultCode == RESULT_OK) {
+                    val uri = data?.data
+                    if (uri != null) {
+                        contentResolver.openInputStream(uri)?.use {
+                            SaveLoadLogic.applyDownload(this, String(it.readBytes()))
+                        }
+                    }
+                }
+            }
+            FileSaver.WRITE_REQUEST_CODE -> {
                 FileSaver.continueSave(this, resultCode, data)
             }
             else -> super.onActivityResult(requestCode, resultCode, data)
