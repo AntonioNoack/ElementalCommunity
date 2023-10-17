@@ -32,9 +32,8 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
     private val bgPaint = Paint()
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if(canvas == null) return
 
         GroupsEtc.tick()
 

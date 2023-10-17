@@ -16,10 +16,8 @@ class LoadingBarView(context: Context, attributeSet: AttributeSet?) : View(conte
 
     var lastTime = System.nanoTime()
 
-    override fun draw(canvas: Canvas?) {
-
+    override fun draw(canvas: Canvas) {
         super.draw(canvas)
-        canvas ?: return
 
         val width = width
         val height = height

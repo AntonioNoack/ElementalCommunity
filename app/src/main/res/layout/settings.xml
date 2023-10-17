@@ -75,6 +75,26 @@
             android:progressTint="@color/colorPrimaryDark"
             android:thumbTint="@color/colorPrimaryDark" />
 
+        <TextView
+            android:id="@+id/backgroundVolumeTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:paddingTop="10dp"
+            android:text="@string/background_music_volume"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="20sp" />
+
+        <SeekBar
+            android:id="@+id/backgroundVolumeSlider"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary"
+            android:progressTint="@color/colorPrimaryDark"
+            android:thumbTint="@color/colorPrimaryDark" />
+
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/craftingCountsSwitch"
             android:layout_width="match_parent"

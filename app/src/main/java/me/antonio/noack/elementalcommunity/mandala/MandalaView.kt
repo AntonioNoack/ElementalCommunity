@@ -142,9 +142,8 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
     init {
 
         val scrollListener = GestureDetector(object : GestureDetector.OnGestureListener {
-            override fun onShowPress(e: MotionEvent?) {}
-            override fun onDown(event: MotionEvent?): Boolean {
-                return if (event != null) {
+            override fun onShowPress(e: MotionEvent) {}
+            override fun onDown(event: MotionEvent): Boolean {
 
                     md = 0f
 
@@ -156,21 +155,19 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
                         AreaType.IGNORE -> null
                     }
 
-                    false
-
-                } else false
+                return     false
             }
 
             override fun onFling(
                 e1: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 velocityX: Float,
                 velocityY: Float
             ): Boolean = false
 
             override fun onScroll(
                 event: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 dx: Float,
                 dy: Float
             ): Boolean {
@@ -178,14 +175,14 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
                 return true
             }
 
-            override fun onLongPress(e: MotionEvent?) {}
-            override fun onSingleTapUp(event: MotionEvent?): Boolean = false
+            override fun onLongPress(e: MotionEvent) {}
+            override fun onSingleTapUp(event: MotionEvent): Boolean = false
         })
 
         val zoomListener =
             ScaleGestureDetector(context, object : ScaleGestureDetector.OnScaleGestureListener {
-                override fun onScale(detector: ScaleGestureDetector?): Boolean {
-                    return if (detector != null && detector.scaleFactor != 1f) {
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    return if (detector.scaleFactor != 1f) {
                         widthPerNode = clamp(
                             widthPerNode * detector.scaleFactor,
                             10f,
@@ -195,8 +192,8 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
                     } else false
                 }
 
-                override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean = true
-                override fun onScaleEnd(detector: ScaleGestureDetector?) {}
+                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean = true
+                override fun onScaleEnd(detector: ScaleGestureDetector) {}
             })
 
         setOnTouchListener { _, event ->
@@ -278,9 +275,8 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
         postInvalidate()
     }
 
-    override fun draw(canvas: Canvas?) {
+    override fun draw(canvas: Canvas) {
         super.draw(canvas)
-        canvas ?: return
 
         if (!hasTree) {
             if (AllManager.elementById.isEmpty()) {

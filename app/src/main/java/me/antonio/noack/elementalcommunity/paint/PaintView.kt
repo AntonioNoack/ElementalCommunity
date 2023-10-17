@@ -179,9 +179,8 @@ class PaintView(ctx: Context, attributeSet: AttributeSet) : View(ctx, attributeS
         }
     }
 
-    override fun draw(canvas: Canvas?) {
+    override fun draw(canvas: Canvas) {
         super.draw(canvas)
-        canvas ?: return
 
         // todo draw the color bar
         // todo draw the field itself

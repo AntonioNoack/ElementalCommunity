@@ -37,9 +37,8 @@ class RecipeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribute
         setMeasuredDimension(width, (width / relativeWidth).toInt())
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if(canvas == null) return
 
         GroupsEtc.tick()
 

@@ -37,34 +37,32 @@ class CandidateView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attri
         val gestureDetector = GestureDetector(context, object : GestureDetector.OnGestureListener {
             override fun onScroll(
                 e1: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 distanceX: Float,
                 distanceY: Float
             ): Boolean = false
 
-            override fun onDown(e: MotionEvent?): Boolean = true
+            override fun onDown(e: MotionEvent): Boolean = true
             override fun onFling(
                 e1: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 velocityX: Float,
                 velocityY: Float
             ): Boolean = false
 
-            override fun onLongPress(e: MotionEvent?) = Unit
-            override fun onShowPress(e: MotionEvent?) {}
-            override fun onSingleTapUp(e: MotionEvent?): Boolean {
-                return if (e != null) {
+            override fun onLongPress(e: MotionEvent) = Unit
+            override fun onShowPress(e: MotionEvent) {}
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
 
-                    calculateTouches(e)
+                calculateTouches(e)
 
-                    if (touchesLike) onLiked()
-                    if (touchesDislike) onDisliked()
+                if (touchesLike) onLiked()
+                if (touchesDislike) onDisliked()
 
-                    mx = 0f
-                    my = 0f
+                mx = 0f
+                my = 0f
 
-                    true
-                } else return false
+                return true
             }
         })
 
@@ -110,9 +108,8 @@ class CandidateView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attri
         textPaint.textAlign = Paint.Align.CENTER
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (canvas == null) return
 
         GroupsEtc.tick()
 

@@ -187,35 +187,31 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
     init {
 
         val scrollListener = GestureDetector(object : GestureDetector.OnGestureListener {
-            override fun onShowPress(e: MotionEvent?) {}
-            override fun onDown(event: MotionEvent?): Boolean {
-                return if (event != null) {
+            override fun onShowPress(e: MotionEvent) {}
+            override fun onDown(event: MotionEvent): Boolean {
+                val (valid, internalX, internalY) = validXY(event)
 
-                    val (valid, internalX, internalY) = validXY(event)
+                dragged = when (valid) {
+                    AreaType.ELEMENTS -> getElementAt(internalX, internalY)
+                    AreaType.FAVOURITES -> AllManager.favourites[internalX]
+                    AreaType.IGNORE -> null
+                }
 
-                    dragged = when (valid) {
-                        AreaType.ELEMENTS -> getElementAt(internalX, internalY)
-                        AreaType.FAVOURITES -> AllManager.favourites[internalX]
-                        AreaType.IGNORE -> null
-                    }
+                setOnBorder(event)
 
-                    setOnBorder(event)
-
-                    false
-
-                } else false
+                return false
             }
 
             override fun onFling(
                 e1: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 velocityX: Float,
                 velocityY: Float
             ): Boolean = false
 
             override fun onScroll(
                 event: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 dx: Float,
                 dy: Float
             ): Boolean {
@@ -243,21 +239,21 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
 
             }
 
-            override fun onLongPress(e: MotionEvent?) {}
-            override fun onSingleTapUp(event: MotionEvent?): Boolean = false
+            override fun onLongPress(e: MotionEvent) {}
+            override fun onSingleTapUp(event: MotionEvent): Boolean = false
         })
 
         val zoomListener =
             ScaleGestureDetector(context, object : ScaleGestureDetector.OnScaleGestureListener {
-                override fun onScale(detector: ScaleGestureDetector?): Boolean {
-                    return if (detector != null && detector.scaleFactor != 1f) {
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    return if (detector.scaleFactor != 1f) {
                         widthPerNode = clamp(widthPerNode * detector.scaleFactor, 10f, 1000f)
                         true
                     } else false
                 }
 
-                override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean = true
-                override fun onScaleEnd(detector: ScaleGestureDetector?) {}
+                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean = true
+                override fun onScaleEnd(detector: ScaleGestureDetector) {}
             })
 
         setOnTouchListener { _, event ->
@@ -287,6 +283,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
                                 invalidate()
                                 null
                             }
+
                             AreaType.IGNORE -> null
                         }
                         if (second != null) {
@@ -330,9 +327,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
 
     var lastTime = System.nanoTime()
 
-    override fun draw(canvas: Canvas?) {
+    override fun draw(canvas: Canvas) {
         super.draw(canvas)
-        canvas ?: return
 
         if (!hasTree) {
             buildTree()
@@ -472,11 +468,13 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
                     scrollX = 0f
                     scrollY = 0f
                 }
+
                 sqrt(sq(scrollX - scrollDestX, scrollY - scrollDestY)) < 0.05f -> {
                     scrollX = scrollDestX
                     scrollY = scrollDestY
                     this.scrollDest = null
                 }
+
                 else -> {
                     invalidate()
                 }

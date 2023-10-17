@@ -38,6 +38,8 @@ import kotlin.math.abs
 // ok: https://freesound.org/people/grunz/sounds/109663/
 // click: https://freesound.org/people/vitriolix/sounds/706/
 
+// todo does offline mode work with synchronizing/loading-saving your progress via a file / the server?
+
 class AllManager : AppCompatActivity() {
 
     companion object {
@@ -126,8 +128,10 @@ class AllManager : AppCompatActivity() {
         lateinit var successSound: Sound
         lateinit var okSound: Sound
         lateinit var clickSound: Sound
+        lateinit var backgroundMusic: List<Sound>
 
         var askFrequency = AskFrequencyOption.ALWAYS
+        var backgroundMusicVolume = 1f
 
         const val diamondBuyKey = "diamondCountBought"
         const val diamondWatchKey = "diamondCountWatched"
@@ -168,6 +172,8 @@ class AllManager : AppCompatActivity() {
     var craftingCountsSwitch: SwitchCompat? = null
     var displayUUIDSwitch: SwitchCompat? = null
     var offlineModeSwitch: SwitchCompat? = null
+    var volumeSlider: SeekBar? = null
+    var volumeTitle: TextView? = null
 
     var treeView: TreeView? = null
     var graphView: GraphView? = null
@@ -209,12 +215,15 @@ class AllManager : AppCompatActivity() {
         newsView = findViewById(R.id.newsView) ?: null
         freqSlider = findViewById(R.id.frequencySlider) ?: null
         freqTitle = findViewById(R.id.frequencyTitle) ?: null
+        volumeSlider = findViewById(R.id.backgroundVolumeSlider) ?: null
+        volumeTitle = findViewById(R.id.backgroundVolumeTitle) ?: null
         craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch) ?: null
         displayUUIDSwitch = findViewById(R.id.displayUUIDSwitch) ?: null
         switchServerButton = findViewById(R.id.switchServer) ?: null
         offlineModeSwitch = findViewById(R.id.offlineModeSwitch) ?: null
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             SaveLoadLogic.WRITE_EXT_STORAGE_CODE -> {
@@ -225,8 +234,11 @@ class AllManager : AppCompatActivity() {
     }
 
     private fun goFullScreen() {
-        val flags =
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             SYSTEM_UI_FLAG_IMMERSIVE or SYSTEM_UI_FLAG_FULLSCREEN or SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        } else {
+            SYSTEM_UI_FLAG_FULLSCREEN or SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        }
         unlocked?.systemUiVisibility = flags
         combiner?.systemUiVisibility = flags
     }
@@ -258,9 +270,15 @@ class AllManager : AppCompatActivity() {
         successSound = Sound(R.raw.magic, this)
         okSound = Sound(R.raw.ok, this)
         clickSound = Sound(R.raw.click, this)
+        backgroundMusic = listOf(
+            Sound(R.raw.music_aquatic_omniverse, this),
+            Sound(R.raw.music_clouds_make2, this),
+            Sound(R.raw.music_infinite_elements, this)
+        )
         // askingSound = So
 
         staticRunOnUIThread = { callback ->
+            MusicScheduler.tick()
             runOnUiThread {
                 try {
                     callback()
@@ -271,6 +289,7 @@ class AllManager : AppCompatActivity() {
         }
 
         staticToast1 = { msg, isLong ->
+            MusicScheduler.tick()
             runOnUiThread {
                 Toast.makeText(
                     this,
@@ -280,6 +299,7 @@ class AllManager : AppCompatActivity() {
             }
         }
         staticToast2 = { msg, isLong ->
+            MusicScheduler.tick()
             runOnUiThread {
                 Toast.makeText(
                     this,
@@ -289,6 +309,7 @@ class AllManager : AppCompatActivity() {
             }
         }
         invalidate = {
+            MusicScheduler.tick()
 
             combiner?.invalidateSearch()
             unlocked?.invalidateSearch()
@@ -309,6 +330,8 @@ class AllManager : AppCompatActivity() {
 
         addClickListeners()
         loadEverythingFromPreferences()
+
+        MusicScheduler.tick()
 
     }
 
@@ -336,6 +359,7 @@ class AllManager : AppCompatActivity() {
     fun loadEverythingFromPreferences() {
 
         askFrequency = AskFrequencyOption[pref]
+        backgroundMusicVolume = pref.getFloat("backgroundMusicVolume", 1f)
         showCraftingCounts = pref.getBoolean("showCraftingCounts", true)
         showElementUUID = pref.getBoolean("showElementUUID", true)
         offlineMode = pref.getBoolean("offlineMode", false)
@@ -348,6 +372,7 @@ class AllManager : AppCompatActivity() {
         SettingsInit.init(this)
 
         saveElement = { edit, element ->
+            MusicScheduler.tick()
             val id = element.uuid
             val value = StringBuilder()
             value.append(element.name)
@@ -376,6 +401,7 @@ class AllManager : AppCompatActivity() {
         }
 
         saveElement2 = { element ->
+            MusicScheduler.tick()
             synchronized(Unit) {
                 val edit = pref.edit()
                 saveElement(edit, element)
@@ -384,6 +410,7 @@ class AllManager : AppCompatActivity() {
         }
 
         saveFavourites = {
+            MusicScheduler.tick()
             val edit = pref.edit()
             edit.putInt("favourites.length", FAVOURITE_COUNT)
             for ((i, favourite) in favourites.withIndex()) {
@@ -633,6 +660,7 @@ class AllManager : AppCompatActivity() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         val flipper = flipper
         if (flipper != null && flipper.displayedChild > 0) {
@@ -647,8 +675,14 @@ class AllManager : AppCompatActivity() {
         super.onDestroy()
     }
 
+    override fun onPause() {
+        super.onPause()
+        MusicScheduler.pause()
+    }
+
     override fun onResume() {
         super.onResume()
+        MusicScheduler.unpause()
         goFullScreen()
     }
 

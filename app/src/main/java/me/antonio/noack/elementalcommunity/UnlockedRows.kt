@@ -205,35 +205,31 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
     init {
 
         val scrollListener = GestureDetector(ctx, object : GestureDetector.OnGestureListener {
-            override fun onShowPress(e: MotionEvent?) {}
-            override fun onDown(event: MotionEvent?): Boolean {
-                return if (event != null) {
+            override fun onShowPress(e: MotionEvent) {}
+            override fun onDown(event: MotionEvent): Boolean {
+                val (valid, internalX, internalY) = validXY(event, true)
 
-                    val (valid, internalX, internalY) = validXY(event, true)
+                dragged = when (valid) {
+                    AreaType.ELEMENTS -> getElementAt(internalX, internalY)
+                    AreaType.FAVOURITES -> AllManager.favourites[internalX]
+                    AreaType.IGNORE -> null
+                }
 
-                    dragged = when (valid) {
-                        AreaType.ELEMENTS -> getElementAt(internalX, internalY)
-                        AreaType.FAVOURITES -> AllManager.favourites[internalX]
-                        AreaType.IGNORE -> null
-                    }
+                setOnBorder(event)
 
-                    setOnBorder(event)
-
-                    false
-
-                } else false
+                return false
             }
 
             override fun onFling(
                 e1: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 velocityX: Float,
                 velocityY: Float
             ): Boolean = false
 
             override fun onScroll(
                 event: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 distanceX: Float,
                 dy: Float
             ): Boolean {
@@ -256,14 +252,14 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
 
             }
 
-            override fun onLongPress(e: MotionEvent?) {}
-            override fun onSingleTapUp(event: MotionEvent?): Boolean = false
+            override fun onLongPress(e: MotionEvent) {}
+            override fun onSingleTapUp(event: MotionEvent): Boolean = false
         })
 
         val zoomListener =
             ScaleGestureDetector(context, object : ScaleGestureDetector.OnScaleGestureListener {
-                override fun onScale(detector: ScaleGestureDetector?): Boolean {
-                    return if (detector != null && detector.scaleFactor != 1f) {
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    return if (detector.scaleFactor != 1f) {
                         zoom /= detector.scaleFactor
                         val newEntriesPerRow = max(
                             3,
@@ -278,8 +274,8 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                     } else false
                 }
 
-                override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean = true
-                override fun onScaleEnd(detector: ScaleGestureDetector?) {}
+                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean = true
+                override fun onScaleEnd(detector: ScaleGestureDetector) {}
             })
 
         setOnTouchListener { _, event ->
@@ -315,6 +311,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                                     null
                                 } else getElementAt(internalX, internalY)
                             }
+
                             AreaType.IGNORE -> null
                         }
                         if (second != null) {
@@ -449,9 +446,8 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
         textPaint.textAlign = Paint.Align.CENTER
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (canvas == null) return
 
         if (searchIsInvalid) {
             validateSearch()
@@ -612,9 +608,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                     scrollDest = null
                     scroll = 0f
                 }
+
                 abs(scroll - scrollDestY) < widthPerNode * 0.05f -> {
                     scrollDest = null
                 }
+
                 else -> {
                     invalidate()
                 }

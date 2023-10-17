@@ -23,11 +23,9 @@ object FileChooser {
     lateinit var folder: File
 
     fun requestFile(all: AllManager, mimeType: String, onSuccess: (String) -> Unit){
-
         select(all){
             onSuccess(it.readText())
         }
-
     }
 
     fun select(all: AllManager, onSelect: (file: File) -> Unit){

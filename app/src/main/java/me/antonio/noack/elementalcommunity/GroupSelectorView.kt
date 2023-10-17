@@ -53,10 +53,8 @@ class GroupSelectorView(ctx: Context, attributeSet: AttributeSet?): View(ctx, at
         bgPaint.textAlign = Paint.Align.CENTER
     }
 
-    override fun onDraw(canvas: Canvas?) {
-
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if(canvas == null) return
 
         GroupsEtc.tick()
 

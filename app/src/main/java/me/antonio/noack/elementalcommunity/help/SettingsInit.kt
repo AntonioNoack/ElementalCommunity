@@ -5,13 +5,22 @@ import android.view.View
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import me.antonio.noack.elementalcommunity.*
+import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.AskFrequencyOption
+import me.antonio.noack.elementalcommunity.FlipperContent
+import me.antonio.noack.elementalcommunity.OfflineSuggestions
+import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.api.ServerService.Companion.defaultOnError
 import me.antonio.noack.elementalcommunity.api.WebServices
 import me.antonio.noack.elementalcommunity.utils.Maths
 import java.math.BigInteger
 
 object SettingsInit {
+
+    fun volumeTitle(): String {
+        return if (AllManager.backgroundMusicVolume == 0f) "Off"
+        else "${(AllManager.backgroundMusicVolume * 100).toInt()}%"
+    }
 
     fun init(all: AllManager) {
         all.apply {
@@ -28,6 +37,9 @@ object SettingsInit {
                 freqSlider?.progress = AllManager.askFrequency.ordinal
                 freqTitle?.text = resources.getString(R.string.frequency_of_asking_title)
                     .replace("#frequency", AllManager.askFrequency.displayName)
+                volumeSlider?.progress = (AllManager.backgroundMusicVolume * 100).toInt()
+                volumeTitle?.text = resources.getString(R.string.background_music_volume)
+                    .replace("#percent", volumeTitle())
                 FlipperContent.SETTINGS.bind(all)
             }
 
@@ -110,6 +122,39 @@ object SettingsInit {
                             .replace("#frequency", AllManager.askFrequency.displayName)
                         AllManager.askFrequency.store(pref)
                         freqSlider.invalidate()
+                    }
+
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                })
+            }
+
+            val volumeSlider = volumeSlider
+            if (volumeSlider != null) {
+                volumeSlider.setOnLongClickListener {
+                    AllManager.toast(
+                        "Sometimes, background music might play. This slider sets how loud it should be.",
+                        true
+                    )
+                    true
+                }
+                volumeSlider.max = 100
+                volumeSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(
+                        seekBar: SeekBar?,
+                        progress: Int,
+                        fromUser: Boolean
+                    ) {
+                        AllManager.backgroundMusicVolume = progress / 100f
+                        volumeTitle?.text = resources.getString(R.string.background_music_volume)
+                            .replace("#percent", volumeTitle())
+                        pref.edit()
+                            .putFloat("backgroundMusicVolume", AllManager.backgroundMusicVolume)
+                            .apply()
+                        for (sound in AllManager.backgroundMusic) {
+                            sound.setVolume(AllManager.backgroundMusicVolume)
+                        }
+                        volumeSlider.invalidate()
                     }
 
                     override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -295,10 +340,12 @@ object SettingsInit {
                                 // not found
                                 AllManager.toast("Server was not found!", true)
                             }
+
                             0 -> {
                                 // password is wrong
                                 AllManager.toast("Password is wrong!", true)
                             }
+
                             else -> {
                                 AllManager.toast("Server is not available!", true)
                             }

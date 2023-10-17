@@ -186,35 +186,31 @@ abstract class NodeGraphView(
     init {
 
         val scrollListener = GestureDetector(context, object : GestureDetector.OnGestureListener {
-            override fun onShowPress(e: MotionEvent?) {}
-            override fun onDown(event: MotionEvent?): Boolean {
-                return if (event != null) {
+            override fun onShowPress(e: MotionEvent) {}
+            override fun onDown(event: MotionEvent): Boolean {
+                val (valid, internalX, _) = validXY(event)
 
-                    val (valid, internalX, _) = validXY(event)
+                dragged = when (valid) {
+                    AreaType.ELEMENTS -> getElementAt(event.x, event.y)
+                    AreaType.FAVOURITES -> AllManager.favourites[internalX]
+                    AreaType.IGNORE -> null
+                }
 
-                    dragged = when (valid) {
-                        AreaType.ELEMENTS -> getElementAt(event.x, event.y)
-                        AreaType.FAVOURITES -> AllManager.favourites[internalX]
-                        AreaType.IGNORE -> null
-                    }
+                setOnBorder(event)
 
-                    setOnBorder(event)
-
-                    false
-
-                } else false
+                return false
             }
 
             override fun onFling(
                 e1: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 velocityX: Float,
                 velocityY: Float
             ): Boolean = false
 
             override fun onScroll(
                 event: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 dx: Float,
                 dy: Float
             ): Boolean {
@@ -242,21 +238,21 @@ abstract class NodeGraphView(
 
             }
 
-            override fun onLongPress(e: MotionEvent?) {}
-            override fun onSingleTapUp(event: MotionEvent?): Boolean = false
+            override fun onLongPress(e: MotionEvent) {}
+            override fun onSingleTapUp(event: MotionEvent): Boolean = false
         })
 
         val zoomListener =
             ScaleGestureDetector(context, object : ScaleGestureDetector.OnScaleGestureListener {
-                override fun onScale(detector: ScaleGestureDetector?): Boolean {
-                    return if (detector != null && detector.scaleFactor != 1f) {
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    return if (detector.scaleFactor != 1f) {
                         elementSize = clamp(elementSize * detector.scaleFactor, 10f, 1000f)
                         true
                     } else false
                 }
 
-                override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean = true
-                override fun onScaleEnd(detector: ScaleGestureDetector?) {}
+                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean = true
+                override fun onScaleEnd(detector: ScaleGestureDetector) {}
             })
 
         setOnTouchListener { _, event ->
@@ -286,6 +282,7 @@ abstract class NodeGraphView(
                         }
                     }
                 }
+
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
 
                     val dragged = dragged
@@ -302,6 +299,7 @@ abstract class NodeGraphView(
                                 invalidate()
                                 null
                             }
+
                             AreaType.IGNORE -> null
                         }
                         if (second != null) {
@@ -355,9 +353,8 @@ abstract class NodeGraphView(
         }
     }
 
-    override fun draw(canvas: Canvas?) {
+    override fun draw(canvas: Canvas) {
         super.draw(canvas)
-        canvas ?: return
 
         if (iterativeTree) {
             buildTreeIteratively()
@@ -477,11 +474,13 @@ abstract class NodeGraphView(
                     scrollX = 0f
                     scrollY = 0f
                 }
+
                 sqrt(sq(scrollX - scrollDestX, scrollY - scrollDestY)) < 0.05f -> {
                     scrollX = scrollDestX
                     scrollY = scrollDestY
                     this.scrollDest = null
                 }
+
                 else -> invalidate()
             }
 

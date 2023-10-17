@@ -66,4 +66,5 @@
     <string name="search">Search</string>
     <string name="what_you_are_searching">What you are searching</string>
     <string name="offline_mode">Offline Mode</string>
+    <string name="background_music_volume">Background Music Volume: #percent</string>
 </resources>
