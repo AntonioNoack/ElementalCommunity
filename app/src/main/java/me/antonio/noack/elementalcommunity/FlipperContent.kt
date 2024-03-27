@@ -11,6 +11,7 @@ enum class FlipperContent(val id: Int) {
     TREE(R.id.treeLayout),
     GRAPH(R.id.graphLayout),
     COMBINER(R.id.combinerLayout),
+    ITEMPEDIA(R.id.itempedia),
     SETTINGS(R.id.settingsLayout),
 
     ;

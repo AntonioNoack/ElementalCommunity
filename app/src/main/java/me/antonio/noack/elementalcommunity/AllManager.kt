@@ -1,5 +1,6 @@
 package me.antonio.noack.elementalcommunity
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -14,7 +15,10 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.children
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
+import me.antonio.noack.elementalcommunity.ItempediaAdapter.Companion.ITEMS_PER_PAGE
 import me.antonio.noack.elementalcommunity.OfflineSuggestions.loadOfflineElements
 import me.antonio.noack.elementalcommunity.api.ServerService
 import me.antonio.noack.elementalcommunity.api.WebServices
@@ -148,6 +152,7 @@ class AllManager : AppCompatActivity() {
     var treeViewButton: View? = null
     var graphViewButton: View? = null
     var mandalaViewButton: View? = null
+    var itempediaViewButton: View? = null
     var suggestButton: View? = null
     var settingButton: View? = null
     var back1: View? = null
@@ -158,6 +163,7 @@ class AllManager : AppCompatActivity() {
     var backArrow3: View? = null
     var backArrow4: View? = null
     var backArrow5: View? = null
+    var backArrow6: View? = null
     var favTitle: TextView? = null
     var favSlider: SeekBar? = null
     var search1: EditText? = null
@@ -194,6 +200,7 @@ class AllManager : AppCompatActivity() {
         treeViewButton = findViewById(R.id.treeButton) ?: null
         graphViewButton = findViewById(R.id.graphButton) ?: null
         mandalaViewButton = findViewById(R.id.mandalaButton) ?: null
+        itempediaViewButton = findViewById(R.id.itempediaButton) ?: null
         suggestButton = findViewById(R.id.suggest) ?: null
         settingButton = findViewById(R.id.settingsButton) ?: null
         back1 = findViewById(R.id.back1) ?: null
@@ -206,6 +213,7 @@ class AllManager : AppCompatActivity() {
         backArrow3 = findViewById(R.id.backArrow3) ?: null
         backArrow4 = findViewById(R.id.backArrow4) ?: null
         backArrow5 = findViewById(R.id.backArrow5) ?: null
+        backArrow6 = findViewById(R.id.backArrow6) ?: null
         search1 = findViewById(R.id.search1) ?: null
         search2 = findViewById(R.id.search2) ?: null
         searchButton1 = findViewById(R.id.searchButton1) ?: null
@@ -349,6 +357,71 @@ class AllManager : AppCompatActivity() {
 
     }
 
+    val lazyItempediaInit = lazy {
+        initializeItempedia()
+    }
+
+    private fun initializeItempedia() {
+        val rec = findViewById<RecyclerView>(R.id.itempediaElements)!!
+        rec.setHasFixedSize(true)
+        val numColumns = 10 // good number?
+        rec.layoutManager = GridLayoutManager(this, numColumns)
+        itempediaAdapter = ItempediaAdapter(this)
+        rec.adapter = itempediaAdapter
+        loadNumPages()
+        createItempediaPages(10)
+    }
+
+    lateinit var itempediaAdapter: ItempediaAdapter
+
+    @SuppressLint("SetTextI18n")
+    private fun createItempediaPages(numElements: Int) {
+        val pageList = findViewById<LinearLayout>(R.id.pageFlipper)
+        pageList.removeAllViews()
+        val numPages = (numElements + ITEMS_PER_PAGE - 1) / ITEMS_PER_PAGE
+        for (i in 0 until numPages) {
+            layoutInflater.inflate(R.layout.itempedia_page, pageList)
+            val view = pageList.children.last() as TextView
+            view.text = "${i + 1}"
+            view.setOnClickListener {
+                loadItempediaPage(i)
+            }
+        }
+    }
+
+    private fun loadNumPages() {
+        thread {
+            WebServices.askPage(-1, { _, maxUUID ->
+                runOnUiThread {
+                    createItempediaPages(maxUUID)
+                }
+            })
+            loadItempediaPage(0)
+        }
+    }
+
+    private var lastItempediaPage = -1
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun loadItempediaPage(pageIndex: Int) {
+        if (pageIndex == lastItempediaPage) return
+        lastItempediaPage = pageIndex
+        thread {
+            WebServices.askPage(pageIndex, { list, _ ->
+                if (lastItempediaPage == pageIndex) {
+                    list.sortBy { it.uuid }
+                    runOnUiThread { // present results
+                        itempediaAdapter.startIndex = pageIndex * ITEMS_PER_PAGE + 1
+                        itempediaAdapter.currentItems = list
+                        itempediaAdapter.notifyDataSetChanged()
+                        val rec = findViewById<RecyclerView>(R.id.itempediaElements)!!
+                        rec.smoothScrollToPosition(0)
+                    }
+                }
+            })
+        }
+    }
+
     private fun addClickListeners() {
         startButton?.setOnClickListener { FlipperContent.GAME.bind(this) }
         treeViewButton?.setOnClickListener { FlipperContent.TREE.bind(this) }
@@ -360,11 +433,16 @@ class AllManager : AppCompatActivity() {
         mandalaViewButton?.setOnClickListener {
             FlipperContent.MANDALA.bind(this)
         }
+        itempediaViewButton?.setOnClickListener {
+            lazyItempediaInit.value
+            FlipperContent.ITEMPEDIA.bind(this)
+        }
         back1?.setOnClickListener { FlipperContent.MENU.bind(this) }
         back2?.setOnClickListener { FlipperContent.MENU.bind(this) }
         backArrow3?.setOnClickListener { FlipperContent.MENU.bind(this) }
         backArrow4?.setOnClickListener { FlipperContent.MENU.bind(this) }
         backArrow5?.setOnClickListener { FlipperContent.MENU.bind(this) }
+        backArrow6?.setOnClickListener { FlipperContent.MENU.bind(this) }
         addSearchListeners(back3, backArrow1, searchButton1, search1, unlocked)
         addSearchListeners(back1, backArrow2, searchButton2, search2, combiner)
         randomButton?.setOnClickListener { RandomSuggestion.make(this) }

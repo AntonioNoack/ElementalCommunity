@@ -55,6 +55,7 @@ class Element constructor(
     var compacted = Compact.compacted(name)
     var hashLong = calcHashLong()
     var startingNumber = calcStartingNumber()
+    var createdDate = 0
 
     fun calcStartingNumber(): Long {
 

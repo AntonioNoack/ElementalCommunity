@@ -67,4 +67,16 @@
     <string name="what_you_are_searching">What you are searching</string>
     <string name="offline_mode">Offline Mode</string>
     <string name="background_music_volume">Background Music Volume: #percent</string>
+    <string name="itempedia">Itempedia</string>
+    <string name="close">Close</string>
+    <string name="crafting_count_disclaimer">*Crafting count has been an estimation for many years now, as it isn\'t tracked 1:1, but more like 1:30.</string>
+    <string name="creation_date_title">Creation Date:</string>
+    <string name="crafting_count_title">Times Crafted* (Result):</string>
+    <string name="crafting_count_as_component">Times Crafted* (Component):</string>
+    <string name="number_of_recipes">#Recipes (Result):</string>
+    <string name="times_used_as_component">#Recipes (Component):</string>
+    <string name="suggestions_for_recipes">#Suggestions (Result):</string>
+    <string name="times_suggested_as_component">#Suggestions (Component):</string>
+    <string name="itempedia_stats">Element Statistics</string>
+    <string name="unique_identifier">Unique Identifier:</string>
 </resources>

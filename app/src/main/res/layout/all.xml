@@ -9,17 +9,12 @@
         tools:context=".AllManager">
 
     <include layout="@layout/menu"/>
-
     <include layout="@layout/game"/>
-
     <include layout="@layout/mandala"/>
-
     <include layout="@layout/tree"/>
-
     <include layout="@layout/graph"/>
-
     <include layout="@layout/combiner"/>
-
+    <include layout="@layout/itempedia"/>
     <include layout="@layout/settings"/>
 
 </ViewFlipper>

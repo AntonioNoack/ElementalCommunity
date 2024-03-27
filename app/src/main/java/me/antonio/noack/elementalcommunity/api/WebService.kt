@@ -2,6 +2,7 @@ package me.antonio.noack.elementalcommunity.api
 
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.Element
+import me.antonio.noack.elementalcommunity.ElementStats
 import me.antonio.noack.elementalcommunity.GroupsEtc
 import me.antonio.noack.elementalcommunity.OfflineSuggestions
 import me.antonio.noack.elementalcommunity.api.web.Candidate
@@ -237,6 +238,73 @@ open class WebService(private val serverURL: String) : ServerService {
 
     }
 
+    private fun readElement(line: String): Element? {
+        val data = line.split(':')
+        if (data.size < 5) return null
+        val uuid = data[0].toIntOrNull() ?: return null
+        val group = data[1].toIntOrNull() ?: return null
+        val name = data[2]
+        val craftingCount = data[3].toIntOrNull() ?: return null
+        val createdDate = data[4].toIntOrNull() ?: return null // unix timestamp
+        val element = Element(name, uuid, group, craftingCount)
+        element.createdDate = createdDate
+        return element
+    }
+
+    override fun askPage(
+        pageIndex: Int,
+        onSuccess: (ArrayList<Element>, Int) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        HTTP.request(
+            "${getURL()}?l4=$pageIndex" +
+                    "&$webVersionName=$webVersion", { text ->
+                if (pageIndex < 0) {
+                    val maxUUID = text.toIntOrNull() ?: 0
+                    onSuccess(ArrayList(0), maxUUID)
+                } else {
+                    val lines = text.split('\n')
+                    val list = ArrayList<Element>(lines.size)
+                    for (line in lines) {
+                        val element = readElement(line) ?: continue
+                        list.add(element)
+                    }
+                    onSuccess(list, -1)
+                }
+            }, onError
+        )
+    }
+
+    override fun askStats(
+        elementId: Int,
+        onSuccess: (ElementStats) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        HTTP.request(
+            "${getURL()}?qes=$elementId" +
+                    "&$webVersionName=$webVersion", { text ->
+                val lines = text.split('\n')
+                if (lines.size >= 5) {
+                    val element = readElement(lines[0])
+                    if (element != null) {
+                        val numRecipes = lines[1].toIntOrNull() ?: -1
+                        val ingredients = lines[2].split(':')
+                        val numIngredients = ingredients[0].toIntOrNull() ?: -1
+                        val numCraftedAsIngredient = ingredients.getOrNull(1)?.toIntOrNull() ?: -1
+                        val numSuggestedRecipe = lines[3].toIntOrNull() ?: -1
+                        val numSuggestedIngredient = lines[4].toIntOrNull() ?: -1
+                        onSuccess(
+                            ElementStats(
+                                element,
+                                numRecipes, numIngredients, numCraftedAsIngredient,
+                                numSuggestedRecipe, numSuggestedIngredient
+                            )
+                        )
+                    } else onError(Exception("Illegal Answer"))
+                } else onError(Exception("Illegal Answer"))
+            }, onError
+        )
+    }
 
     override fun getCandidates(
         a: Element,

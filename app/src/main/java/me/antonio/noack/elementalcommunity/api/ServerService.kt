@@ -2,6 +2,7 @@ package me.antonio.noack.elementalcommunity.api
 
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.Element
+import me.antonio.noack.elementalcommunity.ElementStats
 import me.antonio.noack.elementalcommunity.api.web.Candidate
 import me.antonio.noack.elementalcommunity.api.web.News
 
@@ -24,6 +25,18 @@ interface ServerService {
     fun askNews(
         count: Int,
         onSuccess: (ArrayList<News>) -> Unit, onError: (Exception) -> Unit = defaultOnError
+    )
+
+    fun askPage(
+        pageIndex: Int,
+        onSuccess: (ArrayList<Element>, Int) -> Unit,
+        onError: (Exception) -> Unit = defaultOnError
+    )
+
+    fun askStats(
+        elementId: Int,
+        onSuccess: (ElementStats) -> Unit,
+        onError: (Exception) -> Unit = defaultOnError
     )
 
     fun getCandidates(

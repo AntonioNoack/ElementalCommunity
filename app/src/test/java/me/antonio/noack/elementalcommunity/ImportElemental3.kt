@@ -37,7 +37,7 @@ class ImportElemental3 {
     class Elemental3Element(node: JsonNode, val uuid: Int){
         val name: String
         init {
-            var pre = (node["name"] as String)
+            var pre = (node.get("name") as String)
                 .replace(" +", "ßßß")
                 .replace("+", " ")
                 .replace('\u00b4', '\'')
@@ -102,11 +102,11 @@ class ImportElemental3 {
                 .replace("O_o", "O o")
                 .trim()
             if(name.isEmpty()){
-                println("#empty from ${node["name"]}")
+                println("#empty from ${node.get("name")}")
             }
         }
 
-        val color = node["color"] as Int
+        val color = node.get("color") as Int
         val parents = node.getList("parents")
         val children = HashSet<Elemental3Element>()
         lateinit var parentA: Elemental3Element
