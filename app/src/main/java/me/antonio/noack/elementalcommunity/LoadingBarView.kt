@@ -14,7 +14,7 @@ class LoadingBarView(context: Context, attributeSet: AttributeSet?) : View(conte
 
     val paint = Paint()
 
-    var lastTime = System.nanoTime()
+    private var lastTime = System.nanoTime()
 
     override fun draw(canvas: Canvas) {
         super.draw(canvas)

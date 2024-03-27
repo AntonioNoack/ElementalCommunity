@@ -14,11 +14,11 @@ import android.view.View.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.math.MathUtils.clamp
 import androidx.core.view.children
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
-import me.antonio.noack.elementalcommunity.ItempediaAdapter.Companion.ITEMS_PER_PAGE
 import me.antonio.noack.elementalcommunity.OfflineSuggestions.loadOfflineElements
 import me.antonio.noack.elementalcommunity.api.ServerService
 import me.antonio.noack.elementalcommunity.api.WebServices
@@ -28,6 +28,9 @@ import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.help.SettingsInit
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.io.SplitReader2
+import me.antonio.noack.elementalcommunity.itempedia.ItempediaAdapter
+import me.antonio.noack.elementalcommunity.itempedia.ItempediaAdapter.Companion.ITEMS_PER_PAGE
+import me.antonio.noack.elementalcommunity.itempedia.ItempediaSwipeDetector
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.utils.IntArrayList
@@ -357,7 +360,7 @@ class AllManager : AppCompatActivity() {
 
     }
 
-    val lazyItempediaInit = lazy {
+    private val lazyItempediaInit = lazy {
         initializeItempedia()
     }
 
@@ -368,24 +371,40 @@ class AllManager : AppCompatActivity() {
         rec.layoutManager = GridLayoutManager(this, numColumns)
         itempediaAdapter = ItempediaAdapter(this)
         rec.adapter = itempediaAdapter
+        rec.addOnItemTouchListener(ItempediaSwipeDetector(this))
         loadNumPages()
         createItempediaPages(10)
     }
 
-    lateinit var itempediaAdapter: ItempediaAdapter
+    private lateinit var itempediaAdapter: ItempediaAdapter
+    var deltaItempediaPage: (Int) -> Unit = {}
 
     @SuppressLint("SetTextI18n")
     private fun createItempediaPages(numElements: Int) {
         val pageList = findViewById<LinearLayout>(R.id.pageFlipper)
         pageList.removeAllViews()
         val numPages = (numElements + ITEMS_PER_PAGE - 1) / ITEMS_PER_PAGE
+        val views = ArrayList<TextView>()
+        var previouslyClicked = 0
+        fun openPage(i: Int) {
+            val view = views[i]
+            views[previouslyClicked].alpha = 0.7f
+            view.alpha = 1f
+            previouslyClicked = i
+            loadItempediaPage(i)
+        }
         for (i in 0 until numPages) {
             layoutInflater.inflate(R.layout.itempedia_page, pageList)
             val view = pageList.children.last() as TextView
             view.text = "${i + 1}"
+            view.alpha = if (i == 0) 1f else 0.7f
             view.setOnClickListener {
-                loadItempediaPage(i)
+                openPage(i)
             }
+            views.add(view)
+        }
+        deltaItempediaPage = { delta ->
+            openPage(clamp(previouslyClicked + delta, 0, numPages - 1))
         }
     }
 
@@ -406,8 +425,13 @@ class AllManager : AppCompatActivity() {
     private fun loadItempediaPage(pageIndex: Int) {
         if (pageIndex == lastItempediaPage) return
         lastItempediaPage = pageIndex
+        BasicOperations.todo.incrementAndGet()
         thread {
+            val lazyDone = lazy {
+                BasicOperations.done.incrementAndGet()
+            }
             WebServices.askPage(pageIndex, { list, _ ->
+                lazyDone.value
                 if (lastItempediaPage == pageIndex) {
                     list.sortBy { it.uuid }
                     runOnUiThread { // present results
@@ -418,6 +442,9 @@ class AllManager : AppCompatActivity() {
                         rec.smoothScrollToPosition(0)
                     }
                 }
+            }, {
+                lazyDone.value
+                ServerService.defaultOnError(it)
             })
         }
     }

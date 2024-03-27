@@ -1,10 +1,15 @@
-package me.antonio.noack.elementalcommunity
+package me.antonio.noack.elementalcommunity.itempedia
 
+import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
+import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.Element
+import me.antonio.noack.elementalcommunity.OneElement
+import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.api.WebServices
 import java.text.DateFormat
 import java.util.Date
@@ -23,6 +28,7 @@ class ItempediaAdapter(private val manager: AllManager) :
         return ViewHolder(view)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         // present results
         val uuid = position + startIndex
@@ -30,7 +36,7 @@ class ItempediaAdapter(private val manager: AllManager) :
         if (index >= 0) {
             val element = currentItems[index]
             holder.view.element = element
-            holder.view.alpha = if (uuid in AllManager.unlockedIds.keys) 255 else 80
+            holder.view.alpha = if (uuid in AllManager.unlockedIds.keys) 255 else HIDDEN_ALPHA
             holder.view.invalidate()
             holder.view.setOnClickListener {
                 // open menu, where we show more data about the element
@@ -54,15 +60,16 @@ class ItempediaAdapter(private val manager: AllManager) :
                     })
                 }
                 dialog.findViewById<OneElement>(R.id.elementView)?.element = element
-                dialog.findViewById<TextView>(R.id.uuid)?.text = uuid.toString()
+                dialog.findViewById<TextView>(R.id.uuid)?.text = "#$uuid"
                 dialog.findViewById<TextView>(R.id.craftingCount)?.text =
                     element.craftingCount.toString()
                 dialog.findViewById<TextView>(R.id.creationDate)?.text =
-                    DateFormat.getDateInstance().format(Date(element.createdDate * 1000L))
+                    DateFormat.getDateInstance().format(Date(element.createdDate * 86_400_000L)) // days to millis
                 dialog.findViewById<View>(R.id.back)?.setOnClickListener { dialog.dismiss() }
             }
         } else {
-            holder.view.alpha = 80
+            holder.view.alpha = HIDDEN_ALPHA
+            holder.view.element = null
             holder.view.setOnClickListener { }
         }
     }
@@ -72,6 +79,7 @@ class ItempediaAdapter(private val manager: AllManager) :
     }
 
     companion object {
-        const val ITEMS_PER_PAGE = 500 // -> 200 pages
+        const val HIDDEN_ALPHA = 120
+        const val ITEMS_PER_PAGE = 250 // -> 200 pages
     }
 }
