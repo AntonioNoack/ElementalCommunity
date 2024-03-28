@@ -7,9 +7,7 @@ class IntArrayList(capacity: Int = 16) {
 
     fun add(i: Int) {
         if (size >= data.size) {
-            val data = IntArray(data.size * 2)
-            System.arraycopy(this.data, 0, data, 0, size)
-            this.data = data
+            data = data.copyOf(data.size * 2)
         }
         data[size++] = i
     }

@@ -5,7 +5,7 @@ import android.util.AttributeSet
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.Element
 
-class GraphView(ctx: Context, attrs: AttributeSet) :
+class GraphView(ctx: Context, attrs: AttributeSet?) :
     NodeGraphView(ctx, attrs, alwaysValid = true, iterativeTree = true) {
 
     private val grid = Grid(1, 1)

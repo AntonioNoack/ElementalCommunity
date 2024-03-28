@@ -457,8 +457,7 @@ open class WebService(private val serverURL: String) : ServerService {
 
             val data = SplitReader(
                 listOf(ElementType.INT, ElementType.INT, ElementType.STRING, ElementType.INT),
-                '\n', ':',
-                it.byteInputStream()
+                '\n', ':', it
             )
 
             val groupSizes = IntArray(GroupsEtc.GroupSizes.size)

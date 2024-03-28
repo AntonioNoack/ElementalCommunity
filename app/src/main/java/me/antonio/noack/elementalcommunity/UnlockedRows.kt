@@ -358,10 +358,9 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
     }
 
     fun checkScroll() {
-        var sum = 0
-        synchronized(Unit) {
-            shownSymbols.forEach { unlocked ->
-                sum += (unlocked.size + entriesPerRow - 1) / entriesPerRow
+        val sum = synchronized(Unit) {
+            shownSymbols.sumOf { unlocked ->
+               (unlocked.size + entriesPerRow - 1) / entriesPerRow
             }
         }
         val (widthPerNode, avgMargin) = widthPerNodeNMargin()

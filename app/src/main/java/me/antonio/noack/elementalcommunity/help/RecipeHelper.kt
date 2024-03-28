@@ -63,7 +63,7 @@ object RecipeHelper {
         val data = SplitReader(
             listOf(
                 ElementType.INT, ElementType.INT, ElementType.INT
-            ), ';', ':', raw.byteInputStream()
+            ), ';', ':', raw
         )
         val returnValue = ArrayList<Recipe>()
         while (data.hasRemaining) {

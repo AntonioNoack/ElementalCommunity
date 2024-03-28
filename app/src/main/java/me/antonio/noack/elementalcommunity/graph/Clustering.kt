@@ -3,7 +3,6 @@ package me.antonio.noack.elementalcommunity.graph
 import androidx.core.math.MathUtils.clamp
 import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.utils.Maths.mix
-import me.antonio.noack.elementalcommunity.utils.Maths.random
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -333,7 +332,7 @@ object Clustering {
 
         // reorder elements randomly
         for (i in 0 until elementCount) {
-            var j = (random() * (elementCount - 1)).toInt()
+            var j = (Random.nextDouble() * (elementCount - 1)).toInt()
             if (j >= i) j++
             val ei = elements[i]
             val ej = elements[j]
@@ -374,8 +373,8 @@ object Clustering {
     }
 
     private fun resetElement(element: Element, scale: Float) {
-        element.px = (Math.random().toFloat() - 0.5f) * scale
-        element.py = (Math.random().toFloat() - 0.5f) * scale
+        element.px = (Random.nextDouble().toFloat() - 0.5f) * scale
+        element.py = (Random.nextDouble().toFloat() - 0.5f) * scale
     }
 
     private fun addForce(e1: Element, e2: Element, fx: Float, fy: Float) {

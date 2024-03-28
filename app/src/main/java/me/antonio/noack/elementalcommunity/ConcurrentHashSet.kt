@@ -2,10 +2,7 @@ package me.antonio.noack.elementalcommunity
 
 import java.util.concurrent.ConcurrentHashMap
 
-class ConcurrentHashSet<V> : ConcurrentHashMap<V, Unit> {
-
-    constructor() : super()
-    constructor(capacity: Int) : super(capacity)
+class ConcurrentHashSet<V>(capacity: Int) : ConcurrentHashMap<V, Unit>(capacity) {
 
     fun put(element: V) {
         this[element] = Unit

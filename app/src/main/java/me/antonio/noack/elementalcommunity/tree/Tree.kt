@@ -52,9 +52,7 @@ class Tree {
             todo.remove(element)
         }
 
-        var hasChanges = true
-        loop@ while (hasChanges) {
-            hasChanges = false
+        loop@ while (true) {
             for (recipe in allRecipes) {
                 val (a, b, result) = recipe
                 val firstRank = a.rank
@@ -67,7 +65,6 @@ class Tree {
                         result.rank = max(firstRank, secondRank) + 1
                     }
                     allRecipes.remove(recipe)
-                    hasChanges = true
                     continue@loop
                 }
             }

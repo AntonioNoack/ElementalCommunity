@@ -2,12 +2,7 @@ package me.antonio.noack.elementalcommunity
 
 import org.junit.Test
 import java.io.File
-import java.lang.RuntimeException
-import java.lang.StringBuilder
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
+import java.util.Locale
 
 class CreateWebApp {
 
@@ -16,49 +11,40 @@ class CreateWebApp {
     // val webAppPath = File("/home/antonio/IdeaProjects/ElementalCommunityWeb/")
 
     // Windows system
-    val androidAppPath = File("E:\\Projects\\Android\\ElementalCommunity")
-    val webAppPath = File("E:\\Projects\\Java\\ElementalCommunityWeb")
+    val androidAppPath = File("C:\\Users\\Antonio\\Documents\\IdeaProjects\\ElementalCommunity2")
+    val webAppPath = File("C:\\Users\\Antonio\\Documents\\IdeaProjects\\ElementalCommunityWeb")
 
     @Test
-    fun main(){
+    fun main() {
 
-        val self = File(androidAppPath, "app/src/main/")
+        val self = File(androidAppPath, "app/src/main")
         val selfCode = File(self, "java")
-        val target = File(webAppPath, "src/")
-        val targetCode = target
+        val target = File(webAppPath, "src/main/kotlin")
 
-        copy(selfCode, targetCode)
-
-        val targetR = File(target, "R.kt")
-        val targetMain = File(target, "me.antonio.noack/elementalcommunity")
-        val targetRunner = File(target, "me.antonio.noack/webdroid")
+        // copyCodeFiles(selfCode, target)
 
         val res = File(self, "res")
         val values = File(res, "values")
-        val java = File(self, "java")
-
-        val icon = File(self, "ic_launcher-web.png")
-
         val layout = File(res, "layout")
 
-        val r = targetR.writer()
+        val r = File(target, "R.kt").writer()
 
         var tabs = 0
 
-        fun send(){
+        fun send() {
             r.write("\n")
         }
 
-        fun writeTabs(){
-            for(i in 0 until tabs){
+        fun writeTabs() {
+            for (i in 0 until tabs) {
                 r.write("\t")
             }
         }
 
-        fun send(string: String, dir: Int = 0){
+        fun send(string: String, dir: Int = 0) {
             writeTabs()
             r.write(string)
-            when(dir){
+            when (dir) {
                 1 -> {
                     tabs++
                 }
@@ -69,12 +55,12 @@ class CreateWebApp {
             r.write("\n")
         }
 
-        fun open(name: String){
+        fun open(name: String) {
             send("object $name {", +1)
             send()
         }
 
-        fun close(){
+        fun close() {
             send()
             tabs--
             send("}")
@@ -87,13 +73,15 @@ class CreateWebApp {
         fun beautifyValue(value: String): String {
             return when {
                 value.startsWith("@color/") -> {
-                    colorString(colors.first { it.first == value.substring(7) }.second)
+                    "color.${value.substring(7)}"
+                    // colorString(colors.first { it.first == value.substring(7) }.second)
                 }
                 value.startsWith("@string/") -> {
-                    "\"${strings.first { it.first == value.substring(8) }.second}\""
+                    "string.${value.substring(8)}"
+                    // "\"${strings.first { it.first == value.substring(8) }.second}\""
                 }
                 value.startsWith("@drawable/") -> {
-                    "R.drawable.${value.substring(10)}"
+                    "drawable.${value.substring(10)}"
                 }
                 value.startsWith("#") -> {
                     colorString(parseColor(value))
@@ -102,19 +90,20 @@ class CreateWebApp {
                     "\"${value.substring(5)}\""
                 }
                 value.startsWith("@style") -> {
-                    "R.style.${value.substring(7)}"
+                    "style.${value.substring(7)}"
                 }
                 else -> "\"$value\""
             }
         }
 
-        for(file in values.listFiles()!!){
+        for (file in values.listFiles()!!) {
             val fileName = file.name
-            if(fileName.endsWith(".xml") && !fileName.startsWith('.')){
-                val resources = (XMLReader().parse(file.inputStream()) as XMLNode).children ?: continue
-                for(resource in resources){
+            if (fileName.endsWith(".xml") && !fileName.startsWith('.')) {
+                val resources =
+                    (XMLReader().parse(file.inputStream()) as XMLNode).children ?: continue
+                for (resource in resources) {
                     resource as XMLNode
-                    when(resource.type){
+                    when (resource.type) {
                         "color" -> {
                             val name = resource["name"]!!
                             colors.add(name to parseColor(resource.getContentString()))
@@ -128,7 +117,7 @@ class CreateWebApp {
                             val style = Style()
                             style["parent"] = resource["parent"]!!
                             styles.add(name to style)
-                            for(child in resource.children) {
+                            for (child in resource.children) {
                                 child as XMLNode
                                 assert(child.type == "item")
                                 style[child["name"]!!] = child.getContentString().trim()
@@ -139,11 +128,11 @@ class CreateWebApp {
             }
         }
 
-        for(imported in ("kotlin.browser.document," +
+        for (imported in ("kotlinx.browser.document," +
                 "org.w3c.files.File," +
                 "android.view.*," +
                 "me.antonio.noack.elementalcommunity.AllManager," +
-                "android.widget.*").split(',').sorted()){
+                "android.widget.*").split(',').sorted()) {
             send("import $imported")
         }
 
@@ -152,98 +141,125 @@ class CreateWebApp {
         send("val all = AllManager()")
         send()
         open("color")
-        for((name, color) in colors){
+        for ((name, color) in colors) {
             send("const val $name = ${colorString(color)}")
         }
         close()
         send()
         open("string")
-        for((name, string) in strings){
-            send("const val $name = \"${string}\"")
+        for ((name, string) in strings) {
+            send(
+                "const val $name = \"${escape(string)}\""
+            )
         }
         close()
         send()
         open("drawable")
-        for(file in File(res, "drawable").listFiles() ?: emptyArray()){
-            if(!file.isDirectory && !file.name.startsWith(".")){
-                if(file.name.endsWith(".xml")){
-                    val srcText = file.readText()
-                    if(srcText.contains("<vector")){
-                        send("const val ${file.nameWithoutExtension} = \"${escape(makeSVG(srcText.substring(srcText.indexOf("<vector"))))}\"")
+        for (file in File(res, "drawable").listFiles() ?: emptyArray()) {
+            if (!file.isDirectory && !file.name.startsWith(".")) {
+                when (file.extension.lowercase()) {
+                    "xml" -> {
+                        val srcText = file.readText()
+                        if (srcText.contains("<vector")) {
+                            send(
+                                "const val ${file.nameWithoutExtension} = \"${
+                                    escape(makeSVG(srcText.substring(srcText.indexOf("<vector"))))
+                                }\""
+                            )
+                        }
                     }
-                } else if(file.name.endsWith(".png") || file.name.endsWith(".jpg") || file.name.endsWith(".gif")){
-                    send("const val ${file.nameWithoutExtension} = \"drawable/${file.name}\"")
-                } else {
-                    println("got unexpected drawable ${file.name}")
+                    "png", "jpg", "gif" -> {
+                        send("const val ${file.nameWithoutExtension} = \"drawable/${file.name}\"")
+                    }
+                    else -> {
+                        println("got unexpected drawable ${file.name}")
+                    }
                 }
             }
         }
         close()
         send()
-        val nodes = XMLNode("LinearLayout")
-        val byFile = HashMap<String, XMLNode>()
-        val ids = HashSet<String>()
-        for(file in layout.listFiles() ?: emptyArray()){
-            if(!file.isDirectory && file.name.endsWith(".xml")){
-                val node = XMLReader().parse(file.inputStream()) as XMLNode
-                node.attributes["layoutName"] = file.nameWithoutExtension
-                node.attributes.remove("xmlns:android")
-                nodes.add(node)
-                byFile["@layout/${file.nameWithoutExtension}"] = node
-            }
-        }
 
-        fun printLayout(node: XMLNode){
-            if(node.type == "include"){
-                printLayout(byFile[node["layout"]!!]!!)
+        val ids = HashSet<String>()
+        fun printLayout(node: XMLNode) {
+            if (node.type == "include") {
+                send("R.layout." + node["layout"]!!.substring("@layout/".length))
             } else {
 
                 // the id
-                if(node["android:id"] != null){
+                if (node["android:id"] != null) {
                     ids.add(node["android:id"]!!)
                 }
 
                 // attributes
+                tabs++
                 send("${node.type}(all, null)")
                 tabs++
-                for((key, value) in node.attributes){
-                    send(".withAttribute(\"${key.replace("android:", "")}\", ${beautifyValue(value)})")
+                for ((key, value) in node.attributes) {
+                    send(
+                        ".attr(\"${
+                            key.replace(
+                                "android:",
+                                ""
+                            )
+                        }\", ${beautifyValue(value)})"
+                    )
                 }
                 tabs--
 
                 // children
                 tabs++
-                for(child in node.children){
-                    send(".addChild(")
-                    printLayout(child as XMLNode)
-                    send(")")
+                for (child in node.children) {
+                    child as XMLNode
+                    if (child.type == "include") {
+                        send(".addChild(" + child["layout"]!!.substring("@layout/".length) + ")")
+                    } else {
+                        send(".addChild(")
+                        printLayout(child)
+                        send(")")
+                    }
                 }
-                tabs--
-
+                tabs -= 2
             }
         }
-        send("val allLayouts = ")
-        printLayout(nodes)
+
+        open("layout")
+        val layoutNames = HashSet<String>()
+        for (file in layout.listFiles() ?: emptyArray()) {
+            if (!file.isDirectory && file.extension == "xml") {
+                val layoutName = file.nameWithoutExtension
+                layoutNames.add(layoutName)
+                send("val $layoutName: View by lazy {")
+                val node = XMLReader().parse(file.inputStream()) as XMLNode
+                node.attributes.remove("xmlns:android")
+                node.attributes.remove("xmlns:tools")
+                node.attributes.remove("tools:context")
+                node.attributes["layoutId"] = layoutName
+                printLayout(node)
+                send("}")
+                send()
+            }
+        }
+        send("val allLayouts: List<View> by lazy { listOf(")
+        for (subs in layoutNames.sorted().chunked(6)) {
+            send("\t${subs.joinToString()},")
+        }
+        send(") }")
+        close()
+
         send()
 
         open("id")
-        for(rawId in ids.sortedBy { it.lowercase(Locale.getDefault()) }){
+        for (rawId in ids.sortedBy { it.lowercase(Locale.getDefault()) }) {
             val id = rawId.substring("@+id/".length)
             send("const val $id = \"$id\"")
         }
         close()
-        send()
-        open("layout")
-        for(node in nodes.children){
-            node as XMLNode
-            val layoutName = node["layoutName"]
-            send("val $layoutName = allLayouts.first { it.attr(\"layoutName\") == \"$layoutName\"}")
-        }
-        close()
+
         send()
         open("raw")
-        for(file in File(res, "raw").listFiles()!!){
-            if(!file.isDirectory && !file.name.startsWith(".")){
+        for (file in File(res, "raw").listFiles()!!) {
+            if (!file.isDirectory && !file.name.startsWith(".")) {
                 val withoutEnding = file.nameWithoutExtension
                 send("const val $withoutEnding = \"raw/${file.name}\"")
             }
@@ -252,10 +268,10 @@ class CreateWebApp {
         send()
         send("val allStyles = ")
         val stylesNode = XMLNode("LinearLayout")
-        for((name, style) in styles){
+        for ((name, style) in styles) {
             val styleNode = XMLNode("View")
             styleNode.attributes["id"] = name
-            for((key, value) in style){
+            for ((key, value) in style) {
                 styleNode.attributes[key] = value.toString()
             }
             stylesNode.add(styleNode)
@@ -263,9 +279,9 @@ class CreateWebApp {
         printLayout(stylesNode)
         send()
         open("style")
-            for((name, _) in styles){
-                send("const val $name = \"${escape(name)}\"")
-            }
+        for ((name, _) in styles) {
+            send("const val $name = \"${escape(name)}\"")
+        }
         close()
         close()
         send("// ${Math.random()}")
@@ -277,21 +293,26 @@ class CreateWebApp {
 
     }
 
-    fun colorString(color: Int) = "0x${(color.shr(16).and(0xffff).toString(16))}${color.and(0xffff).toString(16)}${if(color < 0) ".toInt()" else ""}"
+    fun colorString(color: Int) = "0x${(color.shr(16).and(0xffff).toString(16))}${
+        color.and(0xffff).toString(16)
+    }${if (color < 0) ".toInt()" else ""}"
 
     fun parseString(str: String) = str.replace("\n", "")
 
     fun parseColor(str: String): Int {
         val text = str.trim()
-        if(text.startsWith("#")){
-            return when(text.length){
+        if (text.startsWith("#")) {
+            return when (text.length) {
                 4 -> {
                     val num = text.substring(1).toInt(16)
-                    return 0xff000000.toInt() or (0x110000 * num.shr(8)) or (0x1100 * num.shr(4).and(15)) or (0x11 * num.and(15))
+                    return 0xff000000.toInt() or (0x110000 * num.shr(8)) or (0x1100 * num.shr(4)
+                        .and(15)) or (0x11 * num.and(15))
                 }
                 5 -> {
                     val num = text.substring(1).toInt(16)
-                    return (0x11000000 * num.shr(12)) or (0x110000 * num.shr(8)) or (0x1100 * num.shr(4).and(15)) or (0x11 * num.and(15))
+                    return (0x11000000 * num.shr(12)) or (0x110000 * num.shr(8)) or (0x1100 * num.shr(
+                        4
+                    ).and(15)) or (0x11 * num.and(15))
                 }
                 7 -> 0xff000000.toInt() or text.substring(1).toInt(16)
                 9 -> text.substring(1).toLong(16).toInt()
@@ -331,7 +352,7 @@ class CreateWebApp {
         val result = StringBuilder()
         result.append(svgParts[0])
 
-        for(i in 1 until svgParts.size){
+        for (i in 1 until svgParts.size) {
             val part = svgParts[i]
             // println(part)
             assert(part[0] == '"')
@@ -349,45 +370,54 @@ class CreateWebApp {
     }
 
     fun rgbaString(color: Int): String {
-        return "rgba(${color.shr(16).and(255)}, ${color.shr(8).and(255)}, ${color.and(255)}, ${color.shr(24).and(255)/255f})"
+        return "rgba(${color.shr(16).and(255)}, ${
+            color.shr(8).and(255)
+        }, ${color.and(255)}, ${color.shr(24).and(255) / 255f})"
     }
 
     fun filterSourceLine(line: String, file: String): Boolean {
-        when(line){
+        when (line) {
             "import kotlin.concurrent.thread",
             "import me.antonio.noack.elementalcommunity.R",
             "import java.lang.Math.abs" -> return false
         }
-        if(line.startsWith("import kotlinx.android")){
+        if (line.startsWith("import kotlinx.android")) {
             println("Warning: Synthetic in $file")
             return false
         }
         return true
     }
 
-    fun copy(src: File, dst: File){
-        if(src.isDirectory){
-            for(file in src.listFiles() ?: emptyArray()){
-                if(!file.name.startsWith(".")){
-                    copy(file, File(dst, file.name))
+    fun copyCodeFiles(src: File, dst: File) {
+        if (src.isDirectory) {
+            for (file in src.listFiles() ?: emptyArray()) {
+                if (!file.name.startsWith(".")) {
+                    copyCodeFiles(file, File(dst, file.name))
                 }
             }
-        } else if(when(src.name){
+        } else if (when (src.name) {
                 "Maths.kt", "Sound.kt", "HTTP.kt", "Captcha.kt", "IDTypes.kt", "BetterPreferences.kt", "FileChooser.kt", "FileSaver.kt" -> false
                 else -> true
-            }){
+            }
+        ) {
             dst.parentFile?.mkdirs()
             var text = src.readText()
+                .replace("\r\n", "\n")
                 .replace(".javaClass.", "::class.")
                 .split('\n').filter { filterSourceLine(it, src.name) }.joinToString("\n")
                 .replace("System.", "java.util.System.")
                 .replace("LinearLayout.LayoutParams", "View.LayoutParams")
-                .replace("import android.content.Intent.", "import android.content.Intent.Companion.")
+                .replace(
+                    "import android.content.Intent.",
+                    "import android.content.Intent.Companion."
+                )
                 .replace("synchronized(", "if(null != ")
-            if(text.contains("thread {") || text.contains("thread(true") || text.contains("thread{")){
+                .replace(".code", ".toInt()")
+                .replace(".lowercase(Locale.getDefault())", ".toLowerCase()")
+            if (text.contains("thread {") || text.contains("thread(true") || text.contains("thread{")) {
                 text = text.replaceFirst("import", "import java.util.*\nimport")
             }
-            if(!dst.exists() || dst.readText() != text){
+            if (!dst.exists() || dst.readText() != text) {
                 dst.writeText(text)
             }
         }

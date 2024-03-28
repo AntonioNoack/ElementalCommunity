@@ -145,7 +145,7 @@ class Mandala(val element: Element, oldTree: Mandala?){
         }
 
         if(oldTree != null){// move old recipes :)
-            oldTree.fromThisSet.filterIndexed { i, oldRecipe ->
+            oldTree.fromThisSet.filter { oldRecipe ->
                 if(toThisSet.contains(oldRecipe)) {
                     val newRecipe = toThisElement[toThisElement.indexOf(oldRecipe)]
                     newRecipe.al *= oldRecipe.al
@@ -157,7 +157,7 @@ class Mandala(val element: Element, oldTree: Mandala?){
                 it.decay()
                 //toThisElement.add(it)
             }
-            oldTree.toThisSet.filterIndexed { i, oldRecipe ->
+            oldTree.toThisSet.filter { oldRecipe ->
                 if(fromThisSet.contains(oldRecipe)) {
                     val newRecipe = fromThisElement[fromThisElement.indexOf(oldRecipe)]
                     newRecipe.al *= oldRecipe.al

@@ -5,13 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
-import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
-import me.antonio.noack.elementalcommunity.api.WebServices
-import java.lang.StrictMath.pow
-import java.util.*
-import kotlin.math.max
-import kotlin.math.sin
 
 class RecipeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 

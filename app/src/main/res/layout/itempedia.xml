@@ -25,7 +25,6 @@
             android:src="@drawable/ic_arrow_back_black_24dp" />
 
         <Button
-            android:id="@+id/back1"
             android:layout_width="0dp"
             android:layout_height="50sp"
             android:layout_weight="1"
@@ -33,9 +32,13 @@
             android:fontFamily="sans-serif"
             android:gravity="center"
             android:padding="5dp"
-            android:text="@string/back"
+            android:text="@string/itempedia"
             android:textAllCaps="false"
             android:textSize="24sp" />
+
+        <View
+            android:layout_width="50sp"
+            android:layout_height="50sp"/>
 
     </LinearLayout>
 

@@ -37,7 +37,7 @@ class ImportElemental3 {
     class Elemental3Element(node: JsonNode, val uuid: Int){
         val name: String
         init {
-            var pre = (node.get("name") as String)
+            var pre = (node.getString("name") ?: "")
                 .replace(" +", "ßßß")
                 .replace("+", " ")
                 .replace('\u00b4', '\'')
@@ -106,8 +106,8 @@ class ImportElemental3 {
             }
         }
 
-        val color = node.get("color") as Int
-        val parents = node.getList("parents")
+        val color = node.getInt("color")
+        val parents = node.get("parents") as? JsonArray
         val children = HashSet<Elemental3Element>()
         lateinit var parentA: Elemental3Element
         lateinit var parentB: Elemental3Element
@@ -160,7 +160,7 @@ class ImportElemental3 {
         val json = JsonReader(File("/home/antonio/AndroidStudioProjects/ElementalCommunity/Elemental3Recipes.json").readText()).readObject()
         val elements = HashMap<Int, Elemental3Element>()
         for(uuid in 1 .. json.attributes.keys.map { it.toIntOrNull() ?: -1 }.max()!!){
-            val node = json.getNode(uuid.toString())
+            val node = json.map[uuid.toString()] as? JsonNode
             if(node != null){
                 elements[uuid] = Elemental3Element(node, uuid)
             }

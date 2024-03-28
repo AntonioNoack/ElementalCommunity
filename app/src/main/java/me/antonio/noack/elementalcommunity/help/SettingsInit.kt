@@ -13,8 +13,8 @@ import me.antonio.noack.elementalcommunity.OfflineSuggestions
 import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.api.ServerService.Companion.defaultOnError
 import me.antonio.noack.elementalcommunity.api.WebServices
-import me.antonio.noack.elementalcommunity.utils.Maths
 import java.math.BigInteger
+import kotlin.random.Random
 
 object SettingsInit {
 
@@ -256,7 +256,7 @@ object SettingsInit {
 
             resetEverythingButton?.setOnLongClickListener {
                 // generate 100 diamonds over 10 long clicks
-                spendDiamonds(if (Maths.random() < 0.1) -250 else 15)
+                spendDiamonds(if (Random.nextDouble() < 0.1) -250 else 15)
                 true
             }
 

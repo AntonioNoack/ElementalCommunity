@@ -1,12 +1,10 @@
 package me.antonio.noack.elementalcommunity.io
 
-import java.io.InputStream
-
 class SplitReader(
     val format: List<ElementType>,
     primary: Char,
     secondary: Char,
-    input: InputStream
+    input: String
 ) {
 
     var input = input
@@ -15,8 +13,13 @@ class SplitReader(
             hasRemaining = true
         }
 
-    private val primary = primary.code
-    private val secondary = secondary.code
+    private var index = 0
+    private fun readChar(): Int {
+        return if (index in input.indices) input[index++].toInt() else -1
+    }
+
+    private val primary = primary.toInt()
+    private val secondary = secondary.toInt()
 
     private val ints = IntArray(format.lastIndexOf(ElementType.INT) + 1)
     private val strings = Array(format.lastIndexOf(ElementType.STRING) + 1) { "" }
@@ -29,10 +32,6 @@ class SplitReader(
     var hasRemaining = true
         private set
 
-    fun reset() {
-        hasRemaining = true
-    }
-
     fun read(): Int {
         // read until primary or -1
         parts@ for (formatIndex in format.indices) {
@@ -40,7 +39,7 @@ class SplitReader(
                 ElementType.INT -> {
                     var i = 0
                     while (true) {
-                        when (val char = input.read()) {
+                        when (val char = readChar()) {
                             primary, -1 -> {
                                 if (char == -1) hasRemaining = false
                                 ints[formatIndex] = i
@@ -57,10 +56,11 @@ class SplitReader(
                         }
                     }
                 }
+
                 ElementType.STRING -> {
                     builder.clear()
                     while (true) {
-                        when (val char = input.read()) {
+                        when (val char = readChar()) {
                             primary, -1 -> {
                                 if (char == -1) hasRemaining = false
                                 strings[formatIndex] = builder.toString()
@@ -79,7 +79,7 @@ class SplitReader(
             }
         }
         while (true) {
-            when (val char = input.read()) {
+            when (val char = readChar()) {
                 primary, -1 -> {
                     if (char == -1) hasRemaining = false
                     return format.size
@@ -90,7 +90,7 @@ class SplitReader(
 
     private fun readError(): Int {
         while (true) {
-            when (val char = input.read()) {
+            when (val char = readChar()) {
                 primary, -1 -> {
                     if (char == -1) hasRemaining = false
                     return -1
@@ -98,5 +98,4 @@ class SplitReader(
             }
         }
     }
-
 }

@@ -241,6 +241,8 @@ open class XMLReader {
             when (val char = input.read()) {
                 '\\'.code -> {
                     when (val second = input.read()) {
+                        '\''.code -> str.append('\'')
+                        '"'.code -> str.append('"')
                         else -> throw RuntimeException("Special character \\${second.toChar()} not yet implemented")
                     }
                 }

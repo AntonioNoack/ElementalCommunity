@@ -11,7 +11,7 @@ import kotlin.math.min
 class OneElement(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeSet) {
 
     var element: Element? = null
-    var alpha = 255
+    var alphaOverride = 255
 
     private var calcWidth = 350f
 
@@ -44,8 +44,8 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribut
 
         val candidate = element
         val width = measuredWidth * 1f
-        bgPaint.alpha = alpha
-        textPaint.alpha = alpha
+        bgPaint.alpha = alphaOverride
+        textPaint.alpha = alphaOverride
         drawElement(
             canvas, -1, 0f, 0f, 0f, width, true,
             candidate?.name ?: "???", candidate?.group ?: 15, -1,

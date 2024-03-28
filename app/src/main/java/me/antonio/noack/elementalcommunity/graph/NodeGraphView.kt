@@ -17,6 +17,7 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
 import me.antonio.noack.elementalcommunity.utils.Maths
 import kotlin.concurrent.thread
 import kotlin.math.*
+import kotlin.random.Random
 
 @SuppressLint("ClickableViewAccessibility")
 abstract class NodeGraphView(
@@ -575,8 +576,8 @@ abstract class NodeGraphView(
             return if (!unlocked.contains(dst) && dst.uuid > -1) {
                 if (srcA === srcB) {
                     // find location in close proximity
-                    dst.px = srcA.px + (Math.random().toFloat() - 0.5f)
-                    dst.py = srcA.py + (Math.random().toFloat() - 0.5f)
+                    dst.px = srcA.px + (Random.nextDouble().toFloat() - 0.5f)
+                    dst.py = srcA.py + (Random.nextDouble().toFloat() - 0.5f)
                 } else {
                     dst.px = (srcA.px + srcB.px) * 0.5f
                     dst.py = (srcA.px + srcB.px) * 0.5f

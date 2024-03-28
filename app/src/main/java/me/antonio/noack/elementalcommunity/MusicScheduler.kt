@@ -1,5 +1,7 @@
 package me.antonio.noack.elementalcommunity
 
+import kotlin.random.Random
+
 object MusicScheduler {
 
     private var lastTime = 0L
@@ -8,7 +10,7 @@ object MusicScheduler {
                 it.isPlaying()
             } || AllManager.backgroundMusicVolume == 0f) return
         val time = System.nanoTime()
-        if (time - lastTime > 30e9 * Math.random()) {
+        if (time - lastTime > 30e9 * Random.nextDouble()) {
             val sound = AllManager.backgroundMusic.randomOrNull() ?: return
             sound.setVolume(AllManager.backgroundMusicVolume)
             sound.play()

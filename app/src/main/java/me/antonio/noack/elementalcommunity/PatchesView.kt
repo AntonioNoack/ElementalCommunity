@@ -3,10 +3,10 @@ package me.antonio.noack.elementalcommunity
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
-import androidx.core.view.children
 import kotlin.math.max
 
-class PatchesView(context: Context, attributeSet: AttributeSet?): ViewGroup(context, attributeSet){
+class PatchesView(context: Context, attributeSet: AttributeSet?) :
+    ViewGroup(context, attributeSet) {
 
     private fun dpToPx(dp: Int): Float {
         val displayMetrics = context!!.resources.displayMetrics
@@ -22,8 +22,8 @@ class PatchesView(context: Context, attributeSet: AttributeSet?): ViewGroup(cont
         val originalWidth = MeasureSpec.getSize(widthMeasureSpec)
 
         val smallerMS = MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST)
-        for(child in children) {
-            child.measure(smallerMS, heightMeasureSpec)
+        for (ci in 0 until childCount) {
+            getChildAt(ci).measure(smallerMS, heightMeasureSpec)
         }
 
         val y = calcLayout(originalWidth, margin)
@@ -37,9 +37,10 @@ class PatchesView(context: Context, attributeSet: AttributeSet?): ViewGroup(cont
         var maxHeight = 0
         var x = -margin
         var y = 0
-        for(child in children){
+        for (ci in 0 until childCount) {
+            val child = getChildAt(ci)
             val x1 = x + margin + child.measuredWidth
-            if(x1 <= width){
+            if (x1 <= width) {
                 // add child to line
                 x += margin
                 child.layout(x, y, x + child.measuredWidth, y + child.measuredHeight)
@@ -64,7 +65,7 @@ class PatchesView(context: Context, attributeSet: AttributeSet?): ViewGroup(cont
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
 
         val margin = getMargin()
-        val originalWidth = r-l
+        val originalWidth = r - l
 
         calcLayout(originalWidth, margin)
 

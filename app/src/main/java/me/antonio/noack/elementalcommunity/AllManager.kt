@@ -15,7 +15,6 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.math.MathUtils.clamp
-import androidx.core.view.children
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
@@ -193,46 +192,46 @@ class AllManager : AppCompatActivity() {
     private val diamondViews = ArrayList<TextView>()
 
     private fun initViews() {
-        combiner = findViewById(R.id.combiner) ?: null
-        unlocked = findViewById(R.id.unlocked) ?: null
-        treeView = findViewById(R.id.tree) ?: null
-        graphView = findViewById(R.id.graph) ?: null
-        mandalaView = findViewById(R.id.tree2) ?: null
-        startButton = findViewById(R.id.start) ?: null
-        flipper = findViewById(R.id.flipper) ?: null
-        treeViewButton = findViewById(R.id.treeButton) ?: null
-        graphViewButton = findViewById(R.id.graphButton) ?: null
-        mandalaViewButton = findViewById(R.id.mandalaButton) ?: null
-        itempediaViewButton = findViewById(R.id.itempediaButton) ?: null
-        suggestButton = findViewById(R.id.suggest) ?: null
-        settingButton = findViewById(R.id.settingsButton) ?: null
-        back1 = findViewById(R.id.back1) ?: null
-        back2 = findViewById(R.id.back2) ?: null
-        back3 = findViewById(R.id.back3) ?: null
-        favTitle = findViewById(R.id.favTitle) ?: null
-        favSlider = findViewById(R.id.favSlider) ?: null
-        backArrow1 = findViewById(R.id.backArrow1) ?: null
-        backArrow2 = findViewById(R.id.backArrow2) ?: null
-        backArrow3 = findViewById(R.id.backArrow3) ?: null
-        backArrow4 = findViewById(R.id.backArrow4) ?: null
-        backArrow5 = findViewById(R.id.backArrow5) ?: null
-        backArrow6 = findViewById(R.id.backArrow6) ?: null
-        search1 = findViewById(R.id.search1) ?: null
-        search2 = findViewById(R.id.search2) ?: null
-        searchButton1 = findViewById(R.id.searchButton1) ?: null
-        searchButton2 = findViewById(R.id.searchButton2) ?: null
-        randomButton = findViewById(R.id.randomButton) ?: null
-        spaceSlider = findViewById(R.id.spaceSlider) ?: null
-        resetEverythingButton = findViewById(R.id.resetEverythingButton) ?: null
-        newsView = findViewById(R.id.newsView) ?: null
-        freqSlider = findViewById(R.id.frequencySlider) ?: null
-        freqTitle = findViewById(R.id.frequencyTitle) ?: null
-        volumeSlider = findViewById(R.id.backgroundVolumeSlider) ?: null
-        volumeTitle = findViewById(R.id.backgroundVolumeTitle) ?: null
-        craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch) ?: null
-        displayUUIDSwitch = findViewById(R.id.displayUUIDSwitch) ?: null
-        switchServerButton = findViewById(R.id.switchServer) ?: null
-        offlineModeSwitch = findViewById(R.id.offlineModeSwitch) ?: null
+        combiner = findViewById(R.id.combiner)
+        unlocked = findViewById(R.id.unlocked)
+        treeView = findViewById(R.id.tree)
+        graphView = findViewById(R.id.graph)
+        mandalaView = findViewById(R.id.tree2)
+        startButton = findViewById(R.id.start)
+        flipper = findViewById(R.id.flipper)
+        treeViewButton = findViewById(R.id.treeButton)
+        graphViewButton = findViewById(R.id.graphButton)
+        mandalaViewButton = findViewById(R.id.mandalaButton)
+        itempediaViewButton = findViewById(R.id.itempediaButton)
+        suggestButton = findViewById(R.id.suggest)
+        settingButton = findViewById(R.id.settingsButton)
+        back1 = findViewById(R.id.back1)
+        back2 = findViewById(R.id.back2)
+        back3 = findViewById(R.id.back3)
+        favTitle = findViewById(R.id.favTitle)
+        favSlider = findViewById(R.id.favSlider)
+        backArrow1 = findViewById(R.id.backArrow1)
+        backArrow2 = findViewById(R.id.backArrow2)
+        backArrow3 = findViewById(R.id.backArrow3)
+        backArrow4 = findViewById(R.id.backArrow4)
+        backArrow5 = findViewById(R.id.backArrow5)
+        backArrow6 = findViewById(R.id.backArrow6)
+        search1 = findViewById(R.id.search1)
+        search2 = findViewById(R.id.search2)
+        searchButton1 = findViewById(R.id.searchButton1)
+        searchButton2 = findViewById(R.id.searchButton2)
+        randomButton = findViewById(R.id.randomButton)
+        spaceSlider = findViewById(R.id.spaceSlider)
+        resetEverythingButton = findViewById(R.id.resetEverythingButton)
+        newsView = findViewById(R.id.newsView)
+        freqSlider = findViewById(R.id.frequencySlider)
+        freqTitle = findViewById(R.id.frequencyTitle)
+        volumeSlider = findViewById(R.id.backgroundVolumeSlider)
+        volumeTitle = findViewById(R.id.backgroundVolumeTitle)
+        craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch)
+        displayUUIDSwitch = findViewById(R.id.displayUUIDSwitch)
+        switchServerButton = findViewById(R.id.switchServer)
+        offlineModeSwitch = findViewById(R.id.offlineModeSwitch)
     }
 
     @Deprecated("Deprecated in Java")
@@ -270,7 +269,7 @@ class AllManager : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.all)
+        setContentView(R.layout.all_pages)
 
         initViews()
 
@@ -308,7 +307,7 @@ class AllManager : AppCompatActivity() {
                 try {
                     callback()
                 } catch (e: Exception) {
-                    staticToast1(e.message + e.localizedMessage, true)
+                    staticToast1(e.message.toString(), true)
                 }
             }
         }
@@ -381,7 +380,7 @@ class AllManager : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun createItempediaPages(numElements: Int) {
-        val pageList = findViewById<LinearLayout>(R.id.pageFlipper)
+        val pageList = findViewById<LinearLayout>(R.id.pageFlipper)!!
         pageList.removeAllViews()
         val numPages = (numElements + ITEMS_PER_PAGE - 1) / ITEMS_PER_PAGE
         val views = ArrayList<TextView>()
@@ -393,9 +392,11 @@ class AllManager : AppCompatActivity() {
             previouslyClicked = i
             loadItempediaPage(i)
         }
+
+        val layoutInflater = layoutInflater
         for (i in 0 until numPages) {
             layoutInflater.inflate(R.layout.itempedia_page, pageList)
-            val view = pageList.children.last() as TextView
+            val view = pageList.getChildAt(pageList.childCount - 1) as TextView
             view.text = "${i + 1}"
             view.alpha = if (i == 0) 1f else 0.7f
             view.setOnClickListener {
@@ -580,14 +581,17 @@ class AllManager : AppCompatActivity() {
         diamondViews.clear()
 
         val flipper = flipper
-        if (flipper != null) for (child in flipper.children) {
-            val diamondTextView = child.findViewById<TextView>(R.id.diamonds) ?: continue
-            diamondViews.add(diamondTextView)
-            diamondTextView.setOnClickListener {
-                RecipeHelper.openHelper(this)
-            }
-            (diamondTextView.parent as? View)?.setOnClickListener {
-                RecipeHelper.openHelper(this)
+        if (flipper != null) {
+            for (ci in 0 until flipper.childCount) {
+                val child = flipper.getChildAt(ci)
+                val diamondTextView = child.findViewById<TextView>(R.id.diamonds) ?: continue
+                diamondViews.add(diamondTextView)
+                diamondTextView.setOnClickListener {
+                    RecipeHelper.openHelper(this)
+                }
+                (diamondTextView.parent as? View)?.setOnClickListener {
+                    RecipeHelper.openHelper(this)
+                }
             }
         }
 

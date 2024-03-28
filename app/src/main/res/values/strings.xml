@@ -57,9 +57,7 @@
     <string name="community">Community</string>
     <string name="create_your_own_server">Create your own server</string>
     <string name="create_your_own_server2">Create your own server!</string>
-    <string name="server_creation_message">Creating your own server allows you to have different recipes than on the
-        default server. It might be useful for your own community, like your YouTube channel.
-    </string>
+    <string name="server_creation_message">Creating your own server allows you to have different recipes than on the default server. It might be useful for your own community, like your YouTube channel.</string>
     <string name="show_element_uuids">Display element ids</string>
     <string name="clear_recipe_cache">Clear Recipe Cache</string>
     <string name="mandala_view">Mandala View</string>
