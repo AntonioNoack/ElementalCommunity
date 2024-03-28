@@ -13,21 +13,20 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribut
     var element: Element? = null
     var alphaOverride = 255
 
-    private var calcWidth = 350f
-
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        var calcWidth = 350
         when (MeasureSpec.getMode(widthMeasureSpec)) {
             MeasureSpec.EXACTLY -> {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-                calcWidth = measuredWidth.toFloat()
+                calcWidth = measuredWidth
             }
             MeasureSpec.UNSPECIFIED -> {}
             MeasureSpec.AT_MOST -> {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-                calcWidth = min(measuredWidth.toFloat(), calcWidth)
+                calcWidth = min(measuredWidth, calcWidth)
             }
         }
-        setMeasuredDimension(calcWidth.toInt(), calcWidth.toInt())
+        setMeasuredDimension(calcWidth, calcWidth)
     }
 
     private val bgPaint = Paint()
