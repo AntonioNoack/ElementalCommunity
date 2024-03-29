@@ -65,6 +65,7 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
             drawElement(canvas, -1, widthPerNode*(relativeWidth-1f)/2, 0f, 0f, widthPerNode, true,
                 candidate?.b?.name ?: if(hasNews) "Magic" else if(offline) "No WLAN" else "No WLAN",
                 candidate?.b?.group ?: (noise.getNoise(time, 156+i*1020).times(size).toInt()), -1, bgPaint, textPaint)
+            val middleTextColor = textPaint.color
             drawElement(canvas, -1, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true,
                 candidate?.result ?: if(hasNews) "Elements" else if(offline) "Game" else "No Game",
                 candidate?.resultGroup ?: (noise.getNoise(time, 23+i*950).times(size).toInt()), -1, bgPaint, textPaint)
@@ -77,10 +78,7 @@ class NewsView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSe
             canvas.drawText("+", widthPerNode*((relativeWidth-1f)/4 + 0.5f), widthPerNode/2-dy, textPaint)
             canvas.drawText("->", widthPerNode*((relativeWidth-1f)*3/4 + 0.5f), widthPerNode/2-dy, textPaint)
 
-            /*bgPaint.color = bgPaint.color and 0x50ffffff.toInt()
-            canvas.drawRect(0f, 0f, width, widthPerNode, bgPaint)
-            */
-            textPaint.color = 0xff000000.toInt()
+            textPaint.color = middleTextColor
             textPaint.textSize = widthPerNode*.21f
             val dy2 = (textPaint.ascent() + textPaint.descent())/2
             canvas.drawText("${timeString(candidate?.dt ?: (pow(2.0, 1.0 + 20.0 * random.nextDouble())).toInt())} ago ${if((candidate?.w ?: 0) > 0) "liked" else "disliked"}",

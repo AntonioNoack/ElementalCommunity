@@ -6,6 +6,8 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
+import me.antonio.noack.elementalcommunity.utils.MeasureSpecHelper
+import kotlin.math.max
 import kotlin.math.min
 
 class OneElement(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeSet) {
@@ -14,19 +16,16 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribut
     var alphaOverride = 255
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        var calcWidth = 350
-        when (MeasureSpec.getMode(widthMeasureSpec)) {
-            MeasureSpec.EXACTLY -> {
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-                calcWidth = measuredWidth
-            }
-            MeasureSpec.UNSPECIFIED -> {}
-            MeasureSpec.AT_MOST -> {
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-                calcWidth = min(measuredWidth, calcWidth)
-            }
-        }
-        setMeasuredDimension(calcWidth, calcWidth)
+        val fittingSize = min(
+            MeasureSpec.getSize(widthMeasureSpec),
+            MeasureSpec.getSize(heightMeasureSpec)
+        )
+        val idealSize = max(150, fittingSize)
+        val lp = layoutParams
+        setMeasuredDimension(
+            MeasureSpecHelper.getDefaultSize(widthMeasureSpec, idealSize, lp.width),
+            MeasureSpecHelper.getDefaultSize(heightMeasureSpec, idealSize, lp.height)
+        )
     }
 
     private val bgPaint = Paint()
@@ -42,15 +41,16 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribut
         GroupsEtc.tick()
 
         val candidate = element
-        val width = measuredWidth * 1f
+        val w = width.toFloat()
+        val h = height.toFloat()
+        val size = min(w, h)
         bgPaint.alpha = alphaOverride
         textPaint.alpha = alphaOverride
         drawElement(
-            canvas, -1, 0f, 0f, 0f, width, true,
+            canvas, -1, (w - size) * 0.5f, (h - size) * 0.5f, 0f, size, true,
             candidate?.name ?: "???", candidate?.group ?: 15, -1,
             bgPaint, textPaint
         )
-
     }
 
 }

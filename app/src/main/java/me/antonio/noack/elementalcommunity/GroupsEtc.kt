@@ -295,15 +295,8 @@ object GroupsEtc {
         key: String,
         craftingCount: Int,
         widthPerNode: Float,
-        textPaint: Paint,
-        bgPaint: Paint
+        textPaint: Paint
     ): CacheEntry {
-        /*if(lastCacheWidth != widthPerNode){
-            println("clear cache, $lastCacheWidth != $widthPerNode")
-            cacheEntries.clear()
-            lastCacheWidth = widthPerNode
-            // println("cleared")
-        }*/
         val cacheEntries = getCache(widthPerNode)
         var entry = cacheEntries[key]
         if (entry == null) {
@@ -313,8 +306,6 @@ object GroupsEtc {
             // split long rawText into multiple sections...
             textPaint.textSize = 20f
             val width0 = textPaint.measureText(text)
-
-            val color = if (brightness(bgPaint.color) > 0.3f) 0xff000000.toInt() else -1
 
             val sideRatio = width0 / textPaint.textSize
             val list = splitText(text, sideRatio, textPaint)
@@ -333,7 +324,7 @@ object GroupsEtc {
             val textDy =
                 (widthPerNode - (textPaint.ascent() + textPaint.descent())) / 2 - if (craftingCount > minimumCraftingCount) 0.5f * widthPerNode * countSize else 0f
 
-            entry = CacheEntry(textSize, textDy, color, list)
+            entry = CacheEntry(textSize, textDy, list)
 
             cacheEntries[key] = entry
 
@@ -349,7 +340,7 @@ object GroupsEtc {
     private const val spacingFactor = 1f + spacingFactorX0
     private const val spacingFactorX2 = 1f + 2f * spacingFactorX0
 
-    class CacheEntry(val textSize: Float, dy0: Float, val color: Int, val lines: List<String>) {
+    class CacheEntry(val textSize: Float, dy0: Float, val lines: List<String>) {
         private val lineOffset = textSize * spacingFactor
         private val indexOffset = (lines.size - 1) * 0.5f
         val dys = FloatArray(lines.size) { dy0 + (it - indexOffset) * lineOffset }
@@ -365,25 +356,21 @@ object GroupsEtc {
 
         drawElementBackground(canvas, x0, y0, delta, widthPerNode, margin, group, bgPaint)
 
+        val color = if (brightness(bgPaint.color) > 0.3f) 0xff000000.toInt() else -1
         val alpha = textPaint.alpha
         val cacheKey =
             if (craftingCount <= minimumCraftingCount) rawName
             else "$rawName ($craftingCount)"
-        val cacheEntry =
-            getCacheEntry(rawName, cacheKey, craftingCount, widthPerNode, textPaint, bgPaint)
-        val color = cacheEntry.color
+        val cacheEntry = getCacheEntry(rawName, cacheKey, craftingCount, widthPerNode, textPaint)
         textPaint.color = color
         textPaint.alpha = alpha
 
         var save = -1
         if (delta != 0f) {
-
             save = canvas.save()
-
             val zoom = (widthPerNode + delta + delta) / widthPerNode
             val half = widthPerNode * 0.5f
             canvas.scale(zoom, zoom, x0 + half, y0 + half)
-
         }
 
         val x = x0 + widthPerNode * 0.5f

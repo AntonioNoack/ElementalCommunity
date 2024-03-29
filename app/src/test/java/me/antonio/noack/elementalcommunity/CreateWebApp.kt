@@ -195,7 +195,7 @@ class CreateWebApp {
                 tabs++
                 send("${node.type}(all, null)")
                 tabs++
-                for ((key, value) in node.attributes) {
+                for ((key, value) in node.attributes.toSortedMap()) {
                     send(
                         ".attr(\"${
                             key.replace(
@@ -234,7 +234,7 @@ class CreateWebApp {
                 node.attributes.remove("xmlns:android")
                 node.attributes.remove("xmlns:tools")
                 node.attributes.remove("tools:context")
-                node.attributes["layoutId"] = layoutName
+                node.attributes["layout_id"] = layoutName
                 printLayout(node)
                 send("}")
                 send()
