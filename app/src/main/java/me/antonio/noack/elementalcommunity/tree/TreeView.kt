@@ -133,7 +133,9 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
         // we have no scroll section -> we are fine with always being valid
         val valid = if (elementOffsetX <= 1) {
             fractOk(intX) && fractOk(intY)
-        } else true
+        } else {
+            xi % elementOffsetX == 0 && yi % elementOffsetY == 0
+        }
         return Triple(
             when {
                 isSpecial -> AreaType.FAVOURITES
