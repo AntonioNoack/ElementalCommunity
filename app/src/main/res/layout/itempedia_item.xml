@@ -18,26 +18,11 @@
             android:textColor="#7fff"
             android:textSize="20sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
-
-            <me.antonio.noack.elementalcommunity.OneElement
-                android:id="@+id/elementView"
-                android:layout_width="200dp"
-                android:layout_height="200dp" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
-
-        </LinearLayout>
+        <me.antonio.noack.elementalcommunity.OneElement
+            android:id="@+id/elementView"
+            android:layout_gravity="center"
+            android:layout_width="200dp"
+            android:layout_height="200dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
