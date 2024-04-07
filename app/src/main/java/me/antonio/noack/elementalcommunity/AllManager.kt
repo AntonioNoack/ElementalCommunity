@@ -1,12 +1,12 @@
 package me.antonio.noack.elementalcommunity
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -14,7 +14,6 @@ import android.view.View.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
-import androidx.core.math.MathUtils.clamp
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import me.antonio.noack.elementalcommunity.GroupsEtc.GroupColors
@@ -28,7 +27,8 @@ import me.antonio.noack.elementalcommunity.help.SettingsInit
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.io.SplitReader2
 import me.antonio.noack.elementalcommunity.itempedia.ItempediaAdapter
-import me.antonio.noack.elementalcommunity.itempedia.ItempediaAdapter.Companion.ITEMS_PER_PAGE
+import me.antonio.noack.elementalcommunity.itempedia.ItempediaPageLoader.createItempediaPages
+import me.antonio.noack.elementalcommunity.itempedia.ItempediaPageLoader.loadNumPages
 import me.antonio.noack.elementalcommunity.itempedia.ItempediaSwipeDetector
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
 import me.antonio.noack.elementalcommunity.tree.TreeView
@@ -37,7 +37,6 @@ import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.concurrent.thread
 import kotlin.math.abs
 
 // Sounds:
@@ -104,10 +103,8 @@ class AllManager : AppCompatActivity() {
             val list = recipesByElement[r]
             if (list == null) {
                 recipesByElement[r] = arrayListOf(a to b)
-            } else synchronized(list) {
-                if (pair !in list) {
-                    list.add(pair)
-                }
+            } else if (pair !in list) {
+                list.add(pair)
             }
             invalidate()
             all?.updateDiamondCount()
@@ -144,35 +141,41 @@ class AllManager : AppCompatActivity() {
         const val diamondWatchKey = "diamondCountWatched"
         const val diamondSpentKey = "diamondCountSpent"
 
+        fun checkIsUIThread() {
+            if (Looper.getMainLooper().thread != Thread.currentThread()) {
+                throw IllegalStateException("Must execute on main thread!")
+            }
+        }
+
     }
 
     lateinit var pref: SharedPreferences
     var combiner: Combiner? = null
     var unlocked: UnlockedRows? = null
-    var startButton: View? = null
+    private var startButton: View? = null
     var flipper: ViewFlipper? = null
-    var treeViewButton: View? = null
-    var graphViewButton: View? = null
-    var mandalaViewButton: View? = null
-    var itempediaViewButton: View? = null
-    var suggestButton: View? = null
+    private var treeViewButton: View? = null
+    private var graphViewButton: View? = null
+    private var mandalaViewButton: View? = null
+    private var itempediaViewButton: View? = null
+    private var suggestButton: View? = null
     var settingButton: View? = null
-    var back1: View? = null
-    var back2: View? = null
-    var back3: View? = null
-    var backArrow1: View? = null
-    var backArrow2: View? = null
-    var backArrow3: View? = null
-    var backArrow4: View? = null
-    var backArrow5: View? = null
-    var backArrow6: View? = null
+    private var back1: View? = null
+    private var back2: View? = null
+    private var back3: View? = null
+    private var backArrow1: View? = null
+    private var backArrow2: View? = null
+    private var backArrow3: View? = null
+    private var backArrow4: View? = null
+    private var backArrow5: View? = null
+    private var backArrow6: View? = null
     var favTitle: TextView? = null
     var favSlider: SeekBar? = null
-    var search1: EditText? = null
-    var search2: EditText? = null
-    var searchButton1: View? = null
-    var searchButton2: View? = null
-    var randomButton: View? = null
+    private var search1: EditText? = null
+    private var search2: EditText? = null
+    private var searchButton1: View? = null
+    private var searchButton2: View? = null
+    private var randomButton: View? = null
     var resetEverythingButton: View? = null
     var newsView: NewsView? = null
     var freqSlider: SeekBar? = null
@@ -185,7 +188,7 @@ class AllManager : AppCompatActivity() {
     var volumeTitle: TextView? = null
 
     var treeView: TreeView? = null
-    var graphView: GraphView? = null
+    private var graphView: GraphView? = null
     var spaceSlider: SeekBar? = null
     var mandalaView: MandalaView? = null
 
@@ -257,6 +260,7 @@ class AllManager : AppCompatActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun goFullScreen() {
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             SYSTEM_UI_FLAG_IMMERSIVE or SYSTEM_UI_FLAG_FULLSCREEN or SYSTEM_UI_FLAG_HIDE_NAVIGATION
@@ -327,8 +331,7 @@ class AllManager : AppCompatActivity() {
             runOnUiThread {
                 Toast.makeText(
                     this,
-                    msg,
-                    if (isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
+                    msg, if (isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
                 ).show()
             }
         }
@@ -371,84 +374,12 @@ class AllManager : AppCompatActivity() {
         itempediaAdapter = ItempediaAdapter(this)
         rec.adapter = itempediaAdapter
         rec.addOnItemTouchListener(ItempediaSwipeDetector(this))
-        loadNumPages()
-        createItempediaPages(10)
+        loadNumPages(this)
+        createItempediaPages(this, 10)
     }
 
-    private lateinit var itempediaAdapter: ItempediaAdapter
+    lateinit var itempediaAdapter: ItempediaAdapter
     var deltaItempediaPage: (Int) -> Unit = {}
-
-    @SuppressLint("SetTextI18n")
-    private fun createItempediaPages(numElements: Int) {
-        val pageList = findViewById<LinearLayout>(R.id.pageFlipper)!!
-        pageList.removeAllViews()
-        val numPages = (numElements + ITEMS_PER_PAGE - 1) / ITEMS_PER_PAGE
-        val views = ArrayList<TextView>()
-        var previouslyClicked = 0
-        fun openPage(i: Int) {
-            val view = views[i]
-            views[previouslyClicked].alpha = 0.7f
-            view.alpha = 1f
-            previouslyClicked = i
-            loadItempediaPage(i)
-        }
-
-        val layoutInflater = layoutInflater
-        for (i in 0 until numPages) {
-            layoutInflater.inflate(R.layout.itempedia_page, pageList)
-            val view = pageList.getChildAt(pageList.childCount - 1) as TextView
-            view.text = "${i + 1}"
-            view.alpha = if (i == 0) 1f else 0.7f
-            view.setOnClickListener {
-                openPage(i)
-            }
-            views.add(view)
-        }
-        deltaItempediaPage = { delta ->
-            openPage(clamp(previouslyClicked + delta, 0, numPages - 1))
-        }
-    }
-
-    private fun loadNumPages() {
-        thread {
-            WebServices.askPage(-1, { _, maxUUID ->
-                runOnUiThread {
-                    createItempediaPages(maxUUID)
-                }
-            })
-            loadItempediaPage(0)
-        }
-    }
-
-    private var lastItempediaPage = -1
-
-    @SuppressLint("NotifyDataSetChanged")
-    private fun loadItempediaPage(pageIndex: Int) {
-        if (pageIndex == lastItempediaPage) return
-        lastItempediaPage = pageIndex
-        BasicOperations.todo.incrementAndGet()
-        thread {
-            val lazyDone = lazy {
-                BasicOperations.done.incrementAndGet()
-            }
-            WebServices.askPage(pageIndex, { list, _ ->
-                lazyDone.value
-                if (lastItempediaPage == pageIndex) {
-                    list.sortBy { it.uuid }
-                    runOnUiThread { // present results
-                        itempediaAdapter.startIndex = pageIndex * ITEMS_PER_PAGE + 1
-                        itempediaAdapter.currentItems = list
-                        itempediaAdapter.notifyDataSetChanged()
-                        val rec = findViewById<RecyclerView>(R.id.itempediaElements)!!
-                        rec.smoothScrollToPosition(0)
-                    }
-                }
-            }, {
-                lazyDone.value
-                ServerService.defaultOnError(it)
-            })
-        }
-    }
 
     private fun addClickListeners() {
         startButton?.setOnClickListener { FlipperContent.GAME.bind(this) }
@@ -522,11 +453,9 @@ class AllManager : AppCompatActivity() {
 
         saveElement2 = { element ->
             MusicScheduler.tick()
-            synchronized(Unit) {
-                val edit = pref.edit()
-                saveElement(edit, element)
-                edit.apply()
-            }
+            val edit = pref.edit()
+            saveElement(edit, element)
+            edit.apply()
         }
 
         saveFavourites = {
@@ -634,10 +563,7 @@ class AllManager : AppCompatActivity() {
                     if (wasCrafted) {
                         // println("added element $name/$group/$craftCount/$wasCrafted")
                         unlockedIds.put(id)
-                        val list = unlockedElements[group]
-                        synchronized(list) {
-                            list.add(element)
-                        }
+                        unlockedElements[group].add(element)
                     }
                     if (reader.hasRemaining) {
                         val list = IntArrayList()
@@ -715,11 +641,9 @@ class AllManager : AppCompatActivity() {
     }
 
     fun updateDiamondCount() {
-        runOnUiThread {
-            val count = getDiamondCount()
-            for (view in diamondViews) {
-                view.text = count.toString()
-            }
+        val count = getDiamondCount()
+        for (view in diamondViews) {
+            view.text = count.toString()
         }
     }
 
@@ -767,13 +691,11 @@ class AllManager : AppCompatActivity() {
     }
 
     private fun updateGroupSizesAndNames() {
-        thread {
-            WebServices.updateGroupSizesAndNames()
-        }
+        WebServices.updateGroupSizesAndNames()
     }
 
     fun askNews() {
-        if (newsView != null) thread(name = "NewsThread") {
+        if (newsView != null) {
             WebServices.askNews(20, {
                 newsView?.news = it
                 newsView?.postInvalidate()
@@ -783,6 +705,7 @@ class AllManager : AppCompatActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         val flipper = flipper

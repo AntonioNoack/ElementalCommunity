@@ -36,7 +36,7 @@ object HTTP {
         if (url.startsWith("http://")) return requestInternal(
             url.substring(7), type, largeArgs, onSuccess, onError
         )
-        thread {
+        thread(name = "HTTP-Request") {
             try {
                 println(url)
                 val con = URL("https://$url").openConnection() as HttpURLConnection
@@ -52,10 +52,13 @@ object HTTP {
                     out.write(largeArgs.toByteArray())
                     out.flush()
                 }
-                onSuccess(String(con.inputStream.buffered().readBytes()))
+                val answer = con.inputStream.bufferedReader().readText()
+                AllManager.staticRunOnUIThread {
+                    onSuccess(answer)
+                }
             } catch (e: SocketTimeoutException) {
                 e.printStackTrace()
-                synchronized(this) {
+                AllManager.staticRunOnUIThread {
                     if (!hasWarned) {
                         hasWarned = true
                         try {
@@ -66,8 +69,8 @@ object HTTP {
                             e.printStackTrace()
                         }
                     }
+                    onError(e)
                 }
-                onError(e)
             } catch (e: IOException) {
                 e.printStackTrace()
                 tryHttp(url, type, largeArgs, onSuccess, onError)
@@ -78,11 +81,11 @@ object HTTP {
         }
     }
 
-    fun tryHttp(
+    private fun tryHttp(
         url: String, type: String, largeArgs: String?, onSuccess: (String) -> Unit,
         onError: (IOException) -> Unit
     ) {
-        synchronized(this) {
+        AllManager.staticRunOnUIThread {
             if (!hasWarned) {
                 hasWarned = true
                 try {
@@ -109,7 +112,12 @@ object HTTP {
                 out.flush()
             }
             when (con.responseCode) {
-                200 -> onSuccess(String(con.inputStream.buffered().readBytes()))
+                200 -> {
+                    val answer = con.inputStream.bufferedReader().readText()
+                    AllManager.staticRunOnUIThread {
+                        onSuccess(answer)
+                    }
+                }
                 301 -> {
                     val newUrl = con.getHeaderField("Location")
                     if (newUrl == "https://$url") throw IOException("Resource $url always redirects to https")
@@ -120,7 +128,9 @@ object HTTP {
             }
         } catch (e: IOException) {
             e.printStackTrace()
-            onError(e)
+            AllManager.staticRunOnUIThread {
+                onError(e)
+            }
         }
     }
 

@@ -13,7 +13,6 @@ import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.api.WebServices
 import java.text.DateFormat
 import java.util.Date
-import kotlin.concurrent.thread
 
 class ItempediaAdapter(private val manager: AllManager) :
     RecyclerView.Adapter<ItempediaAdapter.ViewHolder>() {
@@ -44,22 +43,18 @@ class ItempediaAdapter(private val manager: AllManager) :
                 val dialog = AlertDialog.Builder(manager)
                     .setView(R.layout.itempedia_item)
                     .show()
-                thread {
-                    WebServices.askStats(uuid, { stats ->
-                        manager.runOnUiThread {
-                            dialog.findViewById<TextView>(R.id.numRecipes)?.text =
-                                stats.numRecipes.toString()
-                            dialog.findViewById<TextView>(R.id.numIngredients)?.text =
-                                stats.numIngredients.toString()
-                            dialog.findViewById<TextView>(R.id.numSuggestedRecipes)?.text =
-                                stats.numSuggestedRecipes.toString()
-                            dialog.findViewById<TextView>(R.id.numSuggestedIngredients)?.text =
-                                stats.numSuggestedIngredients.toString()
-                            dialog.findViewById<TextView>(R.id.craftingCountAsIngredient)?.text =
-                                stats.numCraftedAsIngredient.toString()
-                        }
-                    })
-                }
+                WebServices.askStats(uuid, { stats ->
+                    dialog.findViewById<TextView>(R.id.numRecipes)?.text =
+                        stats.numRecipes.toString()
+                    dialog.findViewById<TextView>(R.id.numIngredients)?.text =
+                        stats.numIngredients.toString()
+                    dialog.findViewById<TextView>(R.id.numSuggestedRecipes)?.text =
+                        stats.numSuggestedRecipes.toString()
+                    dialog.findViewById<TextView>(R.id.numSuggestedIngredients)?.text =
+                        stats.numSuggestedIngredients.toString()
+                    dialog.findViewById<TextView>(R.id.craftingCountAsIngredient)?.text =
+                        stats.numCraftedAsIngredient.toString()
+                })
                 dialog.findViewById<OneElement>(R.id.elementView)?.element = element
                 dialog.findViewById<TextView>(R.id.uuid)?.text = "#$uuid"
                 dialog.findViewById<TextView>(R.id.craftingCount)?.text =

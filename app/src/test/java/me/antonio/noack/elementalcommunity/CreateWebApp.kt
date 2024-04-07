@@ -411,7 +411,6 @@ class CreateWebApp {
                     "import android.content.Intent.",
                     "import android.content.Intent.Companion."
                 )
-                .replace("synchronized(", "if(null != ")
                 .replace(".code", ".toInt()")
                 .replace(".lowercase(Locale.getDefault())", ".toLowerCase()")
             if (text.contains("thread {") || text.contains("thread(true") || text.contains("thread{")) {

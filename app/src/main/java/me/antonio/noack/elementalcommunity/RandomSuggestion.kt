@@ -10,7 +10,7 @@ object RandomSuggestion {
         return AllManager.elementByName.values.random()
     }
 
-    fun make(all: AllManager){
+    fun make(all: AllManager) {
 
         val dialog = AlertDialog.Builder(all)
             .setView(R.layout.random)
@@ -22,21 +22,17 @@ object RandomSuggestion {
         val first = dialog.findViewById<OneElement>(R.id.first)!!
         val second = dialog.findViewById<OneElement>(R.id.second)!!
 
-        fun next(){
-            all.runOnUiThread {
+        fun next() {
+            dialog.findViewById<TextView>(R.id.name)?.text = ""
 
-                dialog.findViewById<TextView>(R.id.name)?.text = ""
+            compA = getRandomComponent()
+            compB = getRandomComponent()
 
-                compA = getRandomComponent()
-                compB = getRandomComponent()
+            first.element = compA
+            second.element = compB
 
-                first.element = compA
-                second.element = compB
-
-                first.invalidate()
-                second.invalidate()
-
-            }
+            first.invalidate()
+            second.invalidate()
         }
 
         dialog.findViewById<TextView>(R.id.next)?.setOnClickListener { next() }
@@ -45,16 +41,19 @@ object RandomSuggestion {
             dialog.dismiss()
         }
 
-        setSubmitAction(all, dialog.findViewById(R.id.submit)!!, dialog, false, { compA }, { compB }, { result ->
-            all.runOnUiThread {
-                if(AllManager.unlockedIds.contains(compA.uuid) && AllManager.unlockedIds.contains(compB.uuid)){
+        setSubmitAction(
+            all, dialog.findViewById(R.id.submit)!!,
+            dialog, false, { compA }, { compB }, { result ->
+                if (AllManager.unlockedIds.contains(compA.uuid) && AllManager.unlockedIds.contains(
+                        compB.uuid
+                    )
+                ) {
                     // unlock this element...
                     AllManager.unlockedIds.put(result.uuid)
                     AllManager.addRecipe(compA, compB, result, all)
                 }
                 next()
-            }
-        })
+            })
 
         next()
 

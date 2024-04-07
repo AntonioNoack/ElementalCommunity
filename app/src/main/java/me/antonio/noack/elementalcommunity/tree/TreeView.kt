@@ -47,29 +47,21 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
         hasTree = true
         val ctr = ++ctr
         threadOrNot("TreeBuilder") {
-
-            // println("starting the tree")
-
             tree.invalidate()
-
-            // println("tree done")
-
             if (ctr == this.ctr) {
 
-                this.postInvalidate()
+                postInvalidate()
 
                 minXf = 0f
                 minYf = 0f
                 maxXf = 0f
                 maxYf = 0f
 
-                synchronized(tree.elements) {
-                    for (element in tree.elements) {
-                        minXf = min(minXf, element.tx)
-                        maxXf = max(maxXf, element.tx)
-                        minYf = min(minYf, element.ty)
-                        maxYf = max(maxYf, element.ty)
-                    }
+                for (element in tree.elements) {
+                    minXf = min(minXf, element.tx)
+                    maxXf = max(maxXf, element.tx)
+                    minYf = min(minYf, element.ty)
+                    maxYf = max(maxYf, element.ty)
                 }
 
                 minXf *= elementOffsetX
@@ -78,12 +70,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
                 maxYf *= elementOffsetY
 
                 hasTreeReally = true
-
             }
-
         }
-
-
     }
 
     var widthPerNode = 100f
@@ -104,8 +92,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
                 )
                 if (event.x < favSize) {
                     val maybeX = event.y / favSize
-                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
-                    } else {
+                    if (!(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null)) {
                         isSpecial = true
                         intX = maybeX
                     }
@@ -118,8 +105,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
                 )
                 if (event.y > height - favSize) {
                     val maybeX = event.x / favSize
-                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
-                    } else {
+                    if (!(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null)) {
                         isSpecial = true
                         intX = maybeX
                     }
@@ -188,7 +174,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
 
     init {
 
-        val scrollListener = GestureDetector(object : GestureDetector.OnGestureListener {
+        val scrollListener = GestureDetector(context, object : GestureDetector.OnGestureListener {
             override fun onShowPress(e: MotionEvent) {}
             override fun onDown(event: MotionEvent): Boolean {
                 val (valid, internalX, internalY) = validXY(event)
@@ -357,19 +343,17 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
 
         // val line0 = System.nanoTime()
         if (elementOffsetX != 1 || elementOffsetY != 1) {
-            synchronized(tree.elements) {
-                for (element in tree.elements) {
-                    if (element.hasTreeOutput) {
-                        drawElementOutput(canvas, centerX, centerY, element)
-                    }
+            for (element in tree.elements) {
+                if (element.hasTreeOutput) {
+                    drawElementOutput(canvas, centerX, centerY, element)
                 }
+            }
 
-                for (element in tree.elements) {
-                    val srcA = element.srcA ?: continue
-                    val srcB = element.srcB ?: continue
-                    drawPath(canvas, centerX, centerY, srcA, element, true)
-                    if (srcA != srcB) drawPath(canvas, centerX, centerY, srcB, element, false)
-                }
+            for (element in tree.elements) {
+                val srcA = element.srcA ?: continue
+                val srcB = element.srcB ?: continue
+                drawPath(canvas, centerX, centerY, srcA, element, true)
+                if (srcA != srcB) drawPath(canvas, centerX, centerY, srcB, element, false)
             }
         }
 
@@ -389,30 +373,28 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
         val showCraftingCounts = AllManager.showCraftingCounts
         val showUUIDs = AllManager.showElementUUID
 
-        synchronized(tree.elements) {
-            for (element in tree.elements) {
-                // done draw the element
-                if (element.tx in minX..maxX && element.ty in minY..maxY) {
-                    // x0 = centerX + (element.tx * elementOffsetX - scrollX) * widthPerNode
-                    // (x0 / widthPerNode - centerX + scrollX) / elementOffsetX = element.tx
-                    //
-                    val x0 = centerX + (element.tx * elementOffsetX - scrollX) * widthPerNode
-                    val y0 = centerY + (element.ty * elementOffsetY - scrollY) * widthPerNode
-                    bgPaint.alpha = 255
-                    textPaint.alpha = 255
-                    linePaint.alpha = 255
-                    if (activeElement == element && activeness > 0f) {
-                        val delta = activeness * widthPerNode * 0.5f
-                        drawElement(
-                            canvas, showCraftingCounts, showUUIDs, x0, y0, delta,
-                            widthPerNode, true, element, bgPaint, textPaint
-                        )
-                    } else {
-                        drawElement(
-                            canvas, showCraftingCounts, showUUIDs, x0, y0, 0f,
-                            widthPerNode, true, element, bgPaint, textPaint
-                        )
-                    }
+        for (element in tree.elements) {
+            // done draw the element
+            if (element.tx in minX..maxX && element.ty in minY..maxY) {
+                // x0 = centerX + (element.tx * elementOffsetX - scrollX) * widthPerNode
+                // (x0 / widthPerNode - centerX + scrollX) / elementOffsetX = element.tx
+                //
+                val x0 = centerX + (element.tx * elementOffsetX - scrollX) * widthPerNode
+                val y0 = centerY + (element.ty * elementOffsetY - scrollY) * widthPerNode
+                bgPaint.alpha = 255
+                textPaint.alpha = 255
+                linePaint.alpha = 255
+                if (activeElement == element && activeness > 0f) {
+                    val delta = activeness * widthPerNode * 0.5f
+                    drawElement(
+                        canvas, showCraftingCounts, showUUIDs, x0, y0, delta,
+                        widthPerNode, true, element, bgPaint, textPaint
+                    )
+                } else {
+                    drawElement(
+                        canvas, showCraftingCounts, showUUIDs, x0, y0, 0f,
+                        widthPerNode, true, element, bgPaint, textPaint
+                    )
                 }
             }
         }
@@ -455,7 +437,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
         }
 
         val scrollDest = scrollDest
-        if (scrollDest != null) {
+        if (scrollDest != null && (scrollDest.tx != 0f || scrollDest.ty != 0f)) {
 
             val dt = clamp(3f * deltaTime, 0f, 1f)
 
@@ -470,18 +452,15 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
                     scrollX = 0f
                     scrollY = 0f
                 }
-
                 sqrt(sq(scrollX - scrollDestX, scrollY - scrollDestY)) < 0.05f -> {
                     scrollX = scrollDestX
                     scrollY = scrollDestY
                     this.scrollDest = null
                 }
-
                 else -> {
                     invalidate()
                 }
             }
-
         }
 
         if ((isOnBorderX != 0 || isOnBorderY != 0) && dragged != null) {
@@ -551,8 +530,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
         }
     }
 
-    var activeElement: Element? = null
-    var activeness = 0f
+    private var activeElement: Element? = null
+    private var activeness = 0f
 
     fun add(sa: Element, sb: Element, element: Element): Boolean {
         addRecipe(sa, sb, element, all)
@@ -566,23 +545,16 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
         } else false
     }
 
-    fun unlockElement(sa: Element, sb: Element, element: Element) {
+    private fun unlockElement(sa: Element, sb: Element, element: Element) {
 
         //  add to achieved :D
         val newOne = add(sa, sb, element)
-        synchronized(Unit) {
-            activeElement = element
-            activeness = 1f
-        }
+        activeElement = element
+        activeness = 1f
 
         scrollDest = element
 
-        AllManager.staticRunOnUIThread {
-            invalidate()
-            (if (newOne) AllManager.successSound else AllManager.okSound).play()
-        }
-
+        invalidate()
+        (if (newOne) AllManager.successSound else AllManager.okSound).play()
     }
-
-
 }

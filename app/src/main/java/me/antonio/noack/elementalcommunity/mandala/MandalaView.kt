@@ -19,12 +19,12 @@ import kotlin.math.*
 @SuppressLint("ClickableViewAccessibility")
 class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeSet) {
 
-    var allowLeftFavourites = true
+    private var allowLeftFavourites = true
 
     lateinit var all: AllManager
-    var unlockeds = AllManager.unlockedElements
+    private val unlocked get() = AllManager.unlockedElements
 
-    lateinit var tree: Mandala
+    private lateinit var tree: Mandala
     var hasTree = false
     var isInvalidated = true
 
@@ -55,8 +55,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
                 )
                 if (event.x < favSize) {
                     val maybeX = event.y / favSize
-                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
-                    } else {
+                    if (!(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null)) {
                         isSpecial = true
                         intX = maybeX
                     }
@@ -69,8 +68,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
                 )
                 if (event.y > height - favSize) {
                     val maybeX = event.x / favSize
-                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
-                    } else {
+                    if (!(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null)) {
                         isSpecial = true
                         intX = maybeX
                     }
@@ -83,11 +81,11 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
         return Triple(if (isSpecial) AreaType.FAVOURITES else AreaType.ELEMENTS, intX, intY)
     }
 
-    fun getDistanceSq(loc: MovingLocation, x: Float, y: Float): Float {
+    private fun getDistanceSq(loc: MovingLocation, x: Float, y: Float): Float {
         return sq(loc.targetX - x, loc.targetY - y)
     }
 
-    fun getElementAt(x: Float, y: Float): Element? {
+    fun getElementAt(x: Float, y: Float): Element {
         var minElement = tree.element
         var minDistance = sq(x, y)
         tree.toThisElement.forEach { r ->
@@ -122,7 +120,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
         return minElement
     }
 
-    fun getScale(): Pair<Float, Float> {
+    private fun getScale(): Pair<Float, Float> {
         val min = min(measuredWidth, measuredHeight)
         val sc = if (min > widthPerNode) {
             // w/n or w/n*0.5 is seldom important
@@ -141,21 +139,21 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
 
     init {
 
-        val scrollListener = GestureDetector(object : GestureDetector.OnGestureListener {
+        val scrollListener = GestureDetector(context, object : GestureDetector.OnGestureListener {
             override fun onShowPress(e: MotionEvent) {}
             override fun onDown(event: MotionEvent): Boolean {
 
-                    md = 0f
+                md = 0f
 
-                    val (valid, internalX, internalY) = validXY(event)
+                val (valid, internalX, internalY) = validXY(event)
 
-                    dragged = when (valid) {
-                        AreaType.ELEMENTS -> getElementAt(internalX, internalY)
-                        AreaType.FAVOURITES -> AllManager.favourites[internalX.toInt()]
-                        AreaType.IGNORE -> null
-                    }
+                dragged = when (valid) {
+                    AreaType.ELEMENTS -> getElementAt(internalX, internalY)
+                    AreaType.FAVOURITES -> AllManager.favourites[internalX.toInt()]
+                    AreaType.IGNORE -> null
+                }
 
-                return     false
+                return false
             }
 
             override fun onFling(
@@ -378,38 +376,28 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
 
     private fun sq(x: Float, y: Float) = x * x + y * y
 
-    var activeElement: Element? = null
-    var activeness = 0f
+    private var activeElement: Element? = null
+    private var activeness = 0f
 
     fun add(sa: Element, sb: Element, element: Element): Boolean {
         addRecipe(sa, sb, element, all)
-        val unlocked = unlockeds[element.group]
+        val unlocked = unlocked[element.group]
         return if (!unlocked.contains(element) && element.uuid > -1) {
             unlocked.add(element)
-            // unlocked.sortBy { it.uuid }
-            // invalidateSearch()
             postInvalidate()
             true
         } else false
     }
 
-    fun unlockElement(componentA: Element, componentB: Element, result: Element) {
-
-        //  add to achieved :D
+    private fun unlockElement(componentA: Element, componentB: Element, result: Element) {
+        // add to achieved :D
         val newOne = add(componentA, componentB, result)
-        synchronized(Unit) {
-            activeElement = result
-            activeness = 1f
-        }
+        activeElement = result
+        activeness = 1f
 
         switchTo(result)
 
-        AllManager.staticRunOnUIThread {
-            invalidate()
-            (if (newOne) AllManager.successSound else AllManager.okSound).play()
-        }
-
+        invalidate()
+        (if (newOne) AllManager.successSound else AllManager.okSound).play()
     }
-
-
 }

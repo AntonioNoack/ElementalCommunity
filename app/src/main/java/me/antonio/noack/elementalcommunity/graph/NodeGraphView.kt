@@ -26,24 +26,24 @@ abstract class NodeGraphView(
     val iterativeTree: Boolean
 ) : View(ctx, attributeSet) {
 
-    var allowLeftFavourites = true
+    private var allowLeftFavourites = true
 
     lateinit var all: AllManager
-    val unlockeds get() = AllManager.unlockedElements
+    private val unlockeds get() = AllManager.unlockedElements
 
-    var hasTree = false
-    var hasTreeReally = false
+    private var hasTree = false
+    private var hasTreeReally = false
 
     // measured border coordinates for prevention of scrolling further away
 
-    var minXf = 0f
-    var maxXf = 0f
-    var minYf = 0f
-    var maxYf = 0f
+    private var minXf = 0f
+    private var maxXf = 0f
+    private var minYf = 0f
+    private var maxYf = 0f
 
-    var ctr = 0
+    private var ctr = 0
 
-    var elementSize = 25f
+    private var elementSize = 25f
 
     abstract fun buildTreeAsync()
 
@@ -75,7 +75,6 @@ abstract class NodeGraphView(
             minYf = min(minYf, element.py)
             maxYf = max(maxYf, element.py)
         }
-
     }
 
     fun validXY(event: MotionEvent): Triple<AreaType, Int, Int> {
@@ -339,17 +338,15 @@ abstract class NodeGraphView(
 
     // canvas: Canvas, x0: Float, y0: Float, delta: Float, widthPerNode: Float, margin: Boolean, element: Element, bgPaint: Paint, textPaint: Paint
 
-    var lastTime = System.nanoTime()
+    private var lastTime = System.nanoTime()
 
-    inline fun forAllElements(run: (Element) -> Unit) {
+    fun forAllElements(run: (Element) -> Unit) {
         if (unlockeds.all { it.isEmpty() }) {
             AllManager.registerBaseElements(null)
         }
         for (list in unlockeds) {
-            synchronized(list) {
-                for (element in list) {
-                    run(element)
-                }
+            for (element in list) {
+                run(element)
             }
         }
     }
@@ -460,7 +457,7 @@ abstract class NodeGraphView(
         }
 
         val scrollDest = scrollDest
-        if (scrollDest != null) {
+        if (scrollDest != null && (scrollDest.px != 0f || scrollDest.py != 0f)) {
 
             val dt = clamp(3f * deltaTime, 0f, 1f)
 
@@ -475,13 +472,11 @@ abstract class NodeGraphView(
                     scrollX = 0f
                     scrollY = 0f
                 }
-
                 sqrt(sq(scrollX - scrollDestX, scrollY - scrollDestY)) < 0.05f -> {
                     scrollX = scrollDestX
                     scrollY = scrollDestY
                     this.scrollDest = null
                 }
-
                 else -> invalidate()
             }
 
@@ -572,41 +567,33 @@ abstract class NodeGraphView(
     fun add(srcA: Element, srcB: Element, dst: Element): Boolean {
         addRecipe(srcA, srcB, dst, all)
         val unlocked = unlockeds[dst.group]
-        synchronized(unlocked) {
-            return if (!unlocked.contains(dst) && dst.uuid > -1) {
-                if (srcA === srcB) {
-                    // find location in close proximity
-                    dst.px = srcA.px + (Random.nextDouble().toFloat() - 0.5f)
-                    dst.py = srcA.py + (Random.nextDouble().toFloat() - 0.5f)
-                } else {
-                    dst.px = (srcA.px + srcB.px) * 0.5f
-                    dst.py = (srcA.px + srcB.px) * 0.5f
-                }
-                unlocked.add(dst)
-                // unlocked.sortBy { it.uuid }
-                // invalidateSearch()
-                postInvalidate()
-                true
-            } else false
-        }
+        return if (!unlocked.contains(dst) && dst.uuid > -1) {
+            if (srcA === srcB) {
+                // find location in close proximity
+                dst.px = srcA.px + (Random.nextDouble().toFloat() - 0.5f)
+                dst.py = srcA.py + (Random.nextDouble().toFloat() - 0.5f)
+            } else {
+                dst.px = (srcA.px + srcB.px) * 0.5f
+                dst.py = (srcA.px + srcB.px) * 0.5f
+            }
+            unlocked.add(dst)
+            // unlocked.sortBy { it.uuid }
+            // invalidateSearch()
+            postInvalidate()
+            true
+        } else false
     }
 
     private fun unlockElement(sa: Element, sb: Element, element: Element) {
-
         //  add to achieved :D
         val newOne = add(sa, sb, element)
-        synchronized(Unit) {
-            activeElement = element
-            activeness = 1f
-        }
+        activeElement = element
+        activeness = 1f
 
         scrollDest = element
 
-        AllManager.staticRunOnUIThread {
-            invalidate()
-            (if (newOne) AllManager.successSound else AllManager.okSound).play()
-        }
-
+        invalidate()
+        (if (newOne) AllManager.successSound else AllManager.okSound).play()
     }
 
     companion object {

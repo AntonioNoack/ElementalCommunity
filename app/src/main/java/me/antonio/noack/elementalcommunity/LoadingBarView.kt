@@ -28,8 +28,8 @@ class LoadingBarView(context: Context, attributeSet: AttributeSet?) : View(conte
 
         val lastProgress = progress
 
-        val done = BasicOperations.done.get()
-        val todo = BasicOperations.todo.get()
+        val done = BasicOperations.done
+        val todo = BasicOperations.todo
 
         val target = if (todo == done) done + 0.1 else done + 0.5
         progress = max(progress, target - 5f)
@@ -58,7 +58,7 @@ class LoadingBarView(context: Context, attributeSet: AttributeSet?) : View(conte
 
         if (progress != lastProgress || todo != done) invalidate()
         else {
-            thread {
+            thread(name = "Delayed invalidate") {
                 Thread.sleep(200)
                 postInvalidate()
             }

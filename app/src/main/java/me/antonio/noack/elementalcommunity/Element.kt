@@ -98,12 +98,10 @@ class Element constructor(
     }
 
     init {
-        synchronized(Unit) {
-            elementById[uuid] = this
-            elementByName[name] = this
-            elementByName[compacted] = this
-            elementsByGroup.getOrNull(group)?.add(this)
-        }
+        elementById[uuid] = this
+        elementByName[name] = this
+        elementByName[compacted] = this
+        elementsByGroup.getOrNull(group)?.add(this)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -120,40 +118,38 @@ class Element constructor(
 
     companion object {
         fun get(name: String, uuid: Int, group: Int, craftingCount: Int, save: Boolean): Element {
-            synchronized(Unit) {
-                val element = elementById[uuid]
-                return if (element != null) {
-                    var needsSave = false
-                    if (element.name != name) {
-                        element.name = name
-                        element.compacted = Compact.compacted(name)
-                        element.startingNumber = element.calcStartingNumber()
-                        element.hashLong = element.calcHashLong()
-                        needsSave = true
-                    }
-                    if (craftingCount >= minimumCraftingCount && element.craftingCount != craftingCount) {
-                        element.craftingCount = craftingCount
-                        needsSave = true
-                    }
-                    if (element.group != group) {
-                        // println("group for $name: $group")
-                        val newGroup = clamp(group, 0, elementsByGroup.size - 1)
-                        elementsByGroup[element.group].remove(element)
-                        unlockedElements[element.group].remove(element)
-                        elementsByGroup[newGroup].add(element)
-                        unlockedElements[newGroup].add(element)
-                        element.group = newGroup
-                        // there is the issue:
-                        // saving is done inefficiently
-                        needsSave = true
-                        invalidate()
-                    }
-                    if (save && needsSave) {
-                        saveElement2(element)
-                    }
-                    element
-                } else Element(name, uuid, group, craftingCount)
-            }
+            val element = elementById[uuid]
+            return if (element != null) {
+                var needsSave = false
+                if (element.name != name) {
+                    element.name = name
+                    element.compacted = Compact.compacted(name)
+                    element.startingNumber = element.calcStartingNumber()
+                    element.hashLong = element.calcHashLong()
+                    needsSave = true
+                }
+                if (craftingCount >= minimumCraftingCount && element.craftingCount != craftingCount) {
+                    element.craftingCount = craftingCount
+                    needsSave = true
+                }
+                if (element.group != group) {
+                    // println("group for $name: $group")
+                    val newGroup = clamp(group, 0, elementsByGroup.size - 1)
+                    elementsByGroup[element.group].remove(element)
+                    unlockedElements[element.group].remove(element)
+                    elementsByGroup[newGroup].add(element)
+                    unlockedElements[newGroup].add(element)
+                    element.group = newGroup
+                    // there is the issue:
+                    // saving is done inefficiently
+                    needsSave = true
+                    invalidate()
+                }
+                if (save && needsSave) {
+                    saveElement2(element)
+                }
+                element
+            } else Element(name, uuid, group, craftingCount)
         }
     }
 

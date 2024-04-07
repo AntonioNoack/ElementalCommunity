@@ -1,6 +1,7 @@
 package me.antonio.noack.elementalcommunity
 
 import android.content.SharedPreferences
+import me.antonio.noack.elementalcommunity.AllManager.Companion.checkIsUIThread
 import me.antonio.noack.elementalcommunity.api.WebServices.tryCaptchaLarge
 import me.antonio.noack.elementalcommunity.utils.Compact.compacted
 import java.net.URLEncoder
@@ -33,25 +34,22 @@ object OfflineSuggestions {
         val newElement = createOfflineElement(name, group)
         // add recipe to used-recipe-database
         AllManager.addRecipe(compA, compB, newElement, all, true)
-        synchronized(offlineRecipes) {
-            val ing = Ingredients(compA.uuid, compB.uuid)
-            offlineRecipes[ing] = Recipe(newElement, group)
-        }
+        val ing = Ingredients(compA.uuid, compB.uuid)
+        offlineRecipes[ing] = Recipe(newElement, group)
         return newElement
     }
 
     private fun createOfflineElement(name: String, group: Int): Element {
+        checkIsUIThread()
         val compactName = compacted(name)
-        return synchronized(offlineElements) {
-            val oldValue = offlineElements.firstOrNull { compacted(it.name) == compactName }
-            if (oldValue != null) oldValue
-            else {
-                val newUUID = (offlineElements.minByOrNull { it.uuid }?.uuid ?: 0) - 1
-                // println("Creating new offline element: $newUUID, $name/$compactName")
-                val newElement = Element(name, newUUID, group, 0)
-                offlineElements.add(newElement)
-                newElement
-            }
+        val oldValue = offlineElements.firstOrNull { compacted(it.name) == compactName }
+        return if (oldValue != null) oldValue
+        else {
+            val newUUID = (offlineElements.minByOrNull { it.uuid }?.uuid ?: 0) - 1
+            // println("Creating new offline element: $newUUID, $name/$compactName")
+            val newElement = Element(name, newUUID, group, 0)
+            offlineElements.add(newElement)
+            newElement
         }
     }
 

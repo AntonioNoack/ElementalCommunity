@@ -123,56 +123,52 @@ object RecipeHelper {
 
             // todo show names of elements blurred, which are not already discovered
             fun showResult(list: List<Recipe>, search: String) {
-                all.runOnUiThread {
-                    synchronized(recipes) {
-                        recipes.removeAllViews()
-                        for (recipe in list) {
-                            val a = recipe.a
-                            val b = recipe.b
-                            val r = recipe.r
-                            // todo show this in the list...
-                            // todo make the names unreadable
-                            val recipeView = RecipeView(all, null)
-                            val isKnown = AllManager.elementByRecipe[a to b] != null
-                            recipeView.aName = makeLessReadable(a.name, !isKnown)
-                            recipeView.aGroup = a.group
-                            recipeView.bName = makeLessReadable(b.name, !isKnown)
-                            recipeView.bGroup = b.group
-                            recipeView.rName = makeLessReadable(
-                                r.name,
-                                !isKnown && compacted(search) != compacted(r.name)
-                            )
-                            recipeView.rGroup = r.group
-                            recipeView.overlay =
-                                if (isKnown) 0 else (0xaa000000.toInt() or all.resources.getColor(R.color.colorPrimaryDark)
-                                    .and(0xffffff))
-                            if (!isKnown) {
-                                var wasUnlocked = false
-                                recipeView.setOnClickListener {
-                                    if (wasUnlocked) return@setOnClickListener
-                                    if (all.spendDiamonds(lookUpCost + 1)) {// +1, because unlocking this elements gives you 1 point
-                                        wasUnlocked = true
-                                        recipeView.aName = a.name
-                                        recipeView.aGroup = a.group
-                                        recipeView.bName = b.name
-                                        recipeView.bGroup = b.group
-                                        recipeView.rName = r.name
-                                        recipeView.rGroup = r.group
-                                        recipeView.overlay = 0
-                                        AllManager.addRecipe(a, b, r, all)
-                                        recipeView.invalidate()
-                                        dialog.findViewById<TextView>(R.id.diamonds)?.text =
-                                            all.getDiamondCount().toString()
-                                    }
-                                }
+                recipes.removeAllViews()
+                for (recipe in list) {
+                    val a = recipe.a
+                    val b = recipe.b
+                    val r = recipe.r
+                    // todo show this in the list...
+                    // todo make the names unreadable
+                    val recipeView = RecipeView(all, null)
+                    val isKnown = AllManager.elementByRecipe[a to b] != null
+                    recipeView.aName = makeLessReadable(a.name, !isKnown)
+                    recipeView.aGroup = a.group
+                    recipeView.bName = makeLessReadable(b.name, !isKnown)
+                    recipeView.bGroup = b.group
+                    recipeView.rName = makeLessReadable(
+                        r.name,
+                        !isKnown && compacted(search) != compacted(r.name)
+                    )
+                    recipeView.rGroup = r.group
+                    recipeView.overlay =
+                        if (isKnown) 0 else (0xaa000000.toInt() or all.resources.getColor(R.color.colorPrimaryDark)
+                            .and(0xffffff))
+                    if (!isKnown) {
+                        var wasUnlocked = false
+                        recipeView.setOnClickListener {
+                            if (wasUnlocked) return@setOnClickListener
+                            if (all.spendDiamonds(lookUpCost + 1)) {// +1, because unlocking this elements gives you 1 point
+                                wasUnlocked = true
+                                recipeView.aName = a.name
+                                recipeView.aGroup = a.group
+                                recipeView.bName = b.name
+                                recipeView.bGroup = b.group
+                                recipeView.rName = r.name
+                                recipeView.rGroup = r.group
+                                recipeView.overlay = 0
+                                AllManager.addRecipe(a, b, r, all)
+                                recipeView.invalidate()
+                                dialog.findViewById<TextView>(R.id.diamonds)?.text =
+                                    all.getDiamondCount().toString()
                             }
-                            recipeView.invalidate()
-                            recipes.addView(recipeView)
                         }
-                        recipes.visibility =
-                            if (recipes.childCount == 0) View.GONE else View.VISIBLE
                     }
+                    recipeView.invalidate()
+                    recipes.addView(recipeView)
                 }
+                recipes.visibility =
+                    if (recipes.childCount == 0) View.GONE else View.VISIBLE
             }
 
             textField.addTextChangedListener(object : TextWatcher {

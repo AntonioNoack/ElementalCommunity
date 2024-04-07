@@ -9,8 +9,6 @@ import me.antonio.noack.elementalcommunity.api.WebServices
 
 object CombinationCache {
 
-    val ms = 1000000L
-
     // todo show # of recipes of+from a recipe?
     // todo search for mandala view
 
@@ -18,8 +16,8 @@ object CombinationCache {
     private val hiddenRecipes = Array(GroupsEtc.GroupColors.size + 12) { CacheGroup() }
 
     fun init(pref: SharedPreferences) {
-        for (i in 0 until hiddenRecipes.size) {
-            (pref.getString("cache.$i", null) ?: null)?.apply {
+        for (i in hiddenRecipes.indices) {
+            pref.getString("cache.$i", null)?.apply {
                 loadMultipleFromString()
             }
             hiddenRecipes[i].validationDate =
@@ -52,7 +50,7 @@ object CombinationCache {
 
     fun updateInWealth(a: Element, b: Element) {
         if (a.uuid > b.uuid) return updateInWealth(b, a)
-        hiddenRecipes[a.group].updateInWealth(a, b)
+        hiddenRecipes[a.group].updateInWealth(a)
     }
 
     fun save(edit: SharedPreferences.Editor) {
@@ -68,7 +66,8 @@ object CombinationCache {
     }
 
     fun invalidate(edit: SharedPreferences.Editor) {
-        for ((i, group) in hiddenRecipes.withIndex()) {
+        for (i in hiddenRecipes.indices) {
+            val group = hiddenRecipes[i]
             group.invalidate()
             edit.putLong("cache.$i.date", group.validationDate)
         }
@@ -99,7 +98,7 @@ object CombinationCache {
             data[a to b] = r
         }
 
-        fun isValid(date: Long) =
+        private fun isValid(date: Long) =
             data.isNotEmpty() && kotlin.math.abs(date - validationDate) < 3_600_000 // 1h
 
         fun askRegularly(all: AllManager, a: Element, b: Element, callback: (Element?) -> Unit) {
@@ -133,12 +132,14 @@ object CombinationCache {
             askDirectly(a, b, callback)
         }
 
-        fun askDirectly(a: Element, b: Element, callback: (Element?) -> Unit) {
-            val suggestion = OfflineSuggestions.getOfflineRecipe(a,b)
-            println("asking cache directly, " +
-                    "$suggestion, " +
-                    "${data[a to b]}, " +
-                    "${AllManager.getRecipe(a, b)}")
+        private fun askDirectly(a: Element, b: Element, callback: (Element?) -> Unit) {
+            val suggestion = OfflineSuggestions.getOfflineRecipe(a, b)
+            println(
+                "asking cache directly, " +
+                        "$suggestion, " +
+                        "${data[a to b]}, " +
+                        "${AllManager.getRecipe(a, b)}"
+            )
             val recipe = suggestion ?: data[a to b] ?: AllManager.getRecipe(a, b)
             callback(recipe)
         }
@@ -152,7 +153,7 @@ object CombinationCache {
             validationDate = 0L
         }
 
-        fun updateInWealth(a: Element, b: Element) {
+        fun updateInWealth(a: Element) {
             val date = System.nanoTime()
             if (!isValid(date)) {
                 val oldDate = validationDate

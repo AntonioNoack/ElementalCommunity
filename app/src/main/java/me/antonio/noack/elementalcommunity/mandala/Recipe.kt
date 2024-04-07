@@ -22,7 +22,7 @@ class Recipe(var a: Element,
         }
     }
 
-    val hash = a.uuid.shl(22) or b.uuid.shl(11) or r.uuid
+    private val hash = a.uuid.shl(22) or b.uuid.shl(11) or r.uuid
     override fun compareTo(other: Recipe): Int {
         val x0 = hash.compareTo(other.hash)
         if(x0 != 0) return x0
