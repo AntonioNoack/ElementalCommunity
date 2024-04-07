@@ -64,7 +64,6 @@ object OfflineSuggestions {
             val id = e.substring(0, cai).toIntOrNull() ?: continue
             val group = e.substring(cai + 1, gri).toIntOrNull() ?: continue
             val name = e.substring(gri + 1)
-            // println("Loading offline element: $id, $name")
             offlineElements[id] = createOfflineElement(name, group)
         }
         val offlineRecipes1 = pref.getStringSet("offlineRecipes", HashSet()) ?: emptySet()
@@ -85,7 +84,6 @@ object OfflineSuggestions {
             val compB = AllManager.elementById[compBi] ?: offlineElements[compBi] ?: continue
             addOfflineRecipe(all, compA, compB, name, group)
         }
-        // println("Loaded ${offlineElements1.size} offline elements and ${offlineElements1.size} offline recipes")
     }
 
     private fun storeOfflineElements(editor: SharedPreferences.Editor) {

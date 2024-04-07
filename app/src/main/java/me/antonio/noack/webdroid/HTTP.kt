@@ -38,7 +38,7 @@ object HTTP {
         )
         thread(name = "HTTP-Request") {
             try {
-                println(url)
+                println("Requesting $url")
                 val con = URL("https://$url").openConnection() as HttpURLConnection
                 con.connectTimeout = 10000
                 con.readTimeout = 20000

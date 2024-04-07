@@ -6,6 +6,8 @@ import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.GroupsEtc
 import me.antonio.noack.elementalcommunity.OfflineSuggestions
 import me.antonio.noack.elementalcommunity.api.WebServices
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.concurrent.thread
 
 object CombinationCache {
 
@@ -16,17 +18,18 @@ object CombinationCache {
     private val hiddenRecipes = Array(GroupsEtc.GroupColors.size + 12) { CacheGroup() }
 
     fun init(pref: SharedPreferences) {
-        for (i in hiddenRecipes.indices) {
-            pref.getString("cache.$i", null)?.apply {
-                loadMultipleFromString()
+        thread(name = "CombinationCache.init") {
+            for (i in hiddenRecipes.indices) {
+                pref.getString("cache.$i", null)?.apply {
+                    loadMultipleFromString()
+                }
+                hiddenRecipes[i].validationDate =
+                    pref.getLong("cache.$i.date", hiddenRecipes[i].validationDate)
             }
-            hiddenRecipes[i].validationDate =
-                pref.getLong("cache.$i.date", hiddenRecipes[i].validationDate)
         }
     }
 
     fun String.loadMultipleFromString() {
-        // println("[CCache] loaded ${this.length}: '$this'")
         for (abr in split(';')) {
             if (abr.length >= 5) { // 1,2,3
                 val abrElements = abr
@@ -92,7 +95,7 @@ object CombinationCache {
     class CacheGroup {
 
         var validationDate = 0L
-        val data = HashMap<Pair<Element, Element>, Element>()
+        val data = ConcurrentHashMap<Pair<Element, Element>, Element>()
 
         operator fun set(a: Element, b: Element, r: Element) {
             data[a to b] = r

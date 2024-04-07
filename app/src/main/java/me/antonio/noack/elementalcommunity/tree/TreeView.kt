@@ -267,7 +267,7 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
                                 // set it here
                                 AllManager.favourites[internalX] = first
                                 AllManager.saveFavourites()
-                                AllManager.clickSound.play()
+                                AllManager.clickSound?.play()
                                 invalidate()
                                 null
                             }
@@ -555,6 +555,6 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
         scrollDest = element
 
         invalidate()
-        (if (newOne) AllManager.successSound else AllManager.okSound).play()
+        (if (newOne) AllManager.successSound else AllManager.okSound)?.play()
     }
 }

@@ -220,7 +220,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
                                 // set it here
                                 AllManager.favourites[internalX.toInt()] = first
                                 AllManager.saveFavourites()
-                                AllManager.clickSound.play()
+                                AllManager.clickSound?.play()
                                 invalidate()
                                 null
                             }
@@ -382,8 +382,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
     fun add(sa: Element, sb: Element, element: Element): Boolean {
         addRecipe(sa, sb, element, all)
         val unlocked = unlocked[element.group]
-        return if (!unlocked.contains(element) && element.uuid > -1) {
-            unlocked.add(element)
+        return if (element.uuid > -1 && unlocked.add(element)) {
             postInvalidate()
             true
         } else false
@@ -398,6 +397,6 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
         switchTo(result)
 
         invalidate()
-        (if (newOne) AllManager.successSound else AllManager.okSound).play()
+        (if (newOne) AllManager.successSound else AllManager.okSound)?.play()
     }
 }

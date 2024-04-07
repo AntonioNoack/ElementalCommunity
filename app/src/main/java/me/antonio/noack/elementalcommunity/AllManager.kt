@@ -38,14 +38,13 @@ import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.concurrent.thread
 import kotlin.math.abs
 
 // Sounds:
 // magic: https://freesound.org/people/suntemple/sounds/241809/
 // ok: https://freesound.org/people/grunz/sounds/109663/
 // click: https://freesound.org/people/vitriolix/sounds/706/
-
-// todo does offline mode work with synchronizing/loading-saving your progress via a file / the server?
 
 class AllManager : AppCompatActivity() {
 
@@ -59,17 +58,19 @@ class AllManager : AppCompatActivity() {
         val unlockedIds = ConcurrentHashSet<Int>(512)
 
         init {
-            for (i in 1..4) unlockedIds.put(i)
+            for (i in 1..4) {
+                unlockedIds.put(i)
+            }
         }
 
         val elementById = ConcurrentHashMap<Int, Element>(512)
 
         val elementsByGroup = Array(GroupColors.size + 12) {
-            TreeSet<Element>()
+            ConcurrentTreeSet<Element>()
         }
 
         val unlockedElements = Array(GroupColors.size + 12) {
-            TreeSet<Element>()
+            ConcurrentTreeSet<Element>()
         }
 
         const val MAX_FAVOURITES_RATIO = 0.15f
@@ -82,15 +83,17 @@ class AllManager : AppCompatActivity() {
         val elementByName = ConcurrentHashMap<String, Element>(2048)
 
         fun registerBaseElements(pref: SharedPreferences?) {
-            val names = arrayOf("???", "Earth", "Air", "Water", "Fire")
-            val groups = intArrayOf(20, 5, 12, 20, 4)
-            for (id in unlockedIds.keys) {// after a restart, this should be only 4
-                val defName = names.getOrNull(id) ?: ""
-                val defGroup = groups.getOrNull(id) ?: 0
+            // how TF is this taking 100ms????
+            val names = arrayOf("Earth", "Air", "Water", "Fire")
+            val groups = intArrayOf(5, 12, 20, 4)
+            for (index in 0 until 4) {// after a restart, this should be only 4
+                val id = index + 1
+                val defName = names[index]
+                val defGroup = groups[index]
                 val name = pref?.getString("$id.name", defName) ?: defName
                 val group = pref?.getInt("$id.group", defGroup) ?: defGroup
                 val craftingCount = pref?.getInt("$id.crafted", -1) ?: -1
-                val element = Element.get(name, id, group, craftingCount, false)
+                val element = elementById.getOrPut(id) { Element(name, id, group, craftingCount) }
                 unlockedElements[element.group].add(element)
             }
         }
@@ -104,12 +107,16 @@ class AllManager : AppCompatActivity() {
             val list = recipesByElement[r]
             if (list == null) {
                 recipesByElement[r] = arrayListOf(a to b)
-            } else if (pair !in list) {
-                list.add(pair)
+            } else synchronized(list) {
+                if (pair !in list) {
+                    list.add(pair)
+                }
             }
-            invalidate()
-            all?.updateDiamondCount()
-            if (save) saveElement2(r)
+            if (save) {
+                invalidate()
+                all?.updateDiamondCount()
+                saveElement2(r)
+            }
         }
 
         fun getRecipe(a: Element, b: Element): Element? {
@@ -130,10 +137,10 @@ class AllManager : AppCompatActivity() {
 
         lateinit var invalidate: () -> Unit
 
-        lateinit var successSound: Sound
-        lateinit var okSound: Sound
-        lateinit var clickSound: Sound
-        lateinit var backgroundMusic: List<Sound>
+        var successSound: Sound? = null
+        var okSound: Sound? = null
+        var clickSound: Sound? = null
+        var backgroundMusic: List<Sound> = emptyList()
 
         var askFrequency = AskFrequencyOption.ALWAYS
         var backgroundMusicVolume = 1f
@@ -277,10 +284,18 @@ class AllManager : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        val clock = Clock()
+
         super.onCreate(savedInstanceState)
+        clock.stop("super.onCreate")
+
         setContentView(R.layout.all_pages)
+        clock.stop("Set Layout")
 
         initViews()
+
+        clock.stop("Init Views")
 
         actionBar?.hide()
 
@@ -288,11 +303,14 @@ class AllManager : AppCompatActivity() {
             window.navigationBarColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 resources.getColor(R.color.colorPrimary, theme)
             } else {
+                @Suppress("DEPRECATION")
                 resources.getColor(R.color.colorPrimary)
             }
         }
 
         goFullScreen()
+
+        clock.stop("Fullscreen")
 
         unlocked?.all = this
         combiner?.all = this
@@ -300,15 +318,18 @@ class AllManager : AppCompatActivity() {
         graphView?.all = this
         mandalaView?.all = this
 
-        successSound = Sound(R.raw.magic, this)
-        okSound = Sound(R.raw.ok, this)
-        clickSound = Sound(R.raw.click, this)
-        backgroundMusic = listOf(
-            Sound(R.raw.music_aquatic_omniverse, this),
-            Sound(R.raw.music_clouds_make2, this),
-            Sound(R.raw.music_infinite_elements, this)
-        )
-        // askingSound = So
+        thread(name = "Loading Sounds") {
+            val clock1 = Clock()
+            successSound = Sound(R.raw.magic, this)
+            okSound = Sound(R.raw.ok, this)
+            clickSound = Sound(R.raw.click, this)
+            backgroundMusic = listOf(
+                Sound(R.raw.music_aquatic_omniverse, this),
+                Sound(R.raw.music_clouds_make2, this),
+                Sound(R.raw.music_infinite_elements, this)
+            )
+            clock1.stop("Sounds Async")
+        }
 
         staticRunOnUIThread = { callback ->
             MusicScheduler.tick()
@@ -352,7 +373,6 @@ class AllManager : AppCompatActivity() {
             treeView?.postInvalidate()
             mandalaView?.isInvalidated = true
             mandalaView?.postInvalidate()
-
         }
 
         pref = BetterPreferences(getPreferences(Context.MODE_PRIVATE))
@@ -361,9 +381,14 @@ class AllManager : AppCompatActivity() {
         }
 
         addClickListeners()
+
+        clock.stop("Added click listeners")
+
         loadEverythingFromPreferences()
 
         MusicScheduler.tick()
+
+        clock.total("Total")
 
     }
 
@@ -419,18 +444,26 @@ class AllManager : AppCompatActivity() {
 
     fun loadEverythingFromPreferences() {
 
+        val clock = Clock()
+
+        pref.getInt("0", 0)
+
+        clock.stop("Loading preferences")
+
         askFrequency = AskFrequencyOption[pref]
         backgroundMusicVolume = pref.getFloat("backgroundMusicVolume", 1f)
         showCraftingCounts = pref.getBoolean("showCraftingCounts", true)
         showElementUUID = pref.getBoolean("showElementUUID", true)
         offlineMode = pref.getBoolean("offlineMode", false)
 
-        println("offline mode? $offlineMode")
-
         WebServices.serverInstance = pref.getInt("serverInstance", 0)
         WebServices.serverName = pref.getString("serverName", "Default")!!
 
-        SettingsInit.init(this)
+        clock.stop("Getting a few prefs")
+
+        SettingsInit.initMainButton(this)
+
+        clock.stop("Settings.init")
 
         saveElement = { edit, element ->
             MusicScheduler.tick()
@@ -458,7 +491,6 @@ class AllManager : AppCompatActivity() {
                 }
             }
             edit.putString(id.toString(), value.toString())
-            println("saved $id/$value")
         }
 
         saveElement2 = { element ->
@@ -482,13 +514,21 @@ class AllManager : AppCompatActivity() {
             edit.apply()
         }
 
+        clock.stop("Callbacks")
+
         readUnlockedElementsLegacy()
 
+        clock.stop("Legacy-Loading")
+
         registerBaseElements(pref)
+
+        clock.stop("Register base elements")
 
         readUnlockedElements()
 
         loadOfflineElements(this, pref)
+
+        clock.stop("Loading offline")
 
         createUniqueIdentifier()
 
@@ -499,7 +539,11 @@ class AllManager : AppCompatActivity() {
 
         updateGroupSizesAndNames()
 
+        clock.stop("Stuff")
+
         askNews()
+
+        clock.stop("News")
 
         val edit2 = pref.edit()
         for ((key, value) in pref.all) {
@@ -534,29 +578,40 @@ class AllManager : AppCompatActivity() {
             }
         }
 
+        clock.stop("Diamond View Stuff")
+
         updateDiamondCount()
+
+        clock.stop("Diamond Count")
 
         CombinationCache.init(pref)
 
+        clock.stop("CombinationCache.init")
+
         SaveLoadLogic.init(this)
 
-        // todo everything is saved, isn't it?
-        // todo then clear the cache :D
-
+        clock.stop("SaveLoadLogic.init")
     }
 
     private fun readUnlockedElementsLegacy() {
         val unlockedIdsString = pref.getString("unlocked", null)
         if (unlockedIdsString != null) {
             unlockedIds.addAll(unlockedIdsString
-                .split(',')
-                .mapNotNull { x -> x.toIntOrNull() })
+                .split(',').mapNotNull { x -> x.toIntOrNull() })
         } else unlockedIds.addAll(listOf(1, 2, 3, 4))
     }
 
     private fun readUnlockedElements() {
+        thread(name = "Reading Unlocked") {
+            readUnlockedElements0()
+            runOnUiThread(::updateDiamondCount)
+        }
+    }
+
+    private fun readUnlockedElements0() {
+        val clock = Clock()
         val reader = SplitReader2()
-        val recipeMemory = HashMap<Element, IntArrayList>()
+        val recipeMemory = HashMap<Element, IntArrayList>(512)
         for ((key, value) in pref.all) {
             val id = key.toIntOrNull()
             if (id != null && value != null) {
@@ -569,9 +624,8 @@ class AllManager : AppCompatActivity() {
                     if (group < 0) continue
                     val craftCount = reader.readInt(';', ';', -1)
                     val wasCrafted = reader.readInt(';', ';', 0) > 0
-                    val element = Element.get(name, id, group, craftCount, false)
+                    val element = elementById.getOrPut(id) { Element(name, id, group, craftCount) }
                     if (wasCrafted) {
-                        // println("added element $name/$group/$craftCount/$wasCrafted")
                         unlockedIds.put(id)
                         unlockedElements[group].add(element)
                     }
@@ -606,6 +660,7 @@ class AllManager : AppCompatActivity() {
                 edit.apply()
             }
         }
+        clock.stop("Read Unlocked: Load All, #${unlockedIds.size}")
         for ((element, abs) in recipeMemory) {
             abs.forEachPair { a, b ->
                 val ea = elementById[a]
@@ -615,6 +670,7 @@ class AllManager : AppCompatActivity() {
                 }
             }
         }
+        clock.stop("Read Unlocked: Adding Recipes, #${recipeMemory.size}")
     }
 
     private fun createUniqueIdentifier() {
@@ -641,7 +697,7 @@ class AllManager : AppCompatActivity() {
         val current = getDiamondCount()
         val hasEnough = count < 0 || current >= count
         if (hasEnough) {
-            successSound.play()
+            successSound?.play()
             pref.edit().putInt(diamondSpentKey, pref.getInt(diamondSpentKey, 0) + count).apply()
             updateDiamondCount()
         } else {

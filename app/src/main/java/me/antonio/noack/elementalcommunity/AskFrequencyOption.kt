@@ -3,7 +3,7 @@ package me.antonio.noack.elementalcommunity
 import android.content.SharedPreferences
 import java.util.*
 
-enum class AskFrequencyOption(val displayName: String, val chance: Float, val uuid: Int) {
+enum class AskFrequencyOption(val displayName: String, private val chance: Float, val uuid: Int) {
     ALWAYS("always", 1f, 0),
     SOMETIMES("sometimes", 0.3f, 10),
     RARELY("rarely", 0.03f, 20),

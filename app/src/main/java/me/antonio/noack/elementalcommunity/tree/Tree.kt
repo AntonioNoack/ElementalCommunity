@@ -9,11 +9,8 @@ import kotlin.math.max
 
 class Tree {
 
-    var maxElementRadius = 10
+    val maxElementRadius = 10
     val maxPerRow = maxElementRadius * 2 + 1
-    var maxRadiusX = maxElementRadius.toFloat()
-    var top = 0f
-    var bottom = 5f
 
     lateinit var elements: ArrayList<Element>
 
@@ -21,7 +18,7 @@ class Tree {
 
     fun invalidate() = build()
 
-    fun build() {
+    private fun build() {
 
         // build the tree of elements
         treeMap.clear()
@@ -33,7 +30,7 @@ class Tree {
             allRecipes.add(Triple(src.first, src.second, dst))
         }
 
-        val elements = ArrayList<Element>(max(4, AllManager.unlockedElements.sumBy { it.size }))
+        val elements = ArrayList<Element>(max(4, AllManager.unlockedElements.sumOf { it.size }))
         val todo = HashSet<Element>(elements.size)
 
         for (elementRow in AllManager.unlockedElements) {
@@ -153,11 +150,10 @@ class Tree {
         }
 
         this.elements = elements
-        bottom = ((positionY - 1)).toFloat()
 
     }
 
-    fun sortScore(element: Element?, depth: Int): Int {
+    private fun sortScore(element: Element?, depth: Int): Int {
         if (element == null || depth > 0) return 0
         val sca = sortScore(element.srcA, depth + 1)
         return (3 * sca + if (element.srcB == element.srcA) sca else sortScore(

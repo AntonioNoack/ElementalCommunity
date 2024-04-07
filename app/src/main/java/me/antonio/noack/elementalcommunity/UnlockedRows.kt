@@ -87,7 +87,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
     }
 
     private val unlockeds = AllManager.unlockedElements
-    private val shownSymbols = Array(unlockeds.size) { TreeSet<Element>() }
+    private val shownSymbols = Array(unlockeds.size) { ConcurrentTreeSet<Element>() }
 
     private var entriesPerRow = 5
 
@@ -301,7 +301,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                                     // set it here
                                     AllManager.favourites[internalX] = first
                                     AllManager.saveFavourites()
-                                    AllManager.clickSound.play()
+                                    AllManager.clickSound?.play()
                                     invalidate()
                                     null
                                 } else getElementAt(internalX, internalY)
@@ -337,7 +337,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
         // scroll to destination on success
         scrollDest = element
         invalidate()
-        (if (newOne) AllManager.successSound else AllManager.okSound).play()
+        (if (newOne) AllManager.successSound else AllManager.okSound)?.play()
     }
 
     open fun onRecipeRequest(first: Element, second: Element) {

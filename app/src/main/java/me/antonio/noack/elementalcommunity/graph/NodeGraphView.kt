@@ -295,7 +295,7 @@ abstract class NodeGraphView(
                                 // set it here
                                 AllManager.favourites[internalX] = dragged
                                 AllManager.saveFavourites()
-                                AllManager.clickSound.play()
+                                AllManager.clickSound?.play()
                                 invalidate()
                                 null
                             }
@@ -593,7 +593,7 @@ abstract class NodeGraphView(
         scrollDest = element
 
         invalidate()
-        (if (newOne) AllManager.successSound else AllManager.okSound).play()
+        (if (newOne) AllManager.successSound else AllManager.okSound)?.play()
     }
 
     companion object {

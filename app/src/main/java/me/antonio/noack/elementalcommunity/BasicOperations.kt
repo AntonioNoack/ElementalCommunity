@@ -190,9 +190,7 @@ object BasicOperations {
                             // removed, because it's rather expensive to compute and not that important
                             // maybe we should save that information on per-instance basis in the database...
                             val rCraftingCount = -1
-                            val element =
-                                Element.get(rName, rUUID, rGroup, rCraftingCount, true)
-                            unlockElement(element)
+                            unlockElement(Element.get(rName, rUUID, rGroup, rCraftingCount, true))
                         } catch (_: NumberFormatException) {
 
                         }
