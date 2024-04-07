@@ -29,6 +29,7 @@ import me.antonio.noack.elementalcommunity.io.SplitReader2
 import me.antonio.noack.elementalcommunity.itempedia.ItempediaAdapter
 import me.antonio.noack.elementalcommunity.itempedia.ItempediaPageLoader.createItempediaPages
 import me.antonio.noack.elementalcommunity.itempedia.ItempediaPageLoader.loadNumPages
+import me.antonio.noack.elementalcommunity.itempedia.ItempediaSearch
 import me.antonio.noack.elementalcommunity.itempedia.ItempediaSwipeDetector
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
 import me.antonio.noack.elementalcommunity.tree.TreeView
@@ -173,8 +174,10 @@ class AllManager : AppCompatActivity() {
     var favSlider: SeekBar? = null
     private var search1: EditText? = null
     private var search2: EditText? = null
+    var search3: EditText? = null
     private var searchButton1: View? = null
     private var searchButton2: View? = null
+    var searchButton3: View? = null
     private var randomButton: View? = null
     var resetEverythingButton: View? = null
     var newsView: NewsView? = null
@@ -221,8 +224,10 @@ class AllManager : AppCompatActivity() {
         backArrow6 = findViewById(R.id.backArrow6)
         search1 = findViewById(R.id.search1)
         search2 = findViewById(R.id.search2)
+        search3 = findViewById(R.id.search3)
         searchButton1 = findViewById(R.id.searchButton1)
         searchButton2 = findViewById(R.id.searchButton2)
+        searchButton3 = findViewById(R.id.searchButton3)
         randomButton = findViewById(R.id.randomButton)
         spaceSlider = findViewById(R.id.spaceSlider)
         resetEverythingButton = findViewById(R.id.resetEverythingButton)
@@ -396,14 +401,19 @@ class AllManager : AppCompatActivity() {
             lazyItempediaInit.value
             FlipperContent.ITEMPEDIA.bind(this)
         }
-        back1?.setOnClickListener { FlipperContent.MENU.bind(this) }
-        back2?.setOnClickListener { FlipperContent.MENU.bind(this) }
-        backArrow3?.setOnClickListener { FlipperContent.MENU.bind(this) }
-        backArrow4?.setOnClickListener { FlipperContent.MENU.bind(this) }
-        backArrow5?.setOnClickListener { FlipperContent.MENU.bind(this) }
-        backArrow6?.setOnClickListener { FlipperContent.MENU.bind(this) }
-        addSearchListeners(back3, backArrow1, searchButton1, search1, unlocked)
-        addSearchListeners(back1, backArrow2, searchButton2, search2, combiner)
+
+        for (backArrow in listOf(
+            back1, back2,
+            backArrow1, backArrow2, backArrow3,
+            backArrow4, backArrow5, backArrow6
+        )) {
+            backArrow?.setOnClickListener { FlipperContent.MENU.bind(this) }
+        }
+
+        addSearchListeners(back3, searchButton1, search1, unlocked)
+        addSearchListeners(back1, searchButton2, search2, combiner)
+        ItempediaSearch.setupSearchButton(this)
+
         randomButton?.setOnClickListener { RandomSuggestion.make(this) }
     }
 
@@ -657,13 +667,11 @@ class AllManager : AppCompatActivity() {
 
     private fun addSearchListeners(
         back: View?,
-        backArrow: View?,
         searchButton: View?,
         search: TextView?,
         unlocked: UnlockedRows?
     ) {
         back?.setOnClickListener { flipper?.displayedChild = 0 }
-        backArrow?.setOnClickListener { flipper?.displayedChild = 0 }
         val diamondView = (back?.parent as? View)?.findViewById<View>(R.id.diamonds)
         searchButton?.setOnClickListener {
             if (back?.visibility == VISIBLE) {

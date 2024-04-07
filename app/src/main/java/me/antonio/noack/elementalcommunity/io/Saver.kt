@@ -57,6 +57,6 @@ object Saver {
 
     }
 
-    fun escape(string: String) = string.replace("\n", "\\n")
+    private fun escape(string: String) = string.replace("\n", "\\n")
 
 }

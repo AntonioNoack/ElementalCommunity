@@ -25,6 +25,7 @@
             android:src="@drawable/ic_arrow_back_black_24dp" />
 
         <Button
+            android:id="@+id/itempediaTitle"
             android:layout_width="0dp"
             android:layout_height="50sp"
             android:layout_weight="1"
@@ -36,9 +37,22 @@
             android:textAllCaps="false"
             android:textSize="24sp" />
 
-        <View
+        <ImageView
+            android:id="@+id/searchButton3"
             android:layout_width="50sp"
-            android:layout_height="50sp"/>
+            android:layout_height="50sp"
+            android:src="@drawable/ic_search_black_24dp" />
+
+        <EditText
+            android:id="@+id/search3"
+            android:layout_width="0dp"
+            android:layout_height="50sp"
+            android:layout_weight="3"
+            android:hint="@string/what_you_are_searching"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:maxLines="1"
+            android:visibility="gone" />
 
     </LinearLayout>
 

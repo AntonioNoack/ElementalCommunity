@@ -252,12 +252,12 @@ open class WebService(private val serverURL: String) : ServerService {
     }
 
     override fun askPage(
-        pageIndex: Int,
+        pageIndex: Int, search: String,
         onSuccess: (ArrayList<Element>, Int) -> Unit,
         onError: (Exception) -> Unit
     ) {
         HTTP.request(
-            "${getURL()}?l4=$pageIndex" +
+            "${getURL()}?l4=$pageIndex&search=${URLEncoder.encode(search, "UTF-8")}" +
                     "&$webVersionName=$webVersion", { text ->
                 if (pageIndex < 0) {
                     val maxUUID = text.toIntOrNull() ?: 0

@@ -114,12 +114,12 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
         entriesPerRow = calculateEntriesPerRow()
     }
 
-    private fun widthPerNode(width: Float = this.measuredWidth * 1f): Float {
+    private fun widthPerNode(width: Float = measuredWidth * 1f): Float {
         val avgMargin = getMargin(width / entriesPerRow)
         return (width - 2 * avgMargin) / (entriesPerRow + relativeRightBorder)
     }
 
-    private fun widthPerNodeNMargin(width: Float = this.measuredWidth * 1f): Pair<Float, Float> {
+    private fun widthPerNodeNMargin(width: Float = measuredWidth * 1f): Pair<Float, Float> {
         val avgMargin = getMargin(width / entriesPerRow)
         return (width - 2 * avgMargin) / (entriesPerRow + relativeRightBorder) to avgMargin
     }
@@ -147,8 +147,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                 val favSize = min(height / FAVOURITE_COUNT, width * AllManager.MAX_FAVOURITES_RATIO)
                 if (event.x < favSize) {
                     val maybeX = event.y / favSize
-                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
-                    } else {
+                    if (!(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null)) {
                         isSpecial = true
                         intX = maybeX
                     }
@@ -158,8 +157,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                 val favSize = min(width / FAVOURITE_COUNT, height * AllManager.MAX_FAVOURITES_RATIO)
                 if (event.y > height - favSize) {
                     val maybeX = event.x / favSize
-                    if (searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null) {
-                    } else {
+                    if (!(searchIfNull && AllManager.favourites.getOrNull(maybeX.toInt()) == null)) {
                         isSpecial = true
                         intX = maybeX
                     }
@@ -169,8 +167,8 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
 
         val fraX = fract(intX)
         val fraY = fract(intY)
-        val valid =
-            sq(fraX - 0.5f) + sq(fraY - 0.5f) < 0.15f // < fraX in 0.18f .. 0.82f && fraY in 0.18f .. 0.82f
+        // < fraX in 0.18f .. 0.82f && fraY in 0.18f .. 0.82f
+        val valid = sq(fraX - 0.5f) + sq(fraY - 0.5f) < 0.15f
         val internalX = intX.toInt()
         val internalY = intY.toInt()
 
@@ -260,6 +258,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                             entriesPerRow = newEntriesPerRow
                             // get offset, so we don't lose our current positioning
                             // scroll > 0, posY = (scroll + height/2) / oldElementSize
+                            // todo we need to count how many rows there are..., I think...
                             val newNodeHeight = widthPerNode()
                             val posY = (scroll + height / 2) / oldNodeHeight
                             scroll = posY * newNodeHeight - height / 2

@@ -19,7 +19,6 @@ class ItempediaAdapter(private val manager: AllManager) :
 
     class ViewHolder(view: OneElement) : RecyclerView.ViewHolder(view)
 
-    var startIndex = 0
     var currentItems: List<Element> = emptyList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -30,11 +29,10 @@ class ItempediaAdapter(private val manager: AllManager) :
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         // present results
-        val uuid = position + startIndex
-        val index = currentItems.binarySearch { it.uuid.compareTo(uuid) }
         val view = holder.itemView as OneElement
-        if (index >= 0) {
-            val element = currentItems[index]
+        val element = currentItems.getOrNull(position)
+        if (element != null) {
+            val uuid = element.uuid
             view.element = element
             view.alphaOverride = if (uuid in AllManager.unlockedIds.keys) 255 else HIDDEN_ALPHA
             view.invalidate()
@@ -72,7 +70,7 @@ class ItempediaAdapter(private val manager: AllManager) :
     }
 
     override fun getItemCount(): Int {
-        return ITEMS_PER_PAGE
+        return currentItems.size
     }
 
     companion object {

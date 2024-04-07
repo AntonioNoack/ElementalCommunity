@@ -28,7 +28,7 @@ interface ServerService {
     )
 
     fun askPage(
-        pageIndex: Int,
+        pageIndex: Int, search: String,
         onSuccess: (ArrayList<Element>, Int) -> Unit,
         onError: (Exception) -> Unit = defaultOnError
     )

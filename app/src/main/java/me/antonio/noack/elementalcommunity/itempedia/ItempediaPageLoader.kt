@@ -15,18 +15,21 @@ object ItempediaPageLoader {
 
     @SuppressLint("SetTextI18n")
     fun createItempediaPages(all: AllManager, numElements: Int) {
+
         val pageList = all.findViewById<LinearLayout>(R.id.pageFlipper)!!
         pageList.removeAllViews()
         val numPages =
             (numElements + ItempediaAdapter.ITEMS_PER_PAGE - 1) / ItempediaAdapter.ITEMS_PER_PAGE
+
         val views = ArrayList<TextView>()
         var previouslyClicked = 0
+
         fun openPage(i: Int) {
             val view = views[i]
             views[previouslyClicked].alpha = 0.7f
             view.alpha = 1f
             previouslyClicked = i
-            loadItempediaPage(all, i)
+            loadItempediaPage(all, i, ItempediaSearch.search)
         }
 
         val layoutInflater = all.layoutInflater
@@ -46,28 +49,29 @@ object ItempediaPageLoader {
     }
 
     fun loadNumPages(all: AllManager) {
-        WebServices.askPage(-1, { _, maxUUID ->
+        val search = ItempediaSearch.search
+        WebServices.askPage(-1, search, { _, maxUUID ->
             createItempediaPages(all, maxUUID)
         })
-        loadItempediaPage(all, 0)
+        loadItempediaPage(all, 0, search)
     }
 
-    private var lastItempediaPage = -1
+    private var lastPage = -1
+    private var lastSearch = ""
 
     @SuppressLint("NotifyDataSetChanged")
-    fun loadItempediaPage(all: AllManager, pageIndex: Int) {
-        if (pageIndex == lastItempediaPage) return
-        lastItempediaPage = pageIndex
+    fun loadItempediaPage(all: AllManager, pageIndex: Int, search: String) {
+        if (pageIndex == lastPage && search == lastSearch) return
+        lastPage = pageIndex
+        lastSearch = search
         BasicOperations.todo++
         val lazyDone = lazy {
             BasicOperations.done++
         }
-        WebServices.askPage(pageIndex, { list, _ ->
+        WebServices.askPage(pageIndex, search, { list, _ ->
             lazyDone.value
-            if (lastItempediaPage == pageIndex) {
+            if (lastPage == pageIndex && lastSearch == search) {
                 list.sortBy { it.uuid }
-                all.itempediaAdapter.startIndex =
-                    pageIndex * ItempediaAdapter.ITEMS_PER_PAGE + 1
                 all.itempediaAdapter.currentItems = list
                 all.itempediaAdapter.notifyDataSetChanged()
                 val rec = all.findViewById<RecyclerView>(R.id.itempediaElements)!!
