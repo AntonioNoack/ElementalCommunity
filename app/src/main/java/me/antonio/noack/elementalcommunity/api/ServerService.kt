@@ -64,6 +64,11 @@ interface ServerService {
         onSuccess: (raw: String) -> Unit, onError: (Exception) -> Unit = defaultOnError
     )
 
+    fun getRandomRecipe(
+        onSuccess: (raw: String) -> Unit,
+        onError: (Exception) -> Unit = defaultOnError
+    )
+
     fun updateGroupSizesAndNames()
 
     /**

@@ -211,7 +211,6 @@ object RecipeHelper {
     class Recipe(val a: Element, val b: Element, val r: Element, val score: Int)
 
     fun offerSpendingMoneyOnDiamondsOrWatchAds(all: AllManager) {
-        // todo xD
         AllManager.toast("You don't have enough crystals to continue this action!", false)
     }
 

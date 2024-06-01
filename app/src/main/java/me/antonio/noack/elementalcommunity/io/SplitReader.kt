@@ -32,6 +32,9 @@ class SplitReader(
     var hasRemaining = true
         private set
 
+    /**
+     * reads values, and returns number of read properties
+     * */
     fun read(): Int {
         // read until primary or -1
         parts@ for (formatIndex in format.indices) {
@@ -56,7 +59,6 @@ class SplitReader(
                         }
                     }
                 }
-
                 ElementType.STRING -> {
                     builder.clear()
                     while (true) {

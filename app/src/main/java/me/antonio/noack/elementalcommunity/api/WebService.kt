@@ -220,16 +220,7 @@ open class WebService(private val serverURL: String) : ServerService {
                         val result = data[7]
                         val resultGroup = data[8].toIntOrNull() ?: continue
                         val weight = data[9].toIntOrNull() ?: continue
-                        list.add(
-                            News(
-                                dt,
-                                a,
-                                b,
-                                result,
-                                resultGroup,
-                                weight
-                            )
-                        )
+                        list.add(News(dt, a, b, result, resultGroup, weight))
                     }
                 }
                 onSuccess(list)
@@ -425,13 +416,11 @@ open class WebService(private val serverURL: String) : ServerService {
         onSuccess: (raw: String) -> Unit,
         onError: (Exception) -> Unit
     ) {
-
         HTTP.request(
             "${getURL()}?qr=$name" +
                     "&$webVersionName=$webVersion" +
                     "&sid=$serverInstance", onSuccess, onError
         )
-
     }
 
     override fun askAllRecipesOfGroup(
@@ -439,18 +428,15 @@ open class WebService(private val serverURL: String) : ServerService {
         onSuccess: (raw: String) -> Unit,
         onError: (Exception) -> Unit
     ) {
-
         // query group recipes
         HTTP.request(
             "${getURL()}?qgr=$group" +
                     "&$webVersionName=$webVersion" +
                     "&sid=$serverInstance", onSuccess, onError
         )
-
     }
 
     override fun updateGroupSizesAndNames() {
-
         HTTP.request("${getURL()}?l3" +
                 "&$webVersionName=$webVersion" +
                 "&sid=$serverInstance", {
@@ -481,7 +467,16 @@ open class WebService(private val serverURL: String) : ServerService {
             AllManager.invalidate()
 
         }, {})
+    }
 
+    override fun getRandomRecipe(
+        onSuccess: (raw: String) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        HTTP.request("${getURL()}?rnd" +
+                "&$webVersionName=$webVersion" +
+                "&sid=$serverInstance", onSuccess, onError
+        )
     }
 
     override fun requestServerInstance(
