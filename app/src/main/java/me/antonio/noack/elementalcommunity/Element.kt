@@ -109,7 +109,7 @@ class Element constructor(
     }
 
     override fun hashCode(): Int {
-        return group * 12461 + uuid
+        return uuid.hashCode()
     }
 
     override fun toString(): String {

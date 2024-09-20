@@ -47,7 +47,7 @@ object BasicOperations {
             }
         }, {
             done++
-            AllManager.toast("${it.javaClass.simpleName}: ${it.message}", true)
+            AllManager.toast("${it::class.simpleName}: ${it.message}", true)
         })
     }
 
@@ -134,7 +134,7 @@ object BasicOperations {
             }
         }, {
             done++
-            AllManager.toast("${it.javaClass.simpleName}: ${it.message}", true)
+            AllManager.toast("${it::class.simpleName}: ${it.message}", true)
         })
     }
 

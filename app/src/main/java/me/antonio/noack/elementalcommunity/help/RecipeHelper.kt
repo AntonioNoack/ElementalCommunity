@@ -61,9 +61,8 @@ object RecipeHelper {
 
     fun readRecipes(raw: String, search: String): ArrayList<Recipe> {
         val data = SplitReader(
-            listOf(
-                ElementType.INT, ElementType.INT, ElementType.INT
-            ), ';', ':', raw
+            listOf(ElementType.INT, ElementType.INT, ElementType.INT),
+            ';', ':', raw
         )
         val returnValue = ArrayList<Recipe>()
         while (data.hasRemaining) {

@@ -6,8 +6,12 @@ import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.GroupsEtc
 import me.antonio.noack.elementalcommunity.OfflineSuggestions
 import me.antonio.noack.elementalcommunity.api.WebServices
-import java.util.concurrent.ConcurrentHashMap
+import me.antonio.noack.elementalcommunity.io.ElementType
+import me.antonio.noack.elementalcommunity.io.SplitReader
 import kotlin.concurrent.thread
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 object CombinationCache {
 
@@ -20,32 +24,31 @@ object CombinationCache {
     fun init(pref: SharedPreferences) {
         thread(name = "CombinationCache.init") {
             for (i in hiddenRecipes.indices) {
-                pref.getString("cache.$i", null)?.apply {
-                    loadMultipleFromString()
-                }
+                val str = pref.getString("cache.$i", null)
+                if (str != null) loadMultipleFromString(str)
                 hiddenRecipes[i].validationDate =
                     pref.getLong("cache.$i.date", hiddenRecipes[i].validationDate)
             }
         }
     }
 
-    fun String.loadMultipleFromString() {
-        for (abr in split(';')) {
-            if (abr.length >= 5) { // 1,2,3
-                val abrElements = abr
-                    .split(',')
-                    .map { it.toIntOrNull() }
-                    .map { AllManager.elementById[it ?: 0] }
-                if (abrElements.size > 2) {
-                    var (a, b, r) = abrElements
-                    if (a != null && b != null && r != null) {
-                        if (a.uuid > b.uuid) {
-                            val t = a
-                            a = b
-                            b = t
-                        }
-                        hiddenRecipes[a.group][a, b] = r
+    private fun loadMultipleFromString(str: String) {
+        val reader = SplitReader(
+            listOf(ElementType.INT, ElementType.INT, ElementType.INT),
+            ';', ',', str
+        )
+        while (reader.hasRemaining) {
+            if (reader.read() >= 3) {
+                var a = AllManager.elementById[reader.getInt(0)]
+                var b = AllManager.elementById[reader.getInt(1)]
+                val r = AllManager.elementById[reader.getInt(2)]
+                if (a != null && b != null && r != null) {
+                    if (a.uuid > b.uuid) {
+                        val t = a
+                        a = b
+                        b = t
                     }
+                    hiddenRecipes[a.group][a, b] = r
                 }
             }
         }
@@ -95,14 +98,23 @@ object CombinationCache {
     class CacheGroup {
 
         var validationDate = 0L
-        val data = ConcurrentHashMap<Pair<Element, Element>, Element>()
+        private val data = HashMap<Long, Element>()
 
-        operator fun set(a: Element, b: Element, r: Element) {
-            data[a to b] = r
+        fun key(a: Element, b: Element): Long {
+            return min(a.uuid, b.uuid).toLong().shl(32) + max(a.uuid, b.uuid)
         }
 
-        private fun isValid(date: Long) =
-            data.isNotEmpty() && kotlin.math.abs(date - validationDate) < 3_600_000 // 1h
+        operator fun set(a: Element, b: Element, r: Element) {
+            if (a.name == "Earth" && b.name == "Air") {
+                println("CombinationCache[$a,$b] = $r")
+            }
+            synchronized(data) {
+                data[key(a, b)] = r
+            }
+        }
+
+        private fun isValid(date: Long): Boolean =
+            data.isNotEmpty() && abs(date - validationDate) < 3_600_000 // 1h
 
         fun askRegularly(all: AllManager, a: Element, b: Element, callback: (Element?) -> Unit) {
             val date = System.currentTimeMillis()
@@ -115,7 +127,7 @@ object CombinationCache {
                 // invalid -> ask server
                 WebServices.askAllRecipesOfGroup(a.group, {
                     validationDate = date
-                    it.loadMultipleFromString()
+                    loadMultipleFromString(it)
                     askDirectly(a, b, callback)
                     val edit = all.pref.edit()
                     saveGroup(edit, a.group)
@@ -136,20 +148,31 @@ object CombinationCache {
         }
 
         private fun askDirectly(a: Element, b: Element, callback: (Element?) -> Unit) {
+            if (a.uuid > b.uuid) return askDirectly(b, a, callback)
             val suggestion = OfflineSuggestions.getOfflineRecipe(a, b)
             println(
                 "asking cache directly, " +
                         "$suggestion, " +
-                        "${data[a to b]}, " +
+                        "${synchronized(data) { data[key(a, b)] }}, " +
                         "${AllManager.getRecipe(a, b)}"
             )
-            val recipe = suggestion ?: data[a to b] ?: AllManager.getRecipe(a, b)
+            val recipe = suggestion
+                ?: synchronized(data) { data[key(a, b)] }
+                ?: AllManager.getRecipe(a, b)
             callback(recipe)
         }
 
-        fun save() = data.entries.joinToString(";") { (ab, r) ->
-            val (a, b) = ab
-            "${a.uuid},${b.uuid},${r.uuid}"
+        fun save(): String {
+            val builder = StringBuilder()
+            synchronized(data) {
+                for ((ab, r) in data) {
+                    if (builder.isNotEmpty()) builder.append(';')
+                    val a = ab.ushr(32).toInt()
+                    val b = ab.toInt()
+                    builder.append(a).append(',').append(b).append(',').append(r)
+                }
+            }
+            return builder.toString()
         }
 
         fun invalidate() {
@@ -162,7 +185,7 @@ object CombinationCache {
                 val oldDate = validationDate
                 validationDate = date // optimistic
                 WebServices.askAllRecipesOfGroup(a.group, {
-                    it.loadMultipleFromString()
+                    loadMultipleFromString(it)
                     val edit = AllManager.edit()
                     saveGroup(edit, a.group)
                     edit.apply()

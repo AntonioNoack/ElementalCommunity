@@ -1,17 +1,11 @@
 package me.antonio.noack.elementalcommunity.io
 
 class SplitReader(
-    val format: List<ElementType>,
+    private val format: List<ElementType>,
     primary: Char,
     secondary: Char,
-    input: String
+    private val input: String
 ) {
-
-    var input = input
-        set(value) {
-            field = value
-            hasRemaining = true
-        }
 
     private var index = 0
     private fun readChar(): Int {
@@ -72,9 +66,7 @@ class SplitReader(
                                 strings[formatIndex] = builder.toString()
                                 continue@parts
                             }
-                            else -> {
-                                builder.append(char.toChar())
-                            }
+                            else -> builder.append(char.toChar())
                         }
                     }
                 }

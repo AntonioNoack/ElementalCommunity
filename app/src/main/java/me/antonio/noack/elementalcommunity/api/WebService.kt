@@ -48,7 +48,7 @@ open class WebService(private val serverURL: String) : ServerService {
     fun tryCaptcha(
         all: AllManager, args: String, onSuccess: (String) -> Unit, onError: (Exception) -> Unit = {
             AllManager.toast(
-                "${it.javaClass.simpleName}: ${it.message}",
+                "${it::class.simpleName}: ${it.message}",
                 true
             )
         }
@@ -78,7 +78,7 @@ open class WebService(private val serverURL: String) : ServerService {
         onSuccess: (String) -> Unit,
         onError: (Exception) -> Unit = {
             AllManager.toast(
-                "${it.javaClass.simpleName}: ${it.message}",
+                "${it::class.simpleName}: ${it.message}",
                 true
             )
         }

@@ -11,7 +11,7 @@ interface ServerService {
     companion object {
         val defaultOnError: (Exception) -> Unit = {
             AllManager.toast(
-                "${it.javaClass.simpleName}: ${it.message}",
+                "${it::class.simpleName}: ${it.message}",
                 true
             )
         }

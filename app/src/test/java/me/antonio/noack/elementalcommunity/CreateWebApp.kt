@@ -10,9 +10,11 @@ class CreateWebApp {
     // val androidAppPath = File("/home/antonio/AndroidStudioProjects/ElementalCommunity/")
     // val webAppPath = File("/home/antonio/IdeaProjects/ElementalCommunityWeb/")
 
+    val user = File(System.getProperty("user.home")!!)
+
     // Windows system
-    val androidAppPath = File("C:\\Users\\Antonio\\Documents\\IdeaProjects\\ElementalCommunity2")
-    val webAppPath = File("C:\\Users\\Antonio\\Documents\\IdeaProjects\\ElementalCommunityWeb")
+    val androidAppPath = File(user, "Documents\\IdeaProjects\\ElementalCommunity2")
+    val webAppPath = File(user, "Documents\\IdeaProjects\\ElementalCommunityWeb")
 
     @Test
     fun main() {
@@ -212,9 +214,9 @@ class CreateWebApp {
                 for (child in node.children) {
                     child as XMLNode
                     if (child.type == "include") {
-                        send(".addChild(" + child["layout"]!!.substring("@layout/".length) + ")")
+                        send(".addView(" + child["layout"]!!.substring("@layout/".length) + ")")
                     } else {
-                        send(".addChild(")
+                        send(".addView(")
                         printLayout(child)
                         send(")")
                     }
