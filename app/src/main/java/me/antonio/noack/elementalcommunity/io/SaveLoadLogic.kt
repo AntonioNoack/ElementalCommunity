@@ -12,7 +12,6 @@ import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
 import java.net.URLEncoder
 
-
 object SaveLoadLogic {
 
     private val ignore = { key: String ->
@@ -82,9 +81,7 @@ object SaveLoadLogic {
     }
 
     fun load(all: AllManager) {
-        FileChooser.requestFile(all, "text/plain") {
-            applyDownload(all, it)
-        }
+        FileChooser.requestFile(all, "text/plain")
     }
 
     fun save(all: AllManager) {

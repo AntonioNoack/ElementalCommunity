@@ -10,8 +10,17 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.view.View.*
-import android.widget.*
+import android.view.View.GONE
+import android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
+import android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+import android.view.View.SYSTEM_UI_FLAG_IMMERSIVE
+import android.view.View.VISIBLE
+import android.widget.Button
+import android.widget.EditText
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.Toast
+import android.widget.ViewFlipper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.GridLayoutManager
@@ -34,9 +43,10 @@ import me.antonio.noack.elementalcommunity.itempedia.ItempediaSwipeDetector
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.utils.IntArrayList
+import me.antonio.noack.webdroid.Captcha
 import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
-import java.util.*
+import java.util.Random
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 import kotlin.math.abs
@@ -274,11 +284,9 @@ class AllManager : AppCompatActivity() {
 
     @Suppress("DEPRECATION")
     private fun goFullScreen() {
-        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            SYSTEM_UI_FLAG_IMMERSIVE or SYSTEM_UI_FLAG_FULLSCREEN or SYSTEM_UI_FLAG_HIDE_NAVIGATION
-        } else {
-            SYSTEM_UI_FLAG_FULLSCREEN or SYSTEM_UI_FLAG_HIDE_NAVIGATION
-        }
+        val flags = SYSTEM_UI_FLAG_IMMERSIVE or
+                SYSTEM_UI_FLAG_FULLSCREEN or
+                SYSTEM_UI_FLAG_HIDE_NAVIGATION
         unlocked?.systemUiVisibility = flags
         combiner?.systemUiVisibility = flags
     }
@@ -295,17 +303,26 @@ class AllManager : AppCompatActivity() {
 
         initViews()
 
+        findViewById<Button>(R.id.captchaButton)
+            .setOnClickListener {
+                Captcha.get(this, {
+                    Toast.makeText(this, "Success: $it", Toast.LENGTH_SHORT)
+                        .show()
+                }, {
+                    Toast.makeText(this, "Failure :/", Toast.LENGTH_SHORT)
+                        .show()
+                })
+            }
+
         clock.stop("Init Views")
 
         actionBar?.hide()
 
-        if (Build.VERSION.SDK_INT >= 21) {
-            window.navigationBarColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                resources.getColor(R.color.colorPrimary, theme)
-            } else {
-                @Suppress("DEPRECATION")
-                resources.getColor(R.color.colorPrimary)
-            }
+        window.navigationBarColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            resources.getColor(R.color.colorPrimary, theme)
+        } else {
+            @Suppress("DEPRECATION")
+            resources.getColor(R.color.colorPrimary)
         }
 
         goFullScreen()
@@ -596,8 +613,9 @@ class AllManager : AppCompatActivity() {
     private fun readUnlockedElementsLegacy() {
         val unlockedIdsString = pref.getString("unlocked", null)
         if (unlockedIdsString != null) {
-            unlockedIds.addAll(unlockedIdsString
-                .split(',').mapNotNull { x -> x.toIntOrNull() })
+            unlockedIds.addAll(
+                unlockedIdsString
+                    .split(',').mapNotNull { x -> x.toIntOrNull() })
         } else unlockedIds.addAll(listOf(1, 2, 3, 4))
     }
 
@@ -760,12 +778,13 @@ class AllManager : AppCompatActivity() {
 
     fun askNews() {
         if (newsView != null) {
-            WebServices.askNews(20, {
-                newsView?.news = it
-                newsView?.postInvalidate()
-            }, if (offlineMode) {
-                { /* can be ignored */ }
-            } else ServerService.defaultOnError)
+            WebServices.askNews(
+                20, {
+                    newsView?.news = it
+                    newsView?.postInvalidate()
+                }, if (offlineMode) {
+                    { /* can be ignored */ }
+                } else ServerService.defaultOnError)
         }
     }
 

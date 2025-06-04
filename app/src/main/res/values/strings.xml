@@ -77,4 +77,6 @@
     <string name="times_suggested_as_component">#Suggestions (Component):</string>
     <string name="itempedia_stats">Element Statistics</string>
     <string name="unique_identifier">Unique Identifier:</string>
+    <string name="captcha_title">Are you a robot?</string>
+    <string name="captcha_instructions">If not, Crack the Safe!</string>
 </resources>
