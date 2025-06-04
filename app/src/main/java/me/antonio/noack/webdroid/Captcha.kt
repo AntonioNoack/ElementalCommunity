@@ -4,6 +4,7 @@ import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
 import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.AllManager.Companion.applyStyle
 import me.antonio.noack.elementalcommunity.R
 import org.json.JSONArray
 import org.json.JSONObject
@@ -58,6 +59,7 @@ object Captcha {
         val dialog = AlertDialog.Builder(all)
             .setView(R.layout.captcha)
             .show()
+        applyStyle(dialog)
 
         val captchaView = dialog.findViewById<CaptchaView>(R.id.captchaView)!!
         val okButton = dialog.findViewById<Button>(R.id.ok)!!

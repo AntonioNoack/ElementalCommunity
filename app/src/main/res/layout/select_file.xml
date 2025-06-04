@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:background="@color/colorPrimaryDark"
-              android:layout_marginTop="10dp"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:background="@color/colorPrimaryDark"
+    android:orientation="vertical">
 
     <TextView
-            android:id="@+id/title"
-            android:textSize="24sp"
-            android:padding="5dp"
-            android:background="@color/colorPrimary"
-            android:text="@string/please_select_the_file"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:padding="5dp"
+        android:text="@string/please_select_the_file"
+        android:textSize="24sp" />
 
 </LinearLayout>

@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.AllManager.Companion.applyStyle
 import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.RecipeView
@@ -28,6 +29,7 @@ object RecipeHelper {
             .setView(R.layout.recipe_helper)
             .setCancelable(true)
             .show()
+        applyStyle(dialog)
 
         val window = dialog.window
         window?.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)

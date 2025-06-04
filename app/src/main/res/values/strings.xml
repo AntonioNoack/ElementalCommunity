@@ -79,4 +79,9 @@
     <string name="unique_identifier">Unique Identifier:</string>
     <string name="captcha_title">Are you a robot?</string>
     <string name="captcha_instructions">If not, Crack the Safe!</string>
+    <string name="color_theme_title">Color Theme:</string>
+    <string name="default_style_name">Default</string>
+    <string name="dark_style_name">Dark</string>
+    <string name="neon_style_name">Neon</string>
+    <string name="light_style_name">Light</string>
 </resources>

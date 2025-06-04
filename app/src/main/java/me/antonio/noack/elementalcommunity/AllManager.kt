@@ -17,10 +17,12 @@ import android.view.View.SYSTEM_UI_FLAG_IMMERSIVE
 import android.view.View.VISIBLE
 import android.widget.Button
 import android.widget.EditText
+import android.widget.RadioButton
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import android.widget.ViewFlipper
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.GridLayoutManager
@@ -59,6 +61,12 @@ import kotlin.math.abs
 class AllManager : AppCompatActivity() {
 
     companion object {
+
+        var chosenStyle = Style.defaultStyle
+
+        fun applyStyle(dialog: AlertDialog) {
+            Style.applyStyle(dialog, Style.defaultStyle, chosenStyle)
+        }
 
         var customUUID = 0L
         var showCraftingCounts = true
@@ -168,96 +176,62 @@ class AllManager : AppCompatActivity() {
     }
 
     lateinit var pref: SharedPreferences
-    var combiner: Combiner? = null
-    var unlocked: UnlockedRows? = null
-    private var startButton: View? = null
-    var flipper: ViewFlipper? = null
-    private var treeViewButton: View? = null
-    private var graphViewButton: View? = null
-    private var mandalaViewButton: View? = null
-    private var itempediaViewButton: View? = null
-    private var suggestButton: View? = null
-    var settingButton: View? = null
-    private var back1: View? = null
-    private var back2: View? = null
-    private var back3: View? = null
-    private var backArrow1: View? = null
-    private var backArrow2: View? = null
-    private var backArrow3: View? = null
-    private var backArrow4: View? = null
-    private var backArrow5: View? = null
-    private var backArrow6: View? = null
-    var favTitle: TextView? = null
-    var favSlider: SeekBar? = null
-    private var search1: EditText? = null
-    private var search2: EditText? = null
-    var search3: EditText? = null
-    private var searchButton1: View? = null
-    private var searchButton2: View? = null
-    var searchButton3: View? = null
-    private var randomButton: View? = null
-    var resetEverythingButton: View? = null
-    var newsView: NewsView? = null
-    var freqSlider: SeekBar? = null
-    var freqTitle: TextView? = null
-    var switchServerButton: View? = null
-    var craftingCountsSwitch: SwitchCompat? = null
-    var displayUUIDSwitch: SwitchCompat? = null
-    var offlineModeSwitch: SwitchCompat? = null
-    var volumeSlider: SeekBar? = null
-    var volumeTitle: TextView? = null
+    val combiner: Combiner? get() = findViewById(R.id.combiner)
+    val unlocked: UnlockedRows? get() = findViewById(R.id.unlocked)
+    val flipper: ViewFlipper? get() = findViewById(R.id.flipper)
 
-    var treeView: TreeView? = null
-    private var graphView: GraphView? = null
-    var spaceSlider: SeekBar? = null
-    var mandalaView: MandalaView? = null
+    private val startButton: View? get() = findViewById(R.id.start)
+    private val treeViewButton: View? get() = findViewById(R.id.treeButton)
+    private val graphViewButton: View? get() = findViewById(R.id.graphButton)
+    private val mandalaViewButton: View? get() = findViewById(R.id.mandalaButton)
+    private val itempediaViewButton: View? get() = findViewById(R.id.itempediaButton)
+    private val suggestButton: View? get() = findViewById(R.id.suggest)
+    val settingButton: View? get() = findViewById(R.id.settingsButton)
+
+    private val back1: View? get() = findViewById(R.id.back1)
+    private val back2: View? get() = findViewById(R.id.back2)
+    private val back3: View? get() = findViewById(R.id.back3)
+
+    private val backArrow1: View? get() = findViewById(R.id.backArrow1)
+    private val backArrow2: View? get() = findViewById(R.id.backArrow2)
+    private val backArrow3: View? get() = findViewById(R.id.backArrow3)
+    private val backArrow4: View? get() = findViewById(R.id.backArrow4)
+    private val backArrow5: View? get() = findViewById(R.id.backArrow5)
+    private val backArrow6: View? get() = findViewById(R.id.backArrow6)
+    val favTitle: TextView? get() = findViewById(R.id.favTitle)
+    val favSlider: SeekBar? get() = findViewById(R.id.favSlider)
+
+    private val search1: EditText? get() = findViewById(R.id.search1)
+    private val search2: EditText? get() = findViewById(R.id.search2)
+    val search3: EditText? get() = findViewById(R.id.search3)
+
+    private val searchButton1: View? get() = findViewById(R.id.searchButton1)
+    private val searchButton2: View? get() = findViewById(R.id.searchButton2)
+    val searchButton3: View? get() = findViewById(R.id.searchButton3)
+
+    private val randomButton: View? get() = findViewById(R.id.randomButton)
+    val resetEverythingButton: View? get() = findViewById(R.id.resetEverythingButton)
+    val newsView: NewsView? get() = findViewById(R.id.newsView)
+    val freqSlider: SeekBar? get() = findViewById(R.id.frequencySlider)
+    val freqTitle: TextView? get() = findViewById(R.id.frequencyTitle)
+    val switchServerButton: View? get() = findViewById(R.id.switchServer)
+    val craftingCountsSwitch: SwitchCompat? get() = findViewById(R.id.craftingCountsSwitch)
+    val displayUUIDSwitch: SwitchCompat? get() = findViewById(R.id.displayUUIDSwitch)
+    val offlineModeSwitch: SwitchCompat? get() = findViewById(R.id.offlineModeSwitch)
+    val volumeSlider: SeekBar? get() = findViewById(R.id.backgroundVolumeSlider)
+    val volumeTitle: TextView? get() = findViewById(R.id.backgroundVolumeTitle)
+
+    val styleDefault: RadioButton? get() = findViewById(R.id.radio_default)
+    val styleDark: RadioButton? get() = findViewById(R.id.radio_dark)
+    val styleLight: RadioButton? get() = findViewById(R.id.radio_light)
+    val styleNeon: RadioButton? get() = findViewById(R.id.radio_neon)
+
+    val treeView: TreeView? get() = findViewById(R.id.tree)
+    private val graphView: GraphView? get() = findViewById(R.id.graph)
+    val mandalaView: MandalaView? get() = findViewById(R.id.tree2)
+    val spaceSlider: SeekBar? get() = findViewById(R.id.spaceSlider)
 
     private val diamondViews = ArrayList<TextView>()
-
-    private fun initViews() {
-        combiner = findViewById(R.id.combiner)
-        unlocked = findViewById(R.id.unlocked)
-        treeView = findViewById(R.id.tree)
-        graphView = findViewById(R.id.graph)
-        mandalaView = findViewById(R.id.tree2)
-        startButton = findViewById(R.id.start)
-        flipper = findViewById(R.id.flipper)
-        treeViewButton = findViewById(R.id.treeButton)
-        graphViewButton = findViewById(R.id.graphButton)
-        mandalaViewButton = findViewById(R.id.mandalaButton)
-        itempediaViewButton = findViewById(R.id.itempediaButton)
-        suggestButton = findViewById(R.id.suggest)
-        settingButton = findViewById(R.id.settingsButton)
-        back1 = findViewById(R.id.back1)
-        back2 = findViewById(R.id.back2)
-        back3 = findViewById(R.id.back3)
-        favTitle = findViewById(R.id.favTitle)
-        favSlider = findViewById(R.id.favSlider)
-        backArrow1 = findViewById(R.id.backArrow1)
-        backArrow2 = findViewById(R.id.backArrow2)
-        backArrow3 = findViewById(R.id.backArrow3)
-        backArrow4 = findViewById(R.id.backArrow4)
-        backArrow5 = findViewById(R.id.backArrow5)
-        backArrow6 = findViewById(R.id.backArrow6)
-        search1 = findViewById(R.id.search1)
-        search2 = findViewById(R.id.search2)
-        search3 = findViewById(R.id.search3)
-        searchButton1 = findViewById(R.id.searchButton1)
-        searchButton2 = findViewById(R.id.searchButton2)
-        searchButton3 = findViewById(R.id.searchButton3)
-        randomButton = findViewById(R.id.randomButton)
-        spaceSlider = findViewById(R.id.spaceSlider)
-        resetEverythingButton = findViewById(R.id.resetEverythingButton)
-        newsView = findViewById(R.id.newsView)
-        freqSlider = findViewById(R.id.frequencySlider)
-        freqTitle = findViewById(R.id.frequencyTitle)
-        volumeSlider = findViewById(R.id.backgroundVolumeSlider)
-        volumeTitle = findViewById(R.id.backgroundVolumeTitle)
-        craftingCountsSwitch = findViewById(R.id.craftingCountsSwitch)
-        displayUUIDSwitch = findViewById(R.id.displayUUIDSwitch)
-        switchServerButton = findViewById(R.id.switchServer)
-        offlineModeSwitch = findViewById(R.id.offlineModeSwitch)
-    }
 
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -300,8 +274,6 @@ class AllManager : AppCompatActivity() {
 
         setContentView(R.layout.all_pages)
         clock.stop("Set Layout")
-
-        initViews()
 
         findViewById<Button>(R.id.captchaButton)
             .setOnClickListener {
@@ -393,9 +365,16 @@ class AllManager : AppCompatActivity() {
         }
 
         pref = BetterPreferences(getPreferences(Context.MODE_PRIVATE))
-        edit = {
-            pref.edit()
+        edit = { pref.edit() }
+
+        chosenStyle = when (pref.getString("style", "")) {
+            "dark" -> Style.darkStyle
+            "light" -> Style.lightStyle
+            "neon" -> Style.neonStyle
+            else -> Style.defaultStyle
         }
+        Style.applyStyle(this, Style.defaultStyle, chosenStyle)
+        clock.stop("Styling")
 
         addClickListeners()
 

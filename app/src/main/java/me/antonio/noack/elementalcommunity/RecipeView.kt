@@ -5,7 +5,9 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
+import me.antonio.noack.elementalcommunity.AllManager.Companion.chosenStyle
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
+import me.antonio.noack.elementalcommunity.Style.PLUS_ARROW
 
 class RecipeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attributeSet) {
 
@@ -45,7 +47,7 @@ class RecipeView(ctx: Context, attributeSet: AttributeSet?): View(ctx, attribute
         drawElement(canvas, -1, widthPerNode*(relativeWidth-1f), 0f, 0f, widthPerNode, true, rName, rGroup, -1, bgPaint, textPaint)
 
         textPaint.textSize = widthPerNode*.5f
-        textPaint.color = 0xff777777.toInt()
+        textPaint.color = (0xff shl 24) or chosenStyle.colors[PLUS_ARROW]
 
         val dy = (textPaint.ascent() + textPaint.descent())/2
         canvas.drawText("+", widthPerNode*((relativeWidth-1f)/4 + 0.5f), widthPerNode/2-dy, textPaint)

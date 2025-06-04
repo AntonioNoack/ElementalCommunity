@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.AllManager.Companion.applyStyle
 import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.OneElement
 import me.antonio.noack.elementalcommunity.R
@@ -41,6 +42,8 @@ class ItempediaAdapter(private val manager: AllManager) :
                 val dialog = AlertDialog.Builder(manager)
                     .setView(R.layout.itempedia_item)
                     .show()
+                applyStyle(dialog)
+
                 WebServices.askStats(uuid, { stats ->
                     dialog.findViewById<TextView>(R.id.numRecipes)?.text =
                         stats.numRecipes.toString()

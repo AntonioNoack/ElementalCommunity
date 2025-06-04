@@ -2,6 +2,7 @@ package me.antonio.noack.elementalcommunity
 
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import me.antonio.noack.elementalcommunity.AllManager.Companion.applyStyle
 import me.antonio.noack.elementalcommunity.BasicOperations.setSubmitAction
 import me.antonio.noack.elementalcommunity.api.WebServices
 import me.antonio.noack.elementalcommunity.io.ElementType
@@ -46,6 +47,7 @@ object RandomSuggestion {
         val dialog = AlertDialog.Builder(all)
             .setView(R.layout.random)
             .show()
+        applyStyle(dialog)
 
         val first = dialog.findViewById<OneElement>(R.id.first)!!
         val second = dialog.findViewById<OneElement>(R.id.second)!!

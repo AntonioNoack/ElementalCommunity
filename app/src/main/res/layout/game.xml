@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/gameLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -21,7 +22,8 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:contentDescription="@string/back"
-            android:src="@drawable/ic_arrow_back_black_24dp" />
+            android:tint="#000"
+            android:src="@drawable/ic_arrow_back_24dp" />
 
         <Button
             android:id="@+id/back3"
@@ -40,7 +42,8 @@
             android:id="@+id/searchButton1"
             android:layout_width="50sp"
             android:layout_height="50sp"
-            android:src="@drawable/ic_search_black_24dp" />
+            android:tint="#000"
+            android:src="@drawable/ic_search_24dp" />
 
         <EditText
             android:id="@+id/search1"

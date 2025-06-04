@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import me.antonio.noack.elementalcommunity.AllManager.Companion.applyStyle
 import me.antonio.noack.elementalcommunity.api.WebServices
 import kotlin.math.min
 
@@ -64,9 +65,10 @@ object BasicOperations {
         todo++
         WebServices.getCandidates(a, b, { candidates ->
             done++
-            val dialog: Dialog = AlertDialog.Builder(all)
+            val dialog = AlertDialog.Builder(all)
                 .setView(R.layout.add_recipe)
                 .show()
+            applyStyle(dialog)
             dialog.findViewById<TextView>(R.id.cancel)!!.setOnClickListener {
                 try {
                     dialog.dismiss()

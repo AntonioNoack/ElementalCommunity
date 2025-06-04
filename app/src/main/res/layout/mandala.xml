@@ -20,7 +20,8 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:contentDescription="@string/back"
-            android:src="@drawable/ic_arrow_back_black_24dp" />
+            android:tint="#000"
+            android:src="@drawable/ic_arrow_back_24dp" />
 
         <View
             android:layout_width="0dp"

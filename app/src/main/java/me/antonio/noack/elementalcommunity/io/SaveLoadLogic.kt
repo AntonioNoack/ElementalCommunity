@@ -4,6 +4,7 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.AllManager.Companion.applyStyle
 import me.antonio.noack.elementalcommunity.AllManager.Companion.toast
 import me.antonio.noack.elementalcommunity.R
 import me.antonio.noack.elementalcommunity.api.WebServices
@@ -11,6 +12,7 @@ import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
 import java.net.URLEncoder
+import androidx.core.content.edit
 
 object SaveLoadLogic {
 
@@ -27,9 +29,7 @@ object SaveLoadLogic {
         }
 
         clearRecipeCacheView?.setOnClickListener {
-            val edit = all.pref.edit()
-            CombinationCache.invalidate(edit)
-            edit.apply()
+            all.pref.edit { CombinationCache.invalidate(this) }
             toast("Cleared Recipe Cache!", false)
         }
 
@@ -38,6 +38,7 @@ object SaveLoadLogic {
             val dialog = AlertDialog.Builder(all)
                 .setView(R.layout.progress_save)
                 .show()
+            applyStyle(dialog)
 
             dialog.findViewById<View>(R.id.save)?.setOnClickListener {
                 save(all)
@@ -60,6 +61,7 @@ object SaveLoadLogic {
             val dialog = AlertDialog.Builder(all)
                 .setView(R.layout.progress_load)
                 .show()
+            applyStyle(dialog)
 
             dialog.findViewById<View>(R.id.load)?.setOnClickListener {
                 load(all)
@@ -106,6 +108,7 @@ object SaveLoadLogic {
         val dialog = AlertDialog.Builder(all)
             .setView(R.layout.ask_password)
             .show()
+        applyStyle(dialog)
 
         dialog.findViewById<View>(R.id.ok)?.setOnClickListener {
             download(all, dialog.findViewById<TextView>(R.id.password)!!.text.toString())
@@ -136,6 +139,7 @@ object SaveLoadLogic {
         val dialog = AlertDialog.Builder(all)
             .setView(R.layout.ask_override)
             .show()
+        applyStyle(dialog)
 
         dialog.findViewById<View>(R.id.copy)?.setOnClickListener {
             Loader.load(data, all.pref, true)
@@ -167,6 +171,7 @@ object SaveLoadLogic {
                 val dialog = AlertDialog.Builder(all)
                     .setView(R.layout.show_password)
                     .show()
+                applyStyle(dialog)
 
                 dialog.findViewById<TextView>(R.id.password)!!.text = password
                 dialog.findViewById<View>(R.id.ok)?.setOnClickListener {

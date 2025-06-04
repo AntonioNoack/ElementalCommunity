@@ -1,16 +1,19 @@
 package me.antonio.noack.elementalcommunity.help
 
-import android.app.Dialog
 import android.view.View
+import android.widget.RadioButton
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.edit
 import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.AllManager.Companion.applyStyle
 import me.antonio.noack.elementalcommunity.AskFrequencyOption
 import me.antonio.noack.elementalcommunity.FlipperContent
 import me.antonio.noack.elementalcommunity.MusicScheduler
 import me.antonio.noack.elementalcommunity.OfflineSuggestions
 import me.antonio.noack.elementalcommunity.R
+import me.antonio.noack.elementalcommunity.Style
 import me.antonio.noack.elementalcommunity.api.ServerService.Companion.defaultOnError
 import me.antonio.noack.elementalcommunity.api.WebServices
 import java.math.BigInteger
@@ -57,7 +60,6 @@ object SettingsInit {
             val treeView = treeView
             treeView?.apply {
                 val spaceSlider = spaceSlider!!
-
                 spaceSlider.setOnLongClickListener {
                     AllManager.toast("Change the offset between the elements.", true)
                     true
@@ -120,14 +122,14 @@ object SettingsInit {
                     )
                     true
                 }
-                freqSlider.max = AskFrequencyOption.values().lastIndex
+                freqSlider.max = AskFrequencyOption.entries.lastIndex
                 freqSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                     override fun onProgressChanged(
                         seekBar: SeekBar?,
                         progress: Int,
                         fromUser: Boolean
                     ) {
-                        AllManager.askFrequency = AskFrequencyOption.values().getOrNull(progress)
+                        AllManager.askFrequency = AskFrequencyOption.entries.getOrNull(progress)
                             ?: AskFrequencyOption.ALWAYS
                         freqTitle?.text = resources.getString(R.string.frequency_of_asking_title)
                             .replace("#frequency", AllManager.askFrequency.displayName)
@@ -159,9 +161,9 @@ object SettingsInit {
                         AllManager.backgroundMusicVolume = progress / 100f
                         volumeTitle?.text = resources.getString(R.string.background_music_volume)
                             .replace("#percent", volumeTitle())
-                        pref.edit()
-                            .putFloat("backgroundMusicVolume", AllManager.backgroundMusicVolume)
-                            .apply()
+                        pref.edit {
+                            putFloat("backgroundMusicVolume", AllManager.backgroundMusicVolume)
+                        }
                         MusicScheduler.tick()
                         for (sound in AllManager.backgroundMusic) {
                             sound.setVolume(AllManager.backgroundMusicVolume)
@@ -186,7 +188,7 @@ object SettingsInit {
                 craftingCountsSwitch.isChecked = AllManager.showCraftingCounts
                 craftingCountsSwitch.setOnCheckedChangeListener { _, isChecked ->
                     AllManager.showCraftingCounts = isChecked
-                    pref.edit().putBoolean("showCraftingCounts", isChecked).apply()
+                    pref.edit { putBoolean("showCraftingCounts", isChecked) }
                     AllManager.invalidate()
                 }
             }
@@ -203,7 +205,7 @@ object SettingsInit {
                 displayUUIDSwitch.isChecked = AllManager.showElementUUID
                 displayUUIDSwitch.setOnCheckedChangeListener { _, isChecked ->
                     AllManager.showElementUUID = isChecked
-                    pref.edit().putBoolean("showElementUUID", isChecked).apply()
+                    pref.edit { putBoolean("showElementUUID", isChecked) }
                     AllManager.invalidate()
                 }
             }
@@ -220,10 +222,10 @@ object SettingsInit {
                 offlineModeSwitch.isChecked = AllManager.offlineMode
                 offlineModeSwitch.setOnCheckedChangeListener { _, isChecked ->
                     AllManager.offlineMode = isChecked
-                    pref.edit().putBoolean("offlineMode", isChecked).apply()
+                    pref.edit { putBoolean("offlineMode", isChecked) }
                     // if was checked, and there is stuff stored, ask whether to upload them
                     if (!isChecked && OfflineSuggestions.hasRecipes()) {
-                        AlertDialog.Builder(this)
+                        val dialog = AlertDialog.Builder(this)
                             .setTitle("Upload new recipes?")
                             .setPositiveButton(android.R.string.ok) { _, _ ->
                                 OfflineSuggestions.uploadValues(this, { uploaded, total ->
@@ -240,6 +242,7 @@ object SettingsInit {
                             .setNegativeButton(android.R.string.cancel, null)
                             .setCancelable(true)
                             .show()
+                        applyStyle(dialog)
                     }
                 }
             }
@@ -254,7 +257,7 @@ object SettingsInit {
             switchServerButton?.setOnClickListener { switchServer() }
 
             resetEverythingButton?.setOnClickListener {
-                AlertDialog.Builder(this)
+                val dialog = AlertDialog.Builder(this)
                     .setTitle(R.string.are_you_sure_reset_everything)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         resetEverything()
@@ -262,6 +265,7 @@ object SettingsInit {
                     .setNegativeButton(android.R.string.cancel, null)
                     .setCancelable(true)
                     .show()
+                applyStyle(dialog)
             }
 
             resetEverythingButton?.setOnLongClickListener {
@@ -270,12 +274,25 @@ object SettingsInit {
                 true
             }
 
+            fun initButton(button: RadioButton?, newStyle: Style.Styling, styleName: String) {
+                button?.isChecked = newStyle == AllManager.chosenStyle
+                button?.setOnClickListener {
+                    val lastStyle = AllManager.chosenStyle
+                    AllManager.chosenStyle = newStyle
+                    Style.applyStyle(all.flipper!!, lastStyle, newStyle)
+                    pref.edit { putString("style", styleName) }
+                }
+            }
+            initButton(styleDefault, Style.defaultStyle, "default")
+            initButton(styleDark, Style.darkStyle, "dark")
+            initButton(styleLight, Style.lightStyle, "light")
+            initButton(styleNeon, Style.neonStyle, "neon")
 
         }
     }
 
     private fun AllManager.resetEverything() {
-        pref.edit().clear().putLong("customUUID", AllManager.customUUID).apply()
+        pref.edit { clear().putLong("customUUID", AllManager.customUUID) }
         AllManager.unlockedIds.clear()
         AllManager.unlockedIds.addAll(listOf(1, 2, 3, 4))
         for (list in AllManager.unlockedElements) {
@@ -296,10 +313,11 @@ object SettingsInit {
 
     private fun AllManager.switchServer() {
 
-        val dialog: Dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setView(R.layout.switch_server)
             .setCancelable(true)
             .show()
+        applyStyle(dialog)
 
         dialog.findViewById<View>(R.id.switchToDefault)!!.setOnClickListener {
 
@@ -309,10 +327,10 @@ object SettingsInit {
 
             WebServices.serverName = "Default"
             WebServices.serverInstance = 0
-            pref.edit()
-                .putInt("serverInstance", 0)
-                .putString("serverName", "Default")
-                .apply()
+            pref.edit {
+                putInt("serverInstance", 0)
+                putString("serverName", "Default")
+            }
             // shows the server
             newsView?.postInvalidate()
 
@@ -335,10 +353,10 @@ object SettingsInit {
                     )
                     WebServices.serverName = name
                     WebServices.serverInstance = passInt.toInt()
-                    pref.edit()
-                        .putInt("serverInstance", passInt.toInt())
-                        .putString("serverName", name)
-                        .apply()
+                    pref.edit {
+                        putInt("serverInstance", passInt.toInt())
+                        putString("serverName", name)
+                    }
                     dialog.dismiss()
                     return@setOnClickListener
                 }
@@ -346,7 +364,7 @@ object SettingsInit {
                 checkServerName(name) ?: return@setOnClickListener
                 WebServices.requestServerInstance(this, name, passInt, { realName, id ->
 
-                    if (realName == null || realName.isEmpty()) {
+                    if (realName.isNullOrEmpty()) {
                         when (id) {
                             -1 -> {
                                 // not found
@@ -370,10 +388,10 @@ object SettingsInit {
 
                         WebServices.serverName = realName
                         WebServices.serverInstance = id
-                        pref.edit()
-                            .putInt("serverInstance", id)
-                            .putString("serverName", realName)
-                            .apply()
+                        pref.edit {
+                            putInt("serverInstance", id)
+                            putString("serverName", realName)
+                        }
                         // shows the server
                         newsView?.postInvalidate()
                         AllManager.toast(
@@ -413,10 +431,11 @@ object SettingsInit {
     }
 
     private fun AllManager.createOwnServer() {
-        val dialog: Dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setView(R.layout.switch_server_create)
             .setCancelable(true)
             .show()
+        applyStyle(dialog)
 
         dialog.findViewById<View>(R.id.createServer)!!.setOnClickListener {
             val name = dialog.findViewById<TextView>(R.id.name)!!.text.trim().toString()
@@ -436,10 +455,10 @@ object SettingsInit {
 
                         WebServices.serverName = realName
                         WebServices.serverInstance = id
-                        pref.edit()
-                            .putInt("serverInstance", id)
-                            .putString("serverName", realName)
-                            .apply()
+                        pref.edit {
+                            putInt("serverInstance", id)
+                            putString("serverName", realName)
+                        }
                         // shows the server
                         newsView?.postInvalidate()
                         AllManager.toast(
