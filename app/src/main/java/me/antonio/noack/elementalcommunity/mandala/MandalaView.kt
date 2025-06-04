@@ -12,8 +12,10 @@ import android.view.View
 import androidx.core.math.MathUtils.clamp
 import me.antonio.noack.elementalcommunity.*
 import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
+import me.antonio.noack.elementalcommunity.AllManager.Companion.chosenStyle
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
+import me.antonio.noack.elementalcommunity.Style.defaultStyle
 import kotlin.math.*
 
 @SuppressLint("ClickableViewAccessibility")
@@ -297,7 +299,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
         val centerX = width / 2
         val centerY = height / 2
 
-        linePaint.color = 0x30000000
+        linePaint.color = defaultStyle.replaceWith(0x30000000, chosenStyle)
         linePaint.strokeWidth = max(2f, min(width, height) * 0.005f)
 
         val showCraftingCounts = AllManager.showCraftingCounts
