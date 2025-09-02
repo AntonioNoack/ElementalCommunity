@@ -93,11 +93,12 @@ object OfflineSuggestions {
         }
         editor
             // only keep offlineElements, that are actually used
-            .putStringSet("offlineElements", offlineElements
-                .filter { it in usedElements }
-                .map { e ->
-                    "${e.uuid};${e.group};${e.name}"
-                }.toSet()
+            .putStringSet(
+                "offlineElements", offlineElements
+                    .filter { it in usedElements }
+                    .map { e ->
+                        "${e.uuid};${e.group};${e.name}"
+                    }.toSet()
             )
             .putStringSet("offlineRecipes", offlineRecipes.entries.map { (k, v) ->
                 "${k.compA};${k.compB};${v.group};${v.element.name}"
@@ -126,7 +127,9 @@ object OfflineSuggestions {
             onSuccess(0, 0)
         } else {
 
-            while (entries.size > maxNumRecipes) entries.removeLast()
+            if (entries.size > maxNumRecipes) {
+                entries.subList(maxNumRecipes, entries.size).clear()
+            }
 
             // all ingredients need to be included in the query!
             val knownElements = HashMap<Int, Element>()
@@ -169,7 +172,9 @@ object OfflineSuggestions {
                 }
             }
 
-            while (entries.size > maxNumRecipes) entries.removeLast()
+            if (entries.size > maxNumRecipes) {
+                entries.subList(maxNumRecipes, entries.size).clear()
+            }
 
             val usedByRecipes = HashSet<Int>(entries.size * 2)
             for ((ingredients, _) in entries) {

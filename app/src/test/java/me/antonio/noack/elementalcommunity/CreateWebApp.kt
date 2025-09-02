@@ -342,6 +342,12 @@ class CreateWebApp {
         svg = svgReplace("strokeColor", "stroke", svg)
             .replace("strokeWidth", "stroke-width")
 
+        svg = svg.replace("> <", "><")
+        svg = svg.trim()
+        if (svg.endsWith('"')) {
+            svg = svg.substring(0, svg.lastIndex).trim()
+        }
+
         println("svg $svg")
 
         return svg

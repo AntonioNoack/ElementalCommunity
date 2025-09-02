@@ -275,19 +275,6 @@ class AllManager : AppCompatActivity() {
         setContentView(R.layout.all_pages)
         clock.stop("Set Layout")
 
-        findViewById<Button>(R.id.captchaButton)
-            .setOnClickListener {
-                Captcha.get(this, {
-                    Toast.makeText(this, "Success: $it", Toast.LENGTH_SHORT)
-                        .show()
-                }, {
-                    Toast.makeText(this, "Failure :/", Toast.LENGTH_SHORT)
-                        .show()
-                })
-            }
-
-        clock.stop("Init Views")
-
         actionBar?.hide()
 
         window.navigationBarColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

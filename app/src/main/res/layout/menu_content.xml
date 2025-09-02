@@ -34,19 +34,6 @@
                 android:layout_height="wrap_content"/>
 
         <Button
-            android:id="@+id/captchaButton"
-            android:text="Test Captcha"
-            android:layout_marginTop="10dp"
-            android:gravity="center"
-            android:textSize="30sp"
-            android:textAllCaps="false"
-            android:fontFamily="sans-serif"
-            android:background="@color/colorPrimary"
-            android:padding="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <Button
                 android:id="@+id/mandalaButton"
                 android:text="@string/mandala_view"
                 android:layout_marginTop="10dp"
