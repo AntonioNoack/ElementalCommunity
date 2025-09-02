@@ -23,7 +23,7 @@ class CreateWebApp {
         val selfCode = File(self, "java")
         val target = File(webAppPath, "src/main/kotlin")
 
-        // copyCodeFiles(selfCode, target)
+        copyCodeFiles(selfCode, target)
 
         val res = File(self, "res")
         val values = File(res, "values")
@@ -292,7 +292,6 @@ class CreateWebApp {
 
         println("done")
 
-
     }
 
     fun colorString(color: Int) = "0x${(color.shr(16).and(0xffff).toString(16))}${
@@ -398,7 +397,8 @@ class CreateWebApp {
                 }
             }
         } else if (when (src.name) {
-                "Maths.kt", "Sound.kt", "HTTP.kt", "Captcha.kt", "IDTypes.kt", "BetterPreferences.kt", "FileChooser.kt", "FileSaver.kt" -> false
+                "Maths.kt", "Sound.kt", "HTTP.kt", "Captcha.kt", "IDTypes.kt",
+                "BetterPreferences.kt", "FileChooser.kt", "FileSaver.kt" -> false
                 else -> true
             }
         ) {
