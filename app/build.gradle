@@ -10,8 +10,8 @@ android {
         applicationId "me.antonio.noack.elementalcommunity"
         minSdk 21
         targetSdk 36
-        versionCode 20001
-        versionName "1.10.0"
+        versionCode 20101
+        versionName "1.11.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

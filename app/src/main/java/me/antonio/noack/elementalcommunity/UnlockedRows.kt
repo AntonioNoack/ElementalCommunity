@@ -17,10 +17,16 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.GroupSizes
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawElement
 import me.antonio.noack.elementalcommunity.GroupsEtc.drawFavourites
 import me.antonio.noack.elementalcommunity.GroupsEtc.getMargin
+import me.antonio.noack.elementalcommunity.Style.PRIMARY_TEXT
 import me.antonio.noack.elementalcommunity.utils.Maths.fract
 import me.antonio.noack.elementalcommunity.utils.Maths.mix
-import java.util.*
-import kotlin.math.*
+import java.util.Locale
+import java.util.TreeSet
+import kotlin.math.abs
+import kotlin.math.exp
+import kotlin.math.ln
+import kotlin.math.max
+import kotlin.math.min
 
 // show things that might soon be available (if much more players)
 
@@ -36,7 +42,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
     var search = ""
     private var lastSearch = ""
     private var lastParts = -1
-    private val relativeRightBorder = 0.7f
+    private val relativeRightBorder = 0.84f
 
     private var searchIsInvalid = true
 
@@ -92,7 +98,10 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
     private var entriesPerRow = 5
 
     var scroll = 0f
+    var scrollVelocity = 0f
+    var lastScrollTime = 0L
     var scrollDest: Element? = null
+    var isScrolling = false
 
     private var dragged: Element? = null
     private var activeElement: Element? = null
@@ -102,7 +111,6 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
     private var my = 0f
 
     private var isOnBorderY = 0
-
     private var zoom = 1f
 
     private fun calculateEntriesPerRow(): Int {
@@ -116,12 +124,12 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
 
     private fun widthPerNode(width: Float = measuredWidth * 1f): Float {
         val avgMargin = getMargin(width / entriesPerRow)
-        return (width - 2 * avgMargin) / (entriesPerRow + relativeRightBorder)
+        return (width * relativeRightBorder - 2 * avgMargin) / entriesPerRow
     }
 
     private fun widthPerNodeNMargin(width: Float = measuredWidth * 1f): Pair<Float, Float> {
         val avgMargin = getMargin(width / entriesPerRow)
-        return (width - 2 * avgMargin) / (entriesPerRow + relativeRightBorder) to avgMargin
+        return (width * relativeRightBorder - 2 * avgMargin) / (entriesPerRow) to avgMargin
     }
 
     fun validXY(event: MotionEvent, searchIfNull: Boolean): Triple<AreaType, Int, Int> {
@@ -220,17 +228,18 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
             ): Boolean = false
 
             override fun onScroll(
-                event: MotionEvent?,
-                e2: MotionEvent,
+                firstScroll: MotionEvent?,
+                currentScroll: MotionEvent,
                 distanceX: Float,
                 dy: Float
             ): Boolean {
 
                 if (dragged == null) {
-                    val widthPerNode = widthPerNode()
-                    if (dy != 0f && dy < widthPerNode * 0.7f) {
-                        scroll += dy
-                    }
+                    scroll += dy
+                    val timeMillis = System.nanoTime()
+                    val currVelocity = dy * 1e9f / max(timeMillis - lastScrollTime, 1000)
+                    scrollVelocity += (currVelocity - scrollVelocity) * 0.1f
+                    lastScrollTime = timeMillis
                 }
 
                 scrollDest = null
@@ -288,6 +297,10 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
             }
 
             when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                    isScrolling = true
+                    scrollVelocity = 0f
+                }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
 
                     if (dragged != null) {
@@ -315,6 +328,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                     }
 
                     isOnBorderY = 0
+                    isScrolling = false
 
                 }
             }
@@ -513,7 +527,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                         }
                     }
 
-                    textPaint.color = 0xff000000.toInt()
+                    textPaint.color =AllManager.chosenStyle.colors[PRIMARY_TEXT] or (127 shl 24)
                     textPaint.textSize = widthPerNode * 0.13f
 
                     val text = "${unlocked.size}/${GroupSizes[group]}"
@@ -592,17 +606,21 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
             }
         }
 
-        if (isOnBorderY != 0 && dragged != null) {
-
-            val oldScroll = scroll
-            scroll += isOnBorderY * deltaTime * widthPerNode * 5f
-
-            clampScroll()
-
-            if (oldScroll == scroll) {
-                isOnBorderY = 0
-            } else invalidate()
+        val oldScroll = scroll
+        if (abs(scrollVelocity) > 10f && !isScrolling) {
+            scroll += scrollVelocity * deltaTime
+            scrollVelocity *= exp(-deltaTime * 2f)
         }
+
+        if (isOnBorderY != 0 && dragged != null) {
+            scroll += isOnBorderY * deltaTime * widthPerNode * 5f
+        }
+
+        clampScroll()
+
+        if (oldScroll == scroll) {
+            isOnBorderY = 0
+        } else invalidate()
     }
 
     init {
