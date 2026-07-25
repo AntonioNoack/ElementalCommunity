@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import me.antonio.noack.elementalcommunity.AllManager.Companion.addRecipe
 import me.antonio.noack.elementalcommunity.AllManager.Companion.applyStyle
 import me.antonio.noack.elementalcommunity.api.WebServices
 import kotlin.math.min
@@ -44,6 +45,7 @@ object BasicOperations {
                         }, {})
                     }
                 }
+
                 else -> AllManager.toast(R.string.no_result_found, false)
             }
         }, {
@@ -69,17 +71,16 @@ object BasicOperations {
                 .setView(R.layout.add_recipe)
                 .show()
             applyStyle(dialog)
-            dialog.findViewById<TextView>(R.id.cancel)!!.setOnClickListener {
-                try {
-                    dialog.dismiss()
-                } catch (_: Throwable) {
-                }
-            }
+
+            dialog.findViewById<TextView>(R.id.cancel)!!
+                .setOnClickListener { try { dialog.dismiss() } catch (_: Throwable) { } }
+
             setSubmitAction(
                 all, dialog.findViewById(R.id.submit)!!, dialog,
                 true,
-                { a }, { b }, {
-                    unlockElement(it)
+                { a }, { b }, { result ->
+                    unlockElement(result)
+                    addRecipe(a, b, result, all, save = true)
                     onSuccess()
                 })
             if (candidates.isEmpty()) {

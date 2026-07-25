@@ -15,7 +15,6 @@ import android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
 import android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
 import android.view.View.SYSTEM_UI_FLAG_IMMERSIVE
 import android.view.View.VISIBLE
-import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.SeekBar
@@ -35,6 +34,7 @@ import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.elementalcommunity.graph.GraphView
 import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.help.SettingsInit
+import me.antonio.noack.elementalcommunity.history3d.HistoryView3D
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.io.SplitReader2
 import me.antonio.noack.elementalcommunity.itempedia.ItempediaAdapter
@@ -45,7 +45,6 @@ import me.antonio.noack.elementalcommunity.itempedia.ItempediaSwipeDetector
 import me.antonio.noack.elementalcommunity.mandala.MandalaView
 import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.utils.IntArrayList
-import me.antonio.noack.webdroid.Captcha
 import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
 import java.util.Random
@@ -185,12 +184,14 @@ class AllManager : AppCompatActivity() {
     private val graphViewButton: View? get() = findViewById(R.id.graphButton)
     private val mandalaViewButton: View? get() = findViewById(R.id.mandalaButton)
     private val itempediaViewButton: View? get() = findViewById(R.id.itempediaButton)
+    private val history3dButton: View? get() = findViewById(R.id.history3DButton)
     private val suggestButton: View? get() = findViewById(R.id.suggest)
     val settingButton: View? get() = findViewById(R.id.settingsButton)
 
     private val back1: View? get() = findViewById(R.id.back1)
     private val back2: View? get() = findViewById(R.id.back2)
     private val back3: View? get() = findViewById(R.id.back3)
+    private val back4: View? get() = findViewById(R.id.back4)
 
     private val backArrow1: View? get() = findViewById(R.id.backArrow1)
     private val backArrow2: View? get() = findViewById(R.id.backArrow2)
@@ -198,6 +199,7 @@ class AllManager : AppCompatActivity() {
     private val backArrow4: View? get() = findViewById(R.id.backArrow4)
     private val backArrow5: View? get() = findViewById(R.id.backArrow5)
     private val backArrow6: View? get() = findViewById(R.id.backArrow6)
+    private val backArrow7: View? get() = findViewById(R.id.backArrow7)
     val favTitle: TextView? get() = findViewById(R.id.favTitle)
     val favSlider: SeekBar? get() = findViewById(R.id.favSlider)
 
@@ -239,6 +241,7 @@ class AllManager : AppCompatActivity() {
             SaveLoadLogic.WRITE_EXT_STORAGE_CODE -> {
                 FileSaver.continueSave(this, resultCode, data)
             }
+
             FileChooser.READ_REQUEST_CODE -> {
                 if (resultCode == RESULT_OK) {
                     val uri = data?.data
@@ -249,9 +252,11 @@ class AllManager : AppCompatActivity() {
                     }
                 }
             }
+
             FileSaver.WRITE_REQUEST_CODE -> {
                 FileSaver.continueSave(this, resultCode, data)
             }
+
             else -> super.onActivityResult(requestCode, resultCode, data)
         }
     }
@@ -376,10 +381,6 @@ class AllManager : AppCompatActivity() {
     }
 
     private val lazyItempediaInit = lazy {
-        initializeItempedia()
-    }
-
-    private fun initializeItempedia() {
         val rec = findViewById<RecyclerView>(R.id.itempediaElements)!!
         rec.setHasFixedSize(true)
         val numColumns = 10 // good number?
@@ -389,6 +390,11 @@ class AllManager : AppCompatActivity() {
         rec.addOnItemTouchListener(ItempediaSwipeDetector(this))
         loadNumPages(this)
         createItempediaPages(this, 10)
+    }
+
+    private val historyInit = lazy {
+        findViewById<HistoryView3D>(R.id.historyView)
+            ?.init(this)
     }
 
     lateinit var itempediaAdapter: ItempediaAdapter
@@ -409,11 +415,16 @@ class AllManager : AppCompatActivity() {
             lazyItempediaInit.value
             FlipperContent.ITEMPEDIA.bind(this)
         }
+        history3dButton?.setOnClickListener {
+            historyInit.value
+            FlipperContent.HISTORY.bind(this)
+        }
 
         for (backArrow in listOf(
             back1, back2,
             backArrow1, backArrow2, backArrow3,
-            backArrow4, backArrow5, backArrow6
+            backArrow4, backArrow5, backArrow6,
+            back4, backArrow7
         )) {
             backArrow?.setOnClickListener { FlipperContent.MENU.bind(this) }
         }

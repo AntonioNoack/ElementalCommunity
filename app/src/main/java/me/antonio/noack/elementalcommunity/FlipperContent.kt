@@ -9,7 +9,8 @@ enum class FlipperContent(val id: Int) {
     GRAPH(4),
     COMBINER(5),
     ITEMPEDIA(6),
-    SETTINGS(7);
+    HISTORY(7),
+    SETTINGS(8);
 
     fun bind(all: AllManager) {
         val flipper = all.flipper ?: return

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/itempedia"
+    android:id="@+id/historyLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimaryText"
+    android:background="@color/colorPrimaryDark"
     android:orientation="vertical">
 
     <me.antonio.noack.elementalcommunity.LoadingBarView
@@ -12,14 +12,13 @@
         android:layout_height="5dp" />
 
     <LinearLayout
-        android:layout_marginBottom="5dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
         android:orientation="horizontal">
 
         <ImageView
-            android:id="@+id/backArrow6"
+            android:id="@+id/backArrow7"
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:contentDescription="@string/back"
@@ -27,7 +26,7 @@
             app:tint="#000" />
 
         <Button
-            android:id="@+id/itempediaTitle"
+            android:id="@+id/back4"
             android:layout_width="0dp"
             android:layout_height="50sp"
             android:layout_weight="1"
@@ -35,19 +34,19 @@
             android:fontFamily="sans-serif"
             android:gravity="center"
             android:padding="5dp"
-            android:text="@string/itempedia"
+            android:text="@string/back"
             android:textAllCaps="false"
             android:textSize="24sp" />
 
-        <ImageView
-            android:id="@+id/searchButton3"
+        <!--<ImageView
+            android:id="@+id/searchButton1"
             android:layout_width="50sp"
             android:layout_height="50sp"
-            android:src="@drawable/ic_search_24dp"
-            app:tint="#000" />
+            app:tint="#000"
+            android:src="@drawable/ic_search_24dp" />
 
         <EditText
-            android:id="@+id/search3"
+            android:id="@+id/search1"
             android:layout_width="0dp"
             android:layout_height="50sp"
             android:layout_weight="3"
@@ -55,33 +54,13 @@
             android:importantForAutofill="no"
             android:inputType="text"
             android:maxLines="1"
-            android:visibility="gone" />
+            android:visibility="gone" />-->
 
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/itempediaElements"
+    <me.antonio.noack.elementalcommunity.history3d.HistoryView3D
+        android:id="@+id/historyView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <LinearLayout
-            android:id="@+id/pageFlipper"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingLeft="2dp"
-            android:paddingRight="2dp">
-
-            <include layout="@layout/itempedia_page" />
-            <include layout="@layout/itempedia_page" />
-            <include layout="@layout/itempedia_page" />
-
-        </LinearLayout>
-    </HorizontalScrollView>
+        android:layout_height="match_parent" />
 
 </LinearLayout>

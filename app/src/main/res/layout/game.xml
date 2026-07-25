@@ -22,7 +22,7 @@
             android:layout_width="50sp"
             android:layout_height="50sp"
             android:contentDescription="@string/back"
-            android:tint="#000"
+            app:tint="#000"
             android:src="@drawable/ic_arrow_back_24dp" />
 
         <Button
@@ -42,7 +42,7 @@
             android:id="@+id/searchButton1"
             android:layout_width="50sp"
             android:layout_height="50sp"
-            android:tint="#000"
+            app:tint="#000"
             android:src="@drawable/ic_search_24dp" />
 
         <EditText

@@ -15,6 +15,7 @@
     <include layout="@layout/graph"/>
     <include layout="@layout/combiner"/>
     <include layout="@layout/itempedia"/>
+    <include layout="@layout/history"/>
     <include layout="@layout/settings"/>
 
 </ViewFlipper>
