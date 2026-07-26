@@ -5,6 +5,7 @@ import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.ElementStats
 import me.antonio.noack.elementalcommunity.api.web.Candidate
 import me.antonio.noack.elementalcommunity.api.web.News
+import me.antonio.noack.elementalcommunity.history3d.Element3D
 
 interface ServerService {
 
@@ -95,6 +96,11 @@ interface ServerService {
     fun askAllRecipesOfGroup(
         group: Int,
         onSuccess: (raw: String) -> Unit, onError: (Exception) -> Unit = defaultOnError
+    )
+
+    fun askHistory(
+        pageSize: Int, pageIndex: Int,
+        onSuccess: (List<Element3D>) -> Unit, onError: (Exception) -> Unit = defaultOnError
     )
 
 }

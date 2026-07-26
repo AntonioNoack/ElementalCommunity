@@ -40,6 +40,7 @@ import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.GroupsEtc
 import me.antonio.noack.elementalcommunity.GroupsEtc.getCacheEntry
 import me.antonio.noack.elementalcommunity.R
+import me.antonio.noack.elementalcommunity.history3d.ElementHistoryCache.getElement
 import me.antonio.noack.elementalcommunity.history3d.FloatBuffer.Companion.cubeIndices
 import me.antonio.noack.elementalcommunity.history3d.FloatBuffer.Companion.cubePositions
 import me.antonio.noack.elementalcommunity.history3d.FloatBuffer.Companion.flatIndices
@@ -98,12 +99,17 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         private fun Int.b01() = and(255) * INV255
         private fun Int.a01() = shr(24).and(255) * INV255
 
-        val cubeSize = 30f
+        val cubeSize = 15f
 
         private val animTimeX = 0.3f
         private val maxAnimTime = 30f
 
         private val charWidth = IntArray(100)
+
+        val min = 0
+        val max = 99
+        val center = (min + max) * 0.5f
+
     }
 
     fun init(allManager: AllManager) {
@@ -136,39 +142,11 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
     private var width = 1
     private var height = 1
 
-    private val min = -99
-    private val max = 99
-    private val center = (min + max) * 0.5f
-
-    private val testElements = listOf(
-        Element3D("Earth", 5, min, max, 0),
-        Element3D("Air", 12, min, min, 0),
-        Element3D("Water", 20, max, min, 0),
-        Element3D("Fire, a very long element", 4, max / 2, max, 0),
-
-        Element3D(
-            "Sand", 16, 40, // multiplied by 10
-            max, min, 0,
-            max / 2, max, 0
-        ),
-
-        Element3D(
-            "Lava", 1, 160, // multiplied by 10
-            max / 2, max, 0,
-            max / 2, max, 0
-        )
-    )
-
     private val fontImage = Texture2D(R.drawable.font)
     private val skyboxImage = Texture2D(R.drawable.skybox)
 
     // todo render time
     // todo render timeline??? with zoom and scroll??
-
-    fun getElement(index: Int): Element3D? {
-        // todo cache, and will it using web-requests
-        return testElements.getOrNull(index)
-    }
 
     var animationTime = 0.0
     var lastDown = 0L
@@ -176,7 +154,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
     var rotY = 0f
     var rotX = 0f
 
-    var radius = 1000f
+    var radius = 200f
     val far get() = radius * 2f + 7f * (max - min)
 
     private var lastTime = 0L
@@ -385,6 +363,8 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
             return
         }
 
+        if (element.name.isEmpty()) return
+
         val colors = GroupsEtc.GroupColors
         val color = colors[clamp(element.groupId, 0, colors.lastIndex)]
         val scale = cubeSize * 0.5f
@@ -407,66 +387,80 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         if (dx != 0f || dz != 0f) {
 
             val middleZ = (element.z + max(element.parentAZ, element.parentBZ)) * 0.5f
-            if (element.z.toFloat() == middleZ) return
+            if (element.z == element.parentAZ && element.z == element.parentBZ) return
 
             val barLength = hypot(dx, dz)
             val rotation = atan2(dx, dz)
-            val topDZ = abs(element.z - middleZ)
+            val topLength = abs(element.z - middleZ)
+            val legLength0 = abs(middleZ - element.parentAZ)
+            val legLength1 = abs(middleZ - element.parentBZ)
 
-            val totalLength = barLength + 2f * topDZ
+            val totalLength = barLength + topLength + max(legLength0, legLength1)
             val animTime = min(totalLength * animTimeX, maxAnimTime)
             if (deltaTime >= animTime) return // not good enough
 
-            val topAnimTime = animTime * topDZ / totalLength
+            val topAnimTime = animTime * topLength / totalLength
             val topGrowth = 1f - max(deltaTime / topAnimTime, 0f)
-            if (topGrowth > 0f) drawCube(// top-middle
-                px, (mix(middleZ, element.z.toFloat(), 0.5f * topGrowth) - camZ).toFloat(), pz,
-                scaleX, topGrowth * topDZ * 0.5f, scaleX, color, rotation
-            )
-
-            val barAnimTime = animTime * barLength / totalLength
-            val barGrowth = 1f - max((deltaTime - topAnimTime) / barAnimTime, 0f)
-            if (barGrowth < 1f) {
-                // grow from both sides
-                val mix0 = barGrowth * 0.25f
-                val mix1 = 1f - mix0
-                val lengthZ = barGrowth * barLength * 0.25f + scaleX
-                drawCube( // middle
-                    mix(element.parentAX.toFloat(), element.parentBX.toFloat(), mix0),
-                    (middleZ - camZ).toFloat(),
-                    mix(element.parentAY.toFloat(), element.parentBY.toFloat(), mix0),
-                    scaleX, scaleX, lengthZ, color, rotation
-                )
-                drawCube( // middle
-                    mix(element.parentAX.toFloat(), element.parentBX.toFloat(), mix1),
-                    (middleZ - camZ).toFloat(),
-                    mix(element.parentAY.toFloat(), element.parentBY.toFloat(), mix1),
-                    scaleX, scaleX, lengthZ, color, rotation
-                )
-            } else {
-                drawCube( // middle
-                    px, (middleZ - camZ).toFloat(), pz,
-                    scaleX, scaleX, barLength * 0.5f + scaleX, color, rotation
+            if (topGrowth > 0f) {
+                drawCube(// top-middle
+                    px, (mix(middleZ, element.z.toFloat(), 0.5f * topGrowth) - camZ).toFloat(), pz,
+                    scaleX, topGrowth * topLength * 0.5f, scaleX, color, rotation
                 )
             }
 
-            val legGrowth = 1f - max((deltaTime - (topAnimTime + barAnimTime)) / barAnimTime, 0f)
-            val leg0Z = mix(element.parentAZ.toFloat(), middleZ, legGrowth * 0.5f)
-            val leg0L = legGrowth * abs(middleZ - element.parentAZ) * 0.5f
-            drawCube( // left leg
-                element.parentAX.toFloat(),
-                (leg0Z - camZ).toFloat(),
-                element.parentAY.toFloat(),
-                scaleX, leg0L, scaleX, color, rotation
-            )
-            val leg1Z = mix(element.parentBZ.toFloat(), middleZ, legGrowth * 0.5f)
-            val leg1L = legGrowth * abs(middleZ - element.parentBZ) * 0.5f
-            drawCube( // right leg
-                element.parentBX.toFloat(),
-                (leg1Z - camZ).toFloat(),
-                element.parentBY.toFloat(),
-                scaleX, leg1L, scaleX, color, rotation
-            )
+            val barAnimTime = animTime * barLength / totalLength
+            val barGrowth = 1f - max((deltaTime - topAnimTime) / barAnimTime, 0f)
+            if (barGrowth > 0f) {
+                if (barGrowth < 1f) {
+                    // grow from both sides
+                    val mix0 = barGrowth * 0.25f
+                    val mix1 = 1f - mix0
+                    val lengthZ = barGrowth * barLength * 0.25f + scaleX
+                    drawCube( // middle
+                        mix(element.parentAX.toFloat(), element.parentBX.toFloat(), mix0),
+                        (middleZ - camZ).toFloat(),
+                        mix(element.parentAY.toFloat(), element.parentBY.toFloat(), mix0),
+                        scaleX, scaleX, lengthZ, color, rotation
+                    )
+                    drawCube( // middle
+                        mix(element.parentAX.toFloat(), element.parentBX.toFloat(), mix1),
+                        (middleZ - camZ).toFloat(),
+                        mix(element.parentAY.toFloat(), element.parentBY.toFloat(), mix1),
+                        scaleX, scaleX, lengthZ, color, rotation
+                    )
+                } else {
+                    drawCube( // middle
+                        px, (middleZ - camZ).toFloat(), pz,
+                        scaleX, scaleX, barLength * 0.5f + scaleX, color, rotation
+                    )
+                }
+            }
+
+            val legAnimTime0 = animTime * legLength0 / totalLength
+            val legGrowth0 = 1f - max((deltaTime - (topAnimTime + barAnimTime)) / legAnimTime0, 0f)
+            if (legGrowth0 > 0f) {
+                val leg0Z = mix(element.parentAZ.toFloat(), middleZ, legGrowth0 * 0.5f)
+                val leg0L = legGrowth0 * abs(middleZ - element.parentAZ) * 0.5f
+                drawCube( // left leg
+                    element.parentAX.toFloat(),
+                    (leg0Z - camZ).toFloat(),
+                    element.parentAY.toFloat(),
+                    scaleX, leg0L, scaleX, color, rotation
+                )
+            }
+
+            val legAnimTime1 = animTime * legLength1 / totalLength
+            val legGrowth1 = 1f - max((deltaTime - (topAnimTime + barAnimTime)) / legAnimTime1, 0f)
+            if (legGrowth1 > 0f) {
+                val leg1Z = mix(element.parentBZ.toFloat(), middleZ, legGrowth1 * 0.5f)
+                val leg1L = legGrowth1 * abs(middleZ - element.parentBZ) * 0.5f
+                drawCube( // right leg
+                    element.parentBX.toFloat(),
+                    (leg1Z - camZ).toFloat(),
+                    element.parentBY.toFloat(),
+                    scaleX, leg1L, scaleX, color, rotation
+                )
+            }
 
         } else {
             // just a line straight down
@@ -493,6 +487,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
     private fun drawElementName(element: Element3D, camZ: Double) {
         if (element.z + tooLow < camZ) return
+        if (element.name.isEmpty()) return
 
         val deltaTime = (camZ - element.z).toFloat()
         if (deltaTime < 0.5f) return
@@ -545,7 +540,8 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
                 val colors = GroupsEtc.GroupColors
                 val color = colors[clamp(element.groupId, 0, colors.lastIndex)]
-                val textColorI = if (color.r01() + color.g01() + color.b01() > 1f) 0f else 1f
+                val textColorI =
+                    if (color.r01() * 0.2f + color.g01() * 0.7f + color.b01() * 0.1f > 0.3f) 0f else 1f
                 glUniform3f(shader.color, textColorI, textColorI, textColorI)
 
                 glDrawElements(GL_TRIANGLES, flatIndices.size, GL_UNSIGNED_INT, 0)

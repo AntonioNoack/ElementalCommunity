@@ -8,6 +8,8 @@ import me.antonio.noack.elementalcommunity.OfflineSuggestions
 import me.antonio.noack.elementalcommunity.api.web.Candidate
 import me.antonio.noack.elementalcommunity.api.web.News
 import me.antonio.noack.elementalcommunity.cache.CombinationCache
+import me.antonio.noack.elementalcommunity.history3d.Element3D
+import me.antonio.noack.elementalcommunity.history3d.ElementHistoryCache.parseElements3D
 import me.antonio.noack.elementalcommunity.io.ElementType
 import me.antonio.noack.elementalcommunity.io.SplitReader
 import me.antonio.noack.webdroid.Captcha
@@ -196,7 +198,6 @@ open class WebService(private val serverURL: String) : ServerService {
         onSuccess: (ArrayList<News>) -> Unit,
         onError: (Exception) -> Unit
     ) {
-
         HTTP.request(
             "${getURL()}?n=${count * 3}" +
                     "&$webVersionName=$webVersion" +
@@ -226,7 +227,23 @@ open class WebService(private val serverURL: String) : ServerService {
                 onSuccess(list)
             }, onError
         )
+    }
 
+    override fun askHistory(
+        pageSize: Int,
+        pageIndex: Int,
+        onSuccess: (List<Element3D>) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        HTTP.request(
+            "${getURL()}history?" +
+                    "$webVersionName=$webVersion&" +
+                    "&pageSize=$pageSize" +
+                    "&pageIndex=$pageIndex" +
+                    "&sid=$serverInstance", { text ->
+                onSuccess(text.parseElements3D())
+            }, onError
+        )
     }
 
     private fun readElement(line: String): Element? {
@@ -437,45 +454,47 @@ open class WebService(private val serverURL: String) : ServerService {
     }
 
     override fun updateGroupSizesAndNames() {
-        HTTP.request("${getURL()}?l3" +
-                "&$webVersionName=$webVersion" +
-                "&sid=$serverInstance", {
+        HTTP.request(
+            "${getURL()}?l3" +
+                    "&$webVersionName=$webVersion" +
+                    "&sid=$serverInstance", {
 
-            val data = SplitReader(
-                listOf(ElementType.INT, ElementType.INT, ElementType.STRING, ElementType.INT),
-                '\n', ':', it
-            )
+                val data = SplitReader(
+                    listOf(ElementType.INT, ElementType.INT, ElementType.STRING, ElementType.INT),
+                    '\n', ':', it
+                )
 
-            val groupSizes = IntArray(GroupsEtc.GroupSizes.size)
-            while (data.hasRemaining) {
-                if (data.read() >= 4) {
-                    val uuid = data.getInt(0)
-                    val group = data.getInt(1)
-                    if (group in groupSizes.indices) {
-                        groupSizes[group]++
+                val groupSizes = IntArray(GroupsEtc.GroupSizes.size)
+                while (data.hasRemaining) {
+                    if (data.read() >= 4) {
+                        val uuid = data.getInt(0)
+                        val group = data.getInt(1)
+                        if (group in groupSizes.indices) {
+                            groupSizes[group]++
+                        }
+                        val name = data.getString(2)
+                        val craftingCount = data.getInt(3)
+                        Element.get(name, uuid, group, craftingCount, true)
                     }
-                    val name = data.getString(2)
-                    val craftingCount = data.getInt(3)
-                    Element.get(name, uuid, group, craftingCount, true)
                 }
-            }
 
-            for ((id, size) in groupSizes.withIndex()) {
-                GroupsEtc.GroupSizes[id] = size
-            }
+                for ((id, size) in groupSizes.withIndex()) {
+                    GroupsEtc.GroupSizes[id] = size
+                }
 
-            AllManager.invalidate()
+                AllManager.invalidate()
 
-        }, {})
+            }, {})
     }
 
     override fun getRandomRecipe(
         onSuccess: (raw: String) -> Unit,
         onError: (Exception) -> Unit
     ) {
-        HTTP.request("${getURL()}?rnd" +
-                "&$webVersionName=$webVersion" +
-                "&sid=$serverInstance", onSuccess, onError
+        HTTP.request(
+            "${getURL()}?rnd" +
+                    "&$webVersionName=$webVersion" +
+                    "&sid=$serverInstance", onSuccess, onError
         )
     }
 
@@ -516,4 +535,6 @@ open class WebService(private val serverURL: String) : ServerService {
             }, onError
         )
     }
+
+
 }
