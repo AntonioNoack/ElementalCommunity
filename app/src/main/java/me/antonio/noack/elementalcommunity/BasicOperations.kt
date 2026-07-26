@@ -73,7 +73,14 @@ object BasicOperations {
             applyStyle(dialog)
 
             dialog.findViewById<TextView>(R.id.cancel)!!
-                .setOnClickListener { try { dialog.dismiss() } catch (_: Throwable) { } }
+                .setOnClickListener {
+                    try {
+                        dialog.dismiss()
+                    } catch (_: Throwable) {
+                    }
+                }
+
+            // println("Candidates for $a + $b: $candidates")
 
             setSubmitAction(
                 all, dialog.findViewById(R.id.submit)!!, dialog,
@@ -168,9 +175,17 @@ object BasicOperations {
                 }
             }
             todo++
+            val a = getComponentA()
+            val b = getComponentB()
+
+            println("Suggesting $a + $b = $name")
+
             WebServices.suggestRecipe(
-                all, getComponentA(), getComponentB(), name, group,
+                all, a, b, name, group,
                 { line ->
+
+                    println("Suggested recipe $a + $b = $name ($line)")
+
                     done++
                     AllManager.toast(R.string.sent, false)
                     if (allowingDismiss) {
@@ -189,14 +204,19 @@ object BasicOperations {
                             val rUUID = str.substring(0, index1).toInt()
                             val rGroup = str.substring(index1 + 1, index2).toInt()
                             val rName = str.substring(index2 + 1)
+
+                            println("Unlocking $a + $b = $rUUID ($rName)")
+
                             // val secondaryData = lines.getOrNull(1)?.split(':')
                             // removed, because it's rather expensive to compute and not that important
                             // maybe we should save that information on per-instance basis in the database...
                             val rCraftingCount = -1
                             unlockElement(Element.get(rName, rUUID, rGroup, rCraftingCount, true))
-                        } catch (_: NumberFormatException) {
-
+                        } catch (e: NumberFormatException) {
+                            e.printStackTrace()
                         }
+                    } else {
+                        println("Invalid indices? $index1,$index2")
                     }
                 },
                 { done++ })

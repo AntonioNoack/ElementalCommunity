@@ -104,7 +104,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         private val animTimeX = 0.3f
         private val maxAnimTime = 30f
 
-        private val charWidth = IntArray(100)
+        private val charWidth0 = 64
 
         val min = 0
         val max = 99
@@ -178,7 +178,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         checkErrors()
 
         val all = all
-        fontImage.create(all, charWidth)
+        fontImage.create(all)
         skyboxImage.create(all)
         checkErrors()
     }
@@ -505,17 +505,10 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
             val name = lines[li]
             // todo we need line-breaks like when drawing elements...
 
-            var ki0 = 0
-            for (i in name.indices) {
-                val char = name[i]
-                val code = char.code - 32
-                ki0 += charWidth[code]
-            }
-
             val textSize = entry.textSize * 0.01f
             val shader = TextProgram
 
-            var ki = -ki0
+            var ki = -(name.length - 1) * charWidth0
             val scale = cubeSize * 0.5f * textSize
             val lineDy = scale * 1.6f
 
@@ -524,19 +517,18 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
                 if (char.isWhitespace()) continue
 
                 val code = char.code - 32
-                val cw = charWidth[code]
-                ki += cw
+                ki += charWidth0
 
                 val offsetX = ki * scale * 0.008f
 
-                ki += cw
+                ki += charWidth0
 
                 val xi = code % 10
                 val yi = code / 10
 
                 glUniform4f(shader.pos, px, py - (li - li0) * lineDy, pz, offsetX)
                 glUniform1f(shader.size, scale)
-                glUniform4f(shader.range, 0.025f, -0.025f, xi * 0.1f + 0.05f, yi * 0.1f + 0.05f)
+                glUniform4f(shader.range, 0.05f, -0.05f, xi * 0.1f + 0.05f, yi * 0.1f + 0.05f)
 
                 val colors = GroupsEtc.GroupColors
                 val color = colors[clamp(element.groupId, 0, colors.lastIndex)]

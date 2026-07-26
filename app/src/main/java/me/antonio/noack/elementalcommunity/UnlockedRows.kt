@@ -424,12 +424,16 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
         addRecipe(sa, sb, element, all)
         val unlocked = unlockeds[element.group]
         return if (!unlocked.contains(element) && element.uuid > -1) {
+            // println("unlocking element $element")
             unlocked.add(element)
             // unlocked.sortBy { it.uuid }
             invalidateSearch()
             postInvalidate()
             true
-        } else false
+        } else {
+            // println("element was already unlocked")
+            false
+        }
     }
 
     private fun neededHeight(): Float {

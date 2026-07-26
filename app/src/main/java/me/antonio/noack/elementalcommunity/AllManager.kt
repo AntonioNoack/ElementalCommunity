@@ -119,6 +119,7 @@ class AllManager : AppCompatActivity() {
         fun addRecipe(a: Element, b: Element, r: Element, all: AllManager?, save: Boolean = true) {
             if (a.uuid > b.uuid) return addRecipe(b, a, r, all, save)
             val pair = a to b
+            // println("putting ${r.uuid} to unlocked elements, and saving? $save")
             unlockedIds.put(r.uuid)
             elementByRecipe[pair] = r
             val list = recipesByElement[r]
@@ -130,6 +131,7 @@ class AllManager : AppCompatActivity() {
                 }
             }
             if (save) {
+                // println("Executing save process")
                 invalidate()
                 all?.updateDiamondCount()
                 saveElement2(r)
@@ -470,6 +472,7 @@ class AllManager : AppCompatActivity() {
             value.append(element.craftingCount.toString())
             val unlockedRecipes = recipesByElement[element]
             val unlocked = id in unlockedIds.keys || unlockedRecipes?.isNotEmpty() == true
+            println("Saving element $element, isUnlocked? $unlocked, recipes: $unlockedRecipes")
             if (unlocked) {
                 value.append(';')
                 value.append('1')
@@ -484,10 +487,12 @@ class AllManager : AppCompatActivity() {
                     }
                 }
             }
+            println("Put String $value for $id")
             edit.putString(id.toString(), value.toString())
         }
 
         saveElement2 = { element ->
+            println("Saving element $element")
             MusicScheduler.tick()
             val edit = pref.edit()
             saveElement(edit, element)
@@ -615,7 +620,7 @@ class AllManager : AppCompatActivity() {
                     reader.input = valueStr
                     val name = reader.readString(';', ';', "")
                     val group = reader.readInt(';', ';', -1)
-                    // println("parsing $valueStr for id $id -> '$name', $group")
+                    println("parsing $valueStr for id $id -> '$name', $group")
                     if (group < 0) continue
                     val craftCount = reader.readInt(';', ';', -1)
                     val wasCrafted = reader.readInt(';', ';', 0) > 0
