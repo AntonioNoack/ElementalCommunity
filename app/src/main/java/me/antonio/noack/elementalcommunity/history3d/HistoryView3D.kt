@@ -36,6 +36,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
 import android.view.ScaleGestureDetector
+import android.widget.TextView
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.GroupsEtc
 import me.antonio.noack.elementalcommunity.GroupsEtc.getCacheEntry
@@ -49,15 +50,21 @@ import me.antonio.noack.elementalcommunity.utils.Maths.mix
 import java.lang.StrictMath.clamp
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 import kotlin.math.sin
 
 @SuppressLint("ClickableViewAccessibility")
@@ -123,6 +130,8 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         setRenderer(this)
         renderMode = RENDERMODE_CONTINUOUSLY//RENDERMODE_WHEN_DIRTY
 
+        elementBirthView = allManager.findViewById(R.id.elementBirthDates)
+
         setListeners()
         return true
     }
@@ -145,6 +154,9 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
     var rotY = 0f
     var rotX = -0.5f
+
+    var targetRotY = 0f
+    var targetRotX = -0.5f
 
     var radius = 200f
     val far get() = radius * 2f + 7f * (max - min)
@@ -212,19 +224,67 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         glBlendEquation(GL_FUNC_ADD)
         drawElementNames()
 
+        glDisable(GL_DEPTH_TEST)
+        showBirthedElements()
+
         checkErrors()
     }
+
+    private val formatter = DateTimeFormatter.ofLocalizedDateTime(
+        FormatStyle.MEDIUM,
+        FormatStyle.SHORT
+    )
+
+    var elementBirthView: TextView? = null
+    private var lastShownBirthedElement = ""
+
+    fun showBirthedElements() {
+
+        val elements = lastGoodElements
+        if (elements.isEmpty()) return
+
+        val view = elementBirthView ?: return
+        val lastAddedName = elements.last().name
+        if (lastAddedName == lastShownBirthedElement) return
+        lastShownBirthedElement = lastAddedName
+
+        val asyncSafeList = ArrayList(elements)
+        asyncSafeList.reverse()
+        all.runOnUiThread {
+            view.text = asyncSafeList.joinToString("\n") { element ->
+                val date = LocalDateTime.ofEpochSecond(element.timestampMinutes * 60L, 0, ZoneOffset.UTC)
+                val dateText = formatter.format(date)
+                "${element.name}: $dateText"
+            }
+        }
+    }
+
+    private val shownGoodElements = 4
+    private var lastGoodElements = ArrayDeque<Element3D>(shownGoodElements)
 
     private var autoSpeed = 0f
     private fun updateTime() {
         val time = System.nanoTime()
-        val dt = min(abs(time - lastTime) * 1e-9, 0.1)
+        val dt = min(abs(time - lastTime) * 1e-9f, 0.1f)
         animationTime += dt
 
         if (abs(time - lastDown) > 2e9) {
-            rotY = ((rotY + 0.3f * dt * autoSpeed) % (PI * 2)).toFloat()
-            autoSpeed += (1f - autoSpeed) * dt.toFloat()
+            targetRotY = (targetRotY + 0.3f * dt * autoSpeed)
+            autoSpeed += (1f - autoSpeed) * dt
         } else autoSpeed = 0f
+
+        val factor = exp(-20f * dt)
+        rotX = mix(targetRotX, rotX, factor)
+        rotY = mix(targetRotY, rotY, factor)
+
+        // clamp for precision
+        if (rotX < -PI) {
+            rotX += 2f * PI.toFloat()
+            targetRotX += 2f * PI.toFloat()
+        } else if (rotX > PI) {
+            rotX -= 2f * PI.toFloat()
+            targetRotX -= 2f * PI.toFloat()
+        }
 
         lastTime = time
     }
@@ -288,10 +348,19 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         glUniform1f(shader.metallic, 0.5f)
 
         var maxZ = 0
+        lastGoodElements.clear()
         for (index in lastMinElementId until Int.MAX_VALUE) {
             val element = getElement(index) ?: break
             val done = drawElementCube(index, element, camZ)
             maxZ = element.z
+
+            if (element.name.isNotEmpty() && element.z < camZ) {
+                if (lastGoodElements.size >= shownGoodElements) {
+                    lastGoodElements.removeFirstOrNull()
+                }
+                lastGoodElements.add(element)
+            }
+
             if (done) break
         }
         animationTime = min(animationTime, (maxZ + 5) / zSpeed)
@@ -489,6 +558,8 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
     private val textPaint = Paint().apply { textSize = 10f }
 
+    private val maxDistSqForText = 500f.pow(2)
+
     private fun drawElementName(element: Element3D, camZ: Double): Boolean {
         if (element.z + tooLow < camZ) return false
         if (element.name.isEmpty()) return false
@@ -497,19 +568,31 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         if (deltaTime < 0.5f) return true
 
         // draw name on 4 sides
-        val entry = getCacheEntry(element.name, element.name, 0, 100f, textPaint)
-        val lines = entry.lines
 
         val px = element.x.toFloat() - cameraPos[0]
         val py = (element.z - camZ).toFloat() - cameraPos[1]
         val pz = element.y.toFloat() - cameraPos[2]
 
+        if (px * px + py * py + pz * pz > maxDistSqForText) return false
+
+        val colors = GroupsEtc.GroupColors
+        val color = colors[clamp(element.groupId, 0, colors.lastIndex)]
+        drawText(element.name, color, px, py, pz)
+        return false
+    }
+
+    private fun drawText(text: String, color: Int, px: Float, py: Float, pz: Float) {
+        val entry = getCacheEntry(text, text, 0, 100f, textPaint)
+        drawText(color, px, py, pz, entry.lines, entry.textSize * 0.01f)
+    }
+
+    private fun drawText(
+        color: Int, px: Float, py: Float, pz: Float,
+        lines: List<String>, textSize: Float
+    ) {
         val li0 = lines.lastIndex * 0.5f
         for (li in lines.indices) {
             val name = lines[li]
-            // todo we need line-breaks like when drawing elements...
-
-            val textSize = entry.textSize * 0.01f
             val shader = textProgram
 
             var ki = -name.length
@@ -530,16 +613,13 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
                 glUniform1f(shader.size, scale)
                 glUniform4f(shader.range, 0.05f, -0.05f, xi * 0.1f + 0.05f, yi * 0.1f + 0.05f)
 
-                val colors = GroupsEtc.GroupColors
-                val color = colors[clamp(element.groupId, 0, colors.lastIndex)]
                 val textColorI =
-                    if (color.r01() * 0.2f + color.g01() * 0.7f + color.b01() * 0.1f > 0.3f) 0f else 1f
+                    if (color.r01() * 0.2f + color.g01() * 0.7f + color.b01() * 0.1f > 0.6f) 0f else 1f
                 glUniform3f(shader.color, textColorI, textColorI, textColorI)
 
                 glDrawElements(GL_TRIANGLES, flatIndices.size, GL_UNSIGNED_INT, 0)
             }
         }
-        return false
     }
 
     val zSpeed = 10.0
@@ -578,9 +658,9 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
                         val dx = (event.x - lastX) * speed
                         val dy = (event.y - lastY) * speed
 
-                        rotY = (rotY + dx) % (PI * 2).toFloat()
-                        rotX = clamp(
-                            rotX + dy,
+                        targetRotY -= dx
+                        targetRotX = clamp(
+                            targetRotX - dy,
                             (-PI / 2).toFloat(),
                             0f
                         )

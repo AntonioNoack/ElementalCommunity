@@ -635,7 +635,7 @@ class AllManager : AppCompatActivity() {
                     reader.input = valueStr
                     val name = reader.readString(';', ';', "")
                     val group = reader.readInt(';', ';', -1)
-                    println("parsing $valueStr for id $id -> '$name', $group")
+                    // println("parsing $valueStr for id $id -> '$name', $group")
                     if (group < 0) continue
                     val craftCount = reader.readInt(';', ';', -1)
                     val isUnlocked = reader.readInt(';', ';', 0) > 0

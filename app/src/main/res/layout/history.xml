@@ -56,11 +56,32 @@
             android:maxLines="1"
             android:visibility="gone" />-->
 
+        <!--
+        todo it would be nice to let the user select a date or element, and then jump to that time
+         and it would be nice if you could just track what appeared from an element
+        -->
+
     </LinearLayout>
 
-    <me.antonio.noack.elementalcommunity.history3d.HistoryView3D
-        android:id="@+id/historyView"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+        <me.antonio.noack.elementalcommunity.history3d.HistoryView3D
+            android:id="@+id/historyView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:text="@string/app_name"
+            android:textColor="#000"
+            android:textAlignment="textEnd"
+            android:textSize="15sp"
+            android:padding="5dp"
+            android:id="@+id/elementBirthDates"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </FrameLayout>
 
 </LinearLayout>

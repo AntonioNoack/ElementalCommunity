@@ -175,7 +175,8 @@ object ElementHistoryCache {
         val list = ArrayList<Element3D>(raw.size)
         val loadedZScale = 4
         var prevZ = 0
-        val random = Random(1234)
+        var prevTimestamp = 0
+        val random = Random(12354)
         val rnd = 5
         for (news in raw) {
             val data = news.split(';')
@@ -193,18 +194,30 @@ object ElementHistoryCache {
                 var parentBX = data[6].toIntOrNull() ?: continue
                 var parentBY = data[7].toIntOrNull() ?: continue
                 val parentBZ = data[8].toIntOrNull() ?: continue
-                // timestamp in minutes since 1970 = prevTimestamp + data[9]
+                val deltaT = data[9].toIntOrNull() ?: continue
+                prevTimestamp += deltaT
+
+                val chainRecipe = parentAX == parentBX &&
+                        parentAY == parentBY &&
+                        parentAZ == parentBZ
 
                 parentAX += random.nextInt(-rnd, rnd)
                 parentAY += random.nextInt(-rnd, rnd)
-                parentBX += random.nextInt(-rnd, rnd)
-                parentBY += random.nextInt(-rnd, rnd)
+
+                if (chainRecipe) {
+                    parentBX = parentAX
+                    parentBY = parentAY
+                } else {
+                    parentAX += random.nextInt(-rnd, rnd)
+                    parentAY += random.nextInt(-rnd, rnd)
+                }
 
                 list.add(
                     Element3D(
                         name, groupId, currZ * loadedZScale,
                         parentAX, parentAY, (currZ - parentAZ) * loadedZScale,
-                        parentBX, parentBY, (currZ - parentBZ) * loadedZScale
+                        parentBX, parentBY, (currZ - parentBZ) * loadedZScale,
+                        prevTimestamp
                     )
                 )
             }
