@@ -290,7 +290,7 @@ object GroupsEtc {
         var lastTime = System.nanoTime()
     }
 
-    private fun getCacheEntry(
+    fun getCacheEntry(
         rawText: String,
         key: String,
         craftingCount: Int,
@@ -298,9 +298,7 @@ object GroupsEtc {
         textPaint: Paint
     ): CacheEntry {
         val cacheEntries = getCache(widthPerNode)
-        var entry = cacheEntries[key]
-        if (entry == null) {
-
+        return cacheEntries.getOrPut(key) {
             val text = rawText.trim()
 
             // split long rawText into multiple sections...
@@ -322,15 +320,12 @@ object GroupsEtc {
             )
             textPaint.textSize = textSize
             val textDy =
-                (widthPerNode - (textPaint.ascent() + textPaint.descent())) / 2 - if (craftingCount > minimumCraftingCount) 0.5f * widthPerNode * countSize else 0f
+                (widthPerNode - (textPaint.ascent() + textPaint.descent())) / 2 -
+                        if (craftingCount > minimumCraftingCount) 0.5f * widthPerNode * countSize else 0f
 
-            entry = CacheEntry(textSize, textDy, list)
-
-            cacheEntries[key] = entry
+            CacheEntry(textSize, textDy, list)
 
         }
-
-        return entry
     }
 
     private const val marginFactor = 0.02f
@@ -340,10 +335,10 @@ object GroupsEtc {
     private const val spacingFactor = 1f + spacingFactorX0
     private const val spacingFactorX2 = 1f + 2f * spacingFactorX0
 
-    class CacheEntry(val textSize: Float, dy0: Float, val lines: List<String>) {
+    class CacheEntry(val textSize: Float, val dy0: Float, val lines: List<String>) {
         private val lineOffset = textSize * spacingFactor
-        private val indexOffset = (lines.size - 1) * 0.5f
-        val dys = FloatArray(lines.size) { dy0 + (it - indexOffset) * lineOffset }
+        private val indexOffset get() = (lines.size - 1) * 0.5f
+        fun dys(index: Int) = dy0 + (index - indexOffset) * lineOffset
     }
 
     fun drawElement(
@@ -376,11 +371,10 @@ object GroupsEtc {
         val x = x0 + widthPerNode * 0.5f
 
         textPaint.textSize = cacheEntry.textSize
-        val dys = cacheEntry.dys
 
         val lines = cacheEntry.lines
         for ((index, text) in lines.withIndex()) {
-            canvas.drawText(text, x, y0 + dys[index], textPaint)
+            canvas.drawText(text, x, y0 + cacheEntry.dys(index), textPaint)
         }
 
         if (craftingCount > minimumCraftingCount || uuid > -1) {
@@ -392,7 +386,8 @@ object GroupsEtc {
             textPaint.textSize *= 0.7f
             textPaint.textSize *= min(1f, widthPerNode * 0.7f / textPaint.measureText(text))
             val y = y0 + max(
-                dys.last() + spacingFactor * countSize * widthPerNode,
+                cacheEntry.dys(cacheEntry.lines.size - 1) +
+                        spacingFactor * countSize * widthPerNode,
                 widthPerNode * counterOffset
             )
             canvas.drawText(text, x, y, textPaint)

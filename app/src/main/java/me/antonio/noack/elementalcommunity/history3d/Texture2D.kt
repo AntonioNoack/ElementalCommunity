@@ -2,6 +2,7 @@ package me.antonio.noack.elementalcommunity.history3d
 
 import android.graphics.BitmapFactory
 import android.opengl.GLES20.GL_LINEAR
+import android.opengl.GLES20.GL_LINEAR_MIPMAP_LINEAR
 import android.opengl.GLES20.GL_REPEAT
 import android.opengl.GLES20.GL_TEXTURE0
 import android.opengl.GLES20.GL_TEXTURE_2D
@@ -12,6 +13,7 @@ import android.opengl.GLES20.GL_TEXTURE_WRAP_T
 import android.opengl.GLES20.glActiveTexture
 import android.opengl.GLES20.glBindTexture
 import android.opengl.GLES20.glGenTextures
+import android.opengl.GLES20.glGenerateMipmap
 import android.opengl.GLES20.glTexParameteri
 import android.opengl.GLUtils
 import androidx.core.graphics.get
@@ -35,12 +37,14 @@ class Texture2D(val resource: Int) {
 
         glGenTextures(1, tmp, 0)
         glBindTexture(GL_TEXTURE_2D, tmp[0])
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+
+        GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0)
+        glGenerateMipmap(GL_TEXTURE_2D)
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-
-        GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0)
 
         if (charWidth != null) {
             val nx = 10

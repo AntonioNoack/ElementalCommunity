@@ -10,7 +10,7 @@ import android.opengl.GLES20.glLinkProgram
 import android.opengl.GLES20.glShaderSource
 import android.opengl.GLES20.glUseProgram
 
-class Program(val vertexSource: String, val fragmentSource: String) {
+abstract class Program(val vertexSource: String, val fragmentSource: String) {
 
     var program = -1
 
@@ -29,7 +29,11 @@ class Program(val vertexSource: String, val fragmentSource: String) {
         glAttachShader(program, fragmentShader)
         glLinkProgram(program)
         this.program = program
+
+        init()
     }
+
+    abstract fun init()
 
     fun bind() {
         glUseProgram(program)
