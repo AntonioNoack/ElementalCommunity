@@ -19,7 +19,7 @@ import android.opengl.GLUtils
 import me.antonio.noack.elementalcommunity.AllManager
 import me.antonio.noack.elementalcommunity.history3d.FloatBuffer.Companion.tmp
 
-class Texture2D(val resource: Int) {
+class Texture2D(val resource: Int, val mipmap: Boolean) {
 
     private var pointer = -1
 
@@ -37,9 +37,14 @@ class Texture2D(val resource: Int) {
         glBindTexture(GL_TEXTURE_2D, tmp[0])
 
         GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0)
-        glGenerateMipmap(GL_TEXTURE_2D)
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+        if (mipmap) {
+            glGenerateMipmap(GL_TEXTURE_2D)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+        } else {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        }
+
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)

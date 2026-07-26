@@ -11,7 +11,7 @@ import me.antonio.noack.elementalcommunity.GroupsEtc.minimumCraftingCount
 import me.antonio.noack.elementalcommunity.utils.Compact
 import kotlin.math.min
 
-class Element constructor(
+class Element private constructor(
     var name: String,
     val uuid: Int,
     var group: Int,

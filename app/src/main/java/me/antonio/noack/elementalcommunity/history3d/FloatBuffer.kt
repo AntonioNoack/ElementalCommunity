@@ -5,13 +5,14 @@ import android.opengl.GLES20.GL_FLOAT
 import android.opengl.GLES20.GL_STATIC_DRAW
 import android.opengl.GLES20.glBindBuffer
 import android.opengl.GLES20.glBufferData
+import android.opengl.GLES20.glDisableVertexAttribArray
 import android.opengl.GLES20.glEnableVertexAttribArray
 import android.opengl.GLES20.glGenBuffers
 import android.opengl.GLES20.glVertexAttribPointer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class FloatBuffer(values: FloatArray) {
+class FloatBuffer(values: FloatArray, val stride: Int) {
 
     companion object {
         val tmp = IntArray(1)
@@ -37,7 +38,7 @@ class FloatBuffer(values: FloatArray) {
                 +1f, -1f, 3f,
                 -1f, +1f, 3f,
                 +1f, +1f, 3f,
-            )
+            ), 12
         )
 
         val flatIndices = IntBuffer(
@@ -51,28 +52,52 @@ class FloatBuffer(values: FloatArray) {
 
         val cubePositions = FloatBuffer(
             floatArrayOf(
-                -1f, -1f, -1f,
-                1f, -1f, -1f,
-                -1f, 1f, -1f,
-                1f, 1f, -1f,
+                // -Z
+                -1f, -1f, -1f, 0f, 0f, -1f,
+                +1f, -1f, -1f, 0f, 0f, -1f,
+                -1f, +1f, -1f, 0f, 0f, -1f,
+                +1f, +1f, -1f, 0f, 0f, -1f,
 
-                -1f, -1f, +1f,
-                1f, -1f, +1f,
-                -1f, 1f, +1f,
-                1f, 1f, +1f,
-            )
+                // +Z
+                -1f, -1f, 1f, 0f, 0f, 1f,
+                +1f, -1f, 1f, 0f, 0f, 1f,
+                -1f, +1f, 1f, 0f, 0f, 1f,
+                +1f, +1f, 1f, 0f, 0f, 1f,
+
+                // -Y
+                -1f, -1f, -1f, 0f, -1f, 0f,
+                +1f, -1f, -1f, 0f, -1f, 0f,
+                -1f, -1f, +1f, 0f, -1f, 0f,
+                +1f, -1f, +1f, 0f, -1f, 0f,
+
+                // +Y
+                -1f, 1f, -1f, 0f, 1f, 0f,
+                +1f, 1f, -1f, 0f, 1f, 0f,
+                -1f, 1f, +1f, 0f, 1f, 0f,
+                +1f, 1f, +1f, 0f, 1f, 0f,
+
+                // -X
+                -1f, -1f, -1f, -1f, 0f, 0f,
+                -1f, +1f, -1f, -1f, 0f, 0f,
+                -1f, -1f, +1f, -1f, 0f, 0f,
+                -1f, +1f, +1f, -1f, 0f, 0f,
+
+                // +X
+                1f, -1f, -1f, 1f, 0f, 0f,
+                1f, +1f, -1f, 1f, 0f, 0f,
+                1f, -1f, +1f, 1f, 0f, 0f,
+                1f, +1f, +1f, 1f, 0f, 0f,
+            ), 24
         )
 
         val cubeIndices = IntBuffer(
             intArrayOf(
-                0, 3, 1, 0, 2, 3, // +1, +2
-                4, 5, 7, 6, 4, 7, // all +4
-
-                0, 1, 5, 4, 0, 5, // +1, +4
-                2, 7, 3, 2, 6, 7, // all +2
-
-                0, 6, 2, 0, 4, 6, // +2, +4
-                1, 3, 7, 5, 1, 7, // all +1
+                0, 3, 1, 0, 2, 3, // -Z
+                4, 5, 7, 6, 4, 7, // +Z
+                8, 9, 11, 8, 11,  10,// -Y
+                12, 15, 13, 12, 14, 15, // +Y
+                16, 19, 17, 16, 18, 19, // -X
+                20, 21, 23, 22, 20, 23, // +X
             )
         )
 
@@ -99,10 +124,23 @@ class FloatBuffer(values: FloatArray) {
     }
 
     fun bindAsPositions() {
+        bindAsPosNor(0, -1)
+    }
+
+    fun bindAsPosNor(pos: Int, nor: Int) {
         check(pointer >= 0)
         glBindBuffer(GL_ARRAY_BUFFER, pointer)
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 12, 0)
-        glEnableVertexAttribArray(0)
+        if (pos >= 0) {
+            glVertexAttribPointer(pos, 3, GL_FLOAT, false, stride, 0)
+            glEnableVertexAttribArray(pos)
+        }
+        if (nor >= 0) {
+            val offset = if (stride > 12) 12 else 0
+            glVertexAttribPointer(nor, 3, GL_FLOAT, false, stride, offset)
+            glEnableVertexAttribArray(nor)
+        }
+        if (pos != 0 && nor != 0) glDisableVertexAttribArray(0)
+        if (pos != 1 && nor != 1) glDisableVertexAttribArray(1)
     }
 
 }

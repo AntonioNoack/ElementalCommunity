@@ -47,6 +47,7 @@ import me.antonio.noack.elementalcommunity.tree.TreeView
 import me.antonio.noack.elementalcommunity.utils.IntArrayList
 import me.antonio.noack.webdroid.files.FileChooser
 import me.antonio.noack.webdroid.files.FileSaver
+import java.util.BitSet
 import java.util.Random
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
@@ -72,11 +73,11 @@ class AllManager : AppCompatActivity() {
         var showElementUUID = true
         var offlineMode = false
 
-        val unlockedIds = ConcurrentHashSet<Int>(512)
+        val unlockedIds = BitSet(512)
 
         init {
-            for (i in 1..4) {
-                unlockedIds.put(i)
+            for (rootElementId in 1..4) {
+                unlockedIds.set(rootElementId)
             }
         }
 
@@ -110,31 +111,37 @@ class AllManager : AppCompatActivity() {
                 val name = pref?.getString("$id.name", defName) ?: defName
                 val group = pref?.getInt("$id.group", defGroup) ?: defGroup
                 val craftingCount = pref?.getInt("$id.crafted", -1) ?: -1
-                val element = elementById.getOrPut(id) { Element(name, id, group, craftingCount) }
+                val element = Element.get(name, id, group, craftingCount, save = false)
                 unlockedElements[element.group].add(element)
             }
         }
 
         // for the tree
-        fun addRecipe(a: Element, b: Element, r: Element, all: AllManager?, save: Boolean = true) {
-            if (a.uuid > b.uuid) return addRecipe(b, a, r, all, save)
-            val pair = a to b
-            // println("putting ${r.uuid} to unlocked elements, and saving? $save")
-            unlockedIds.put(r.uuid)
-            elementByRecipe[pair] = r
-            val list = recipesByElement[r]
-            if (list == null) {
-                recipesByElement[r] = arrayListOf(a to b)
-            } else synchronized(list) {
-                if (pair !in list) {
-                    list.add(pair)
-                }
+        fun addRecipe(
+            compA: Element, compB: Element, result: Element,
+            all: AllManager?, save: Boolean = true
+        ) {
+            if (compA.uuid > compB.uuid) {
+                return addRecipe(compB, compA, result, all, save)
             }
+
+            val pair = compA to compB
+
+            // println("putting ${r.uuid} to unlocked elements, and saving? $save")
+            unlockedIds.set(result.uuid)
+            unlockedElements[result.group].add(result)
+            elementByRecipe[pair] = result
+
+            val list = recipesByElement.getOrPut(result) { ArrayList(4) }
+            synchronized(list) {
+                if (pair !in list) list.add(pair)
+            }
+
             if (save) {
                 // println("Executing save process")
                 invalidate()
                 all?.updateDiamondCount()
-                saveElement2(r)
+                saveElement2(result)
             }
         }
 
@@ -394,9 +401,9 @@ class AllManager : AppCompatActivity() {
         createItempediaPages(this, 10)
     }
 
-    private val historyInit = lazy {
-        findViewById<HistoryView3D>(R.id.historyView)
-            ?.init(this)
+    private val historyInitIsOK = lazy {
+        val view = findViewById<HistoryView3D>(R.id.historyView)
+        view != null && view.init(this)
     }
 
     lateinit var itempediaAdapter: ItempediaAdapter
@@ -418,8 +425,11 @@ class AllManager : AppCompatActivity() {
             FlipperContent.ITEMPEDIA.bind(this)
         }
         history3dButton?.setOnClickListener {
-            historyInit.value
-            FlipperContent.HISTORY.bind(this)
+            if (historyInitIsOK.value) {
+                FlipperContent.HISTORY.bind(this)
+            } else {
+                toast("3D View not supported: could not find capable GPU", true)
+            }
         }
 
         for (backArrow in listOf(
@@ -471,7 +481,7 @@ class AllManager : AppCompatActivity() {
             value.append(';')
             value.append(element.craftingCount.toString())
             val unlockedRecipes = recipesByElement[element]
-            val unlocked = id in unlockedIds.keys || unlockedRecipes?.isNotEmpty() == true
+            val unlocked = unlockedIds[id] || unlockedRecipes?.isNotEmpty() == true
             println("Saving element $element, isUnlocked? $unlocked, recipes: $unlockedRecipes")
             if (unlocked) {
                 value.append(';')
@@ -594,11 +604,16 @@ class AllManager : AppCompatActivity() {
 
     private fun readUnlockedElementsLegacy() {
         val unlockedIdsString = pref.getString("unlocked", null)
-        if (unlockedIdsString != null) {
-            unlockedIds.addAll(
-                unlockedIdsString
-                    .split(',').mapNotNull { x -> x.toIntOrNull() })
-        } else unlockedIds.addAll(listOf(1, 2, 3, 4))
+        synchronized(unlockedIds) {
+            if (unlockedIdsString != null) {
+                for (unlockedId in unlockedIdsString
+                    .split(',').mapNotNull { x -> x.toIntOrNull() }) {
+                    unlockedIds.set(unlockedId)
+                }
+            } else {
+                for (e in 1..4) unlockedIds.set(e)
+            }
+        }
     }
 
     private fun readUnlockedElements() {
@@ -623,12 +638,14 @@ class AllManager : AppCompatActivity() {
                     println("parsing $valueStr for id $id -> '$name', $group")
                     if (group < 0) continue
                     val craftCount = reader.readInt(';', ';', -1)
-                    val wasCrafted = reader.readInt(';', ';', 0) > 0
-                    val element = elementById.getOrPut(id) { Element(name, id, group, craftCount) }
-                    if (wasCrafted) {
-                        unlockedIds.put(id)
+                    val isUnlocked = reader.readInt(';', ';', 0) > 0
+
+                    val element = Element.get(name, id, group, craftCount, save = false)
+                    if (isUnlocked) {
+                        unlockedIds.set(id)
                         unlockedElements[group].add(element)
                     }
+
                     if (reader.hasRemaining) {
                         val list = IntArrayList()
                         recipeMemory[element] = list
@@ -660,7 +677,7 @@ class AllManager : AppCompatActivity() {
                 edit.apply()
             }
         }
-        clock.stop("Read Unlocked: Load All, #${unlockedIds.size}")
+        clock.stop("Read Unlocked: Load All, #${unlockedIds.countSetBits()}")
         for ((element, abs) in recipeMemory) {
             abs.forEachPair { a, b ->
                 val ea = elementById[a]
@@ -671,6 +688,17 @@ class AllManager : AppCompatActivity() {
             }
         }
         clock.stop("Read Unlocked: Adding Recipes, #${recipeMemory.size}")
+    }
+
+    private fun BitSet.countSetBits(): Int {
+        var count = 0
+        var index = 0
+        while (true) {
+            index = nextSetBit(index)
+            if (index < 0) return count
+            count++
+            index++
+        }
     }
 
     private fun createUniqueIdentifier() {
@@ -686,7 +714,7 @@ class AllManager : AppCompatActivity() {
     fun getDiamondCount(): Int {
         // split for statistics + no-loss, when everything is reset
         var count = elementByRecipe.size
-        count += 3 * unlockedIds.size
+        count += 3 * unlockedIds.countSetBits()
         count += pref.getInt(diamondWatchKey, 0)
         count += pref.getInt(diamondBuyKey, 0)
         count -= pref.getInt(diamondSpentKey, 0)

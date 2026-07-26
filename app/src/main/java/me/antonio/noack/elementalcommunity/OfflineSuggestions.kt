@@ -47,7 +47,7 @@ object OfflineSuggestions {
         else {
             val newUUID = (offlineElements.minByOrNull { it.uuid }?.uuid ?: 0) - 1
             // println("Creating new offline element: $newUUID, $name/$compactName")
-            val newElement = Element(name, newUUID, group, 0)
+            val newElement = Element.get(name, newUUID, group, 0, true)
             offlineElements.add(newElement)
             newElement
         }

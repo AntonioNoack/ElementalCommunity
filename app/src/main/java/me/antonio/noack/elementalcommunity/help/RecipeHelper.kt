@@ -76,9 +76,9 @@ object RecipeHelper {
                 val b = AllManager.elementById[compB] ?: continue
                 val r = AllManager.elementById[result] ?: continue
                 val isKnown = AllManager.elementByRecipe[a to b] != null
-                val aIsKnown = AllManager.unlockedIds.contains(a.uuid)
-                val bIsKnown = AllManager.unlockedIds.contains(b.uuid)
-                val rIsKnown = AllManager.unlockedIds.contains(r.uuid)
+                val aIsKnown = AllManager.unlockedIds.get(a.uuid)
+                val bIsKnown = AllManager.unlockedIds.get(b.uuid)
+                val rIsKnown = AllManager.unlockedIds.get(r.uuid)
                 // todo show this in the list...
                 // todo make the names unreadable
                 val score = (if (isKnown) 12

@@ -60,18 +60,6 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 
-// todo plan:
-//  we have an API, that gives us the 3d positions for each element,
-//  sorted by ID...
-//  and we query a range of IDs...
-//  and display all until time X,
-//  and we add a little animation for when an element is appearing
-//  and we should add a minimum distance of 1..., and a maximum distance of 10
-//  our RaspberryPi must compute everything
-//  one unit = 1h?
-//  and it should store the data minimally:
-//   index -> (id: u32, x: 0-99, y: 0-99, z: 0-u32)
-
 @SuppressLint("ClickableViewAccessibility")
 class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
     GLSurfaceView(ctx, attributeSet), GLSurfaceView.Renderer {
@@ -112,7 +100,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
     }
 
-    fun init(allManager: AllManager) {
+    fun init(allManager: AllManager): Boolean {
         this.all = allManager
 
         val activityManager = all.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -120,6 +108,8 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         val version = configurationInfo.reqGlEsVersion
         val major = version.shr(16)
         val minor = version.and(0xffff)
+
+        if (major < 2) return false
 
         // val version10x = major * 10 + min(minor, 9)
         // GFXFeatures.supportsShaderStorageBuffers = version10x >= 31
@@ -134,6 +124,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         renderMode = RENDERMODE_CONTINUOUSLY//RENDERMODE_WHEN_DIRTY
 
         setListeners()
+        return true
     }
 
 
@@ -142,17 +133,18 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
     private var width = 1
     private var height = 1
 
-    private val fontImage = Texture2D(R.drawable.font)
-    private val skyboxImage = Texture2D(R.drawable.skybox)
+    private val fontImage = Texture2D(R.drawable.font, true)
+    private val skyboxImage = Texture2D(R.drawable.skybox, false)
 
-    // todo render time
+    // todo render date and time
     // todo render timeline??? with zoom and scroll??
+    // todo date-picker would be nice
 
     var animationTime = 0.0
     var lastDown = 0L
 
     var rotY = 0f
-    var rotX = 0f
+    var rotX = -0.5f
 
     var radius = 200f
     val far get() = radius * 2f + 7f * (max - min)
@@ -161,14 +153,20 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
     private var lastMinElementId = 0
 
-    val cameraMatrix = Matrix4f()
-    val transform = Matrix4f()
+    private val cameraMatrix = Matrix4f()
+    private val transform = Matrix4f()
+
+    private lateinit var textProgram: TextProgramBase
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
 
-        SkyboxProgram.create()
-        TextProgram.create()
-        CubeProgram.create()
+        check(SkyboxProgram.create()) { "Failed to create skybox program" }
+        textProgram = if (TextProgram.create()) TextProgram else {
+            check(TextProgramFallback.create()) { "Failed to create text program & fallback" }
+            TextProgramFallback
+        }
+
+        check(CubeProgram.create()) { "Failed to create cube program" }
         checkErrors()
 
         cubePositions.create()
@@ -177,7 +175,6 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         flatIndices.create()
         checkErrors()
 
-        val all = all
         fontImage.create(all)
         skyboxImage.create(all)
         checkErrors()
@@ -266,7 +263,10 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
     private fun drawElementCubes() {
 
-        // cube mesh and skybox texture are already bound
+        cubePositions.bindAsPosNor(CubeProgram.attrPos, CubeProgram.attrNor)
+        cubeIndices.bindAsIndices()
+
+        // sky texture is already bound
         val shader = CubeProgram
         shader.bind()
         checkErrors()
@@ -276,7 +276,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         val vz = cos(-rotX) * cos(rotY)
 
         cameraPos[0] = vx * radius + center
-        cameraPos[1] = vy * radius
+        cameraPos[1] = vy * radius - radius * 0.5f
         cameraPos[2] = vz * radius + center
 
         cameraMatrix.fillInto(tmp16)
@@ -290,10 +290,31 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         var maxZ = 0
         for (index in lastMinElementId until Int.MAX_VALUE) {
             val element = getElement(index) ?: break
-            drawElementCube(index, element, camZ)
+            val done = drawElementCube(index, element, camZ)
             maxZ = element.z
+            if (done) break
         }
         animationTime = min(animationTime, (maxZ + 5) / zSpeed)
+    }
+
+    private fun drawElementNames() {
+
+        flatPositions.bindAsPositions()
+        flatIndices.bindAsIndices()
+
+        val shader = textProgram
+        shader.bind()
+
+        // cameraMatrix.fillInto(tmp16) // already done
+        glUniformMatrix4fv(shader.transform, 1, false, tmp16)
+
+        fontImage.bind(0)
+
+        val camZ = animationTime * zSpeed
+        for (index in lastMinElementId until Int.MAX_VALUE) {
+            val done = drawElementName(getElement(index) ?: break, camZ)
+            if (done) break
+        }
     }
 
     private fun drawBase(camZ: Double) {
@@ -307,6 +328,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         glDisable(GL_BLEND)
     }
 
+    @Suppress("SameParameterValue")
     private fun drawBaseLayer(camZ: Double, z: Int, scale: Float) {
         val sx = 0.5f * (max - min)
         val scaleZ = sx * (1.4f + 0.2f * z + 0.02f * z * z)
@@ -315,25 +337,6 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
             scaleZ, scale, scaleZ,
             0x11111111 * max(15 - z, 1), 0f
         )
-    }
-
-    private fun drawElementNames() {
-
-        flatPositions.bindAsPositions()
-        flatIndices.bindAsIndices()
-
-        val shader = TextProgram
-        shader.bind()
-
-        // cameraMatrix.fillInto(tmp16) // already done
-        glUniformMatrix4fv(shader.transform, 1, false, tmp16)
-
-        fontImage.bind(0)
-
-        val camZ = animationTime * zSpeed
-        for (index in lastMinElementId until Int.MAX_VALUE) {
-            drawElementName(getElement(index) ?: break, camZ)
-        }
     }
 
     private val cameraPos = FloatArray(3)
@@ -357,13 +360,13 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         glDrawElements(GL_TRIANGLES, cubeIndices.size, GL_UNSIGNED_INT, 0)
     }
 
-    private fun drawElementCube(i: Int, element: Element3D, camZ: Double) {
+    private fun drawElementCube(i: Int, element: Element3D, camZ: Double): Boolean {
         if (element.z + tooLow < camZ) {
             lastMinElementId = max(lastMinElementId, i)
-            return
+            return false
         }
 
-        if (element.name.isEmpty()) return
+        if (element.name.isEmpty()) return false
 
         val colors = GroupsEtc.GroupColors
         val color = colors[clamp(element.groupId, 0, colors.lastIndex)]
@@ -387,7 +390,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         if (dx != 0f || dz != 0f) {
 
             val middleZ = (element.z + max(element.parentAZ, element.parentBZ)) * 0.5f
-            if (element.z == element.parentAZ && element.z == element.parentBZ) return
+            if (element.z == element.parentAZ && element.z == element.parentBZ) return false
 
             val barLength = hypot(dx, dz)
             val rotation = atan2(dx, dz)
@@ -397,7 +400,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
             val totalLength = barLength + topLength + max(legLength0, legLength1)
             val animTime = min(totalLength * animTimeX, maxAnimTime)
-            if (deltaTime >= animTime) return // not good enough
+            if (deltaTime >= animTime) return true // too early
 
             val topAnimTime = animTime * topLength / totalLength
             val topGrowth = 1f - max(deltaTime / topAnimTime, 0f)
@@ -466,10 +469,10 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
             // just a line straight down
             val minZ = min(element.parentAZ, element.parentBZ)
             val topDZ = abs(element.z - minZ)
-            if (topDZ <= 0) return
+            if (topDZ == 0) return false
 
             val animTime = min(topDZ * animTimeX, maxAnimTime)
-            if (deltaTime >= animTime) return // not good enough
+            if (deltaTime >= animTime) return true // too early
 
             val growthTime = 1f - max(deltaTime / animTime, 0f)
             if (growthTime > 0f) {
@@ -481,16 +484,17 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
             }
         }
 
+        return false
     }
 
     private val textPaint = Paint().apply { textSize = 10f }
 
-    private fun drawElementName(element: Element3D, camZ: Double) {
-        if (element.z + tooLow < camZ) return
-        if (element.name.isEmpty()) return
+    private fun drawElementName(element: Element3D, camZ: Double): Boolean {
+        if (element.z + tooLow < camZ) return false
+        if (element.name.isEmpty()) return false
 
         val deltaTime = (camZ - element.z).toFloat()
-        if (deltaTime < 0.5f) return
+        if (deltaTime < 0.5f) return true
 
         // draw name on 4 sides
         val entry = getCacheEntry(element.name, element.name, 0, 100f, textPaint)
@@ -506,22 +510,18 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
             // todo we need line-breaks like when drawing elements...
 
             val textSize = entry.textSize * 0.01f
-            val shader = TextProgram
+            val shader = textProgram
 
-            var ki = -(name.length - 1) * charWidth0
+            var ki = -name.length
             val scale = cubeSize * 0.5f * textSize
             val lineDy = scale * 1.6f
 
             for (i in name.indices) {
-                val char = name[i]
+                val char = name[i]; ki += 2
                 if (char.isWhitespace()) continue
 
                 val code = char.code - 32
-                ki += charWidth0
-
-                val offsetX = ki * scale * 0.008f
-
-                ki += charWidth0
+                val offsetX = ki * scale * 0.5f
 
                 val xi = code % 10
                 val yi = code / 10
@@ -539,6 +539,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
                 glDrawElements(GL_TRIANGLES, flatIndices.size, GL_UNSIGNED_INT, 0)
             }
         }
+        return false
     }
 
     val zSpeed = 10.0

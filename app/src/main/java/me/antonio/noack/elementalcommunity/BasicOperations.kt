@@ -21,8 +21,7 @@ object BasicOperations {
         all: AllManager,
         measuredWidth: Int,
         measuredHeight: Int,
-        unlockElement: (Element) -> Unit,
-        add: (Element) -> Unit
+        unlockElement: (Element) -> Unit
     ) {
         todo++
         WebServices.askRecipe(first, second, all, { result ->
@@ -37,11 +36,7 @@ object BasicOperations {
                         unlockElement
                     ) {
                         WebServices.askRecipe(first, second, all, { result2 ->
-                            if (result2 != null) {// remove in the future, when the least amount of support is 2 or sth like that
-                                AllManager.unlockedIds.put(result2.uuid)
-                                AllManager.saveElement2(result2)
-                                add(result2)
-                            }
+                            if (result2 != null) unlockElement(result2)
                         }, {})
                     }
                 }

@@ -301,6 +301,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                     isScrolling = true
                     scrollVelocity = 0f
                 }
+
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
 
                     if (dragged != null) {
@@ -343,23 +344,21 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
 
     }
 
-    private fun unlockElement(sa: Element, sb: Element, element: Element) {
+    private fun unlockElement(compA: Element, compB: Element, result: Element) {
         //  add to achieved :D
-        val newOne = add(sa, sb, element)
-        activeElement = element
+        val newOne = addRecipeAndInvalidate(compA, compB, result)
+        activeElement = result
         activeness = 1f
         // scroll to destination on success
-        scrollDest = element
+        scrollDest = result
         invalidate()
         (if (newOne) AllManager.successSound else AllManager.okSound)?.play()
     }
 
-    open fun onRecipeRequest(first: Element, second: Element) {
-        BasicOperations.onRecipeRequest(first, second, all, measuredWidth, measuredHeight, {
-            unlockElement(first, second, it)
-        }, {
-            add(first, second, it)
-        })
+    open fun onRecipeRequest(compA: Element, compB: Element) {
+        BasicOperations.onRecipeRequest(compA, compB, all, measuredWidth, measuredHeight) { result ->
+            unlockElement(compA, compB, result)
+        }
     }
 
     fun clampScroll() {
@@ -419,21 +418,15 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
         return sum
     }
 
-    fun add(sa: Element, sb: Element, element: Element): Boolean {
+    fun addRecipeAndInvalidate(compA: Element, compB: Element, result: Element): Boolean {
+        val unlocked = unlockeds[result.group]
+        val success = !unlocked.contains(result) && result.uuid > -1
         checkIsUIThread()
-        addRecipe(sa, sb, element, all)
-        val unlocked = unlockeds[element.group]
-        return if (!unlocked.contains(element) && element.uuid > -1) {
-            // println("unlocking element $element")
-            unlocked.add(element)
-            // unlocked.sortBy { it.uuid }
-            invalidateSearch()
-            postInvalidate()
-            true
-        } else {
-            // println("element was already unlocked")
-            false
-        }
+        addRecipe(compA, compB, result, all)
+
+        invalidateSearch()
+        postInvalidate()
+        return success
     }
 
     private fun neededHeight(): Float {
@@ -531,7 +524,7 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                         }
                     }
 
-                    textPaint.color =AllManager.chosenStyle.colors[PRIMARY_TEXT] or (127 shl 24)
+                    textPaint.color = AllManager.chosenStyle.colors[PRIMARY_TEXT] or (127 shl 24)
                     textPaint.textSize = widthPerNode * 0.13f
 
                     val text = "${unlocked.size}/${GroupSizes[group]}"
@@ -603,9 +596,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                     scrollDest = null
                     scroll = 0f
                 }
+
                 abs(scroll - scrollDestY) < widthPerNode * 0.05f -> {
                     scrollDest = null
                 }
+
                 else -> invalidate()
             }
         }

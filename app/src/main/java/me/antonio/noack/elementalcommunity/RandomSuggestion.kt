@@ -79,12 +79,9 @@ object RandomSuggestion {
             setSubmitAction(
                 all, dialog.findViewById(R.id.submit)!!,
                 dialog, false, { compA }, { compB }, { result ->
-                    if (AllManager.unlockedIds.contains(compA.uuid) && AllManager.unlockedIds.contains(
-                            compB.uuid
-                        )
+                    if (AllManager.unlockedIds.get(compA.uuid) &&
+                        AllManager.unlockedIds.get(compB.uuid)
                     ) {
-                        // unlock this element...
-                        AllManager.unlockedIds.put(result.uuid)
                         AllManager.addRecipe(compA, compB, result, all)
                     }
                     next()

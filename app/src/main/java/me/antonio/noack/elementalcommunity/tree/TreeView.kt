@@ -283,8 +283,8 @@ class TreeView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attributeS
                                 all,
                                 measuredWidth,
                                 measuredHeight,
-                                { unlockElement(first, second, it) },
-                                { add(first, second, it) })
+                                { unlockElement(first, second, it) }
+                            )
 
                         }
                     }

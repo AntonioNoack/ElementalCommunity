@@ -254,7 +254,7 @@ open class WebService(private val serverURL: String) : ServerService {
         val name = data[2]
         val craftingCount = data[3].toIntOrNull() ?: return null
         val createdDate = data[4].toIntOrNull() ?: return null // unix timestamp
-        val element = Element(name, uuid, group, craftingCount)
+        val element = Element.get(name, uuid, group, craftingCount, true)
         element.createdDate = createdDate
         return element
     }

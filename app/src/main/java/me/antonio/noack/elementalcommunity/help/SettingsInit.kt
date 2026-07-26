@@ -293,8 +293,10 @@ object SettingsInit {
 
     private fun AllManager.resetEverything() {
         pref.edit { clear().putLong("customUUID", AllManager.customUUID) }
-        AllManager.unlockedIds.clear()
-        AllManager.unlockedIds.addAll(listOf(1, 2, 3, 4))
+        synchronized(AllManager.unlockedIds) {
+            AllManager.unlockedIds.clear()
+            for (e in 1..4) AllManager.unlockedIds.set(e)
+        }
         for (list in AllManager.unlockedElements) {
             list.removeAll(list.filter { it.uuid > 4 }.toSet())
         }

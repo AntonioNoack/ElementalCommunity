@@ -5,10 +5,10 @@ import android.util.AttributeSet
 
 class Combiner(ctx: Context, attributeSet: AttributeSet?) : UnlockedRows(ctx, attributeSet) {
 
-    override fun onRecipeRequest(first: Element, second: Element) {
-        BasicOperations.askForCandidates(first, second, all,
+    override fun onRecipeRequest(compA: Element, compB: Element) {
+        BasicOperations.askForCandidates(compA, compB, all,
             measuredWidth, measuredHeight,
-            { add(first, second, it) }) {}
+            { result -> addRecipeAndInvalidate(compA, compB, result) }) {}
     }
 
 }

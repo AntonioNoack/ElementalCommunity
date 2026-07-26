@@ -238,9 +238,7 @@ class MandalaView(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribu
                             } else {
                                 BasicOperations.onRecipeRequest(first, second,
                                     all, measuredWidth, measuredHeight,
-                                    { unlockElement(first, second, it) }, {
-                                        add(first, second, it)
-                                    })
+                                    { unlockElement(first, second, it) })
                             }
                         }
                     }

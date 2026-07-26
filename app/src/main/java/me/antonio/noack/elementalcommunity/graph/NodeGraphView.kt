@@ -306,8 +306,8 @@ abstract class NodeGraphView(
                             BasicOperations.onRecipeRequest(
                                 dragged, second, all,
                                 measuredWidth, measuredHeight,
-                                { unlockElement(dragged, second, it) },
-                                { add(dragged, second, it) })
+                                { unlockElement(dragged, second, it) }
+                            )
 
                         }
                     }

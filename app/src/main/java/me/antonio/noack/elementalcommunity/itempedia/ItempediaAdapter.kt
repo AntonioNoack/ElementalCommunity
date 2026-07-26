@@ -35,7 +35,7 @@ class ItempediaAdapter(private val manager: AllManager) :
         if (element != null) {
             val uuid = element.uuid
             view.element = element
-            view.alphaOverride = if (uuid in AllManager.unlockedIds.keys) 255 else HIDDEN_ALPHA
+            view.alphaOverride = if (AllManager.unlockedIds[uuid]) 255 else HIDDEN_ALPHA
             view.invalidate()
             view.setOnClickListener {
                 // open menu, where we show more data about the element
