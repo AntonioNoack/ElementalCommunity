@@ -38,30 +38,19 @@
             android:textAllCaps="false"
             android:textSize="24sp" />
 
-        <!--<ImageView
-            android:id="@+id/searchButton1"
+        <ImageView
+            android:id="@+id/searchButton4"
             android:layout_width="50sp"
             android:layout_height="50sp"
             app:tint="#000"
             android:src="@drawable/ic_search_24dp" />
 
-        <EditText
-            android:id="@+id/search1"
-            android:layout_width="0dp"
-            android:layout_height="50sp"
-            android:layout_weight="3"
-            android:hint="@string/what_you_are_searching"
-            android:importantForAutofill="no"
-            android:inputType="text"
-            android:maxLines="1"
-            android:visibility="gone" />-->
-
-        <!--
-        todo it would be nice to let the user select a date or element, and then jump to that time
-         and it would be nice if you could just track what appeared from an element
-        -->
-
     </LinearLayout>
+
+    <me.antonio.noack.elementalcommunity.history3d.HistoryTimeChooser
+        android:id="@+id/historyTimeChooser"
+        android:layout_width="match_parent"
+        android:layout_height="30sp" />
 
     <FrameLayout
         android:layout_width="match_parent"

@@ -52,9 +52,13 @@ object HTTP {
                     out.write(largeArgs.toByteArray())
                     out.flush()
                 }
-                val answer = con.inputStream.bufferedReader().readText()
-                AllManager.staticRunOnUIThread {
-                    onSuccess(answer)
+                if (con.responseCode in 200 until 300) {
+                    val answer = con.inputStream.bufferedReader().readText()
+                    AllManager.staticRunOnUIThread {
+                        onSuccess(answer)
+                    }
+                } else {
+                    onError(IOException("Got response ${con.responseCode}"))
                 }
             } catch (e: SocketTimeoutException) {
                 e.printStackTrace()
@@ -118,12 +122,14 @@ object HTTP {
                         onSuccess(answer)
                     }
                 }
+
                 301 -> {
                     val newUrl = con.getHeaderField("Location")
                     if (newUrl == "https://$url") throw IOException("Resource $url always redirects to https")
                     val newWithoutProtocol = newUrl.substring(newUrl.indexOf(':') + 3)
                     tryHttp(newWithoutProtocol, type, largeArgs, onSuccess, onError)
                 }
+
                 else -> throw IOException("Asked for $url, got response code ${con.responseCode}")
             }
         } catch (e: IOException) {

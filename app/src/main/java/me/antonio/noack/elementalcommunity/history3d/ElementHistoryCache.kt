@@ -1,9 +1,10 @@
 package me.antonio.noack.elementalcommunity.history3d
 
+import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.api.ServerService.Companion.defaultOnError
 import me.antonio.noack.elementalcommunity.api.WebServices
+import me.antonio.noack.elementalcommunity.utils.Compact.compacted
 import java.util.Random
-import kotlin.math.abs
 
 object ElementHistoryCache {
 
@@ -229,7 +230,12 @@ object ElementHistoryCache {
     private val chunkSize = 1 shl chunkSizeBits
     private val chunks = ArrayList<List<Element3D>>()
     private var isQuerying = false
-    private var lastErrorTimeNanos = Long.MIN_VALUE
+    private var waitUntilNanos = Long.MIN_VALUE
+    private val voidElement = Element3D(
+        "", 0, 0,
+        0, 0, 0,
+        0, 0, 0, 0
+    )
 
     fun getElement(index: Int): Element3D? {
         if (index < 0) return null
@@ -244,7 +250,7 @@ object ElementHistoryCache {
             return testElements.getOrNull(index)
         }
 
-        if (abs(System.nanoTime() - lastErrorTimeNanos) < 5e9) {
+        if (System.nanoTime() < waitUntilNanos) {
             // wait a little
             return testElements.getOrNull(index)
         }
@@ -253,19 +259,43 @@ object ElementHistoryCache {
 
         val nextChunkIndex = chunks.size
         WebServices.askHistory(chunkSize, nextChunkIndex, { elements ->
-            synchronized(chunks) {
-                if (chunks.size == nextChunkIndex) {
-                    chunks.add(elements)
+            // println("got good response: ${elements.size}x")
+            if (elements.isNotEmpty()) {
+                synchronized(chunks) {
+                    if (chunks.size == nextChunkIndex) {
+                        val listWithVoids = if (elements.size == chunkSize) elements else {
+                            elements + List(chunkSize - elements.size) { voidElement }
+                        }
+                        chunks.add(listWithVoids)
+                    }//  else println("duplicate/skipped???")
                 }
+            } else {
+                waitUntilNanos = System.nanoTime() + (60 * 1e9).toLong() // no more elements
             }
             isQuerying = false
         }, { error ->
-            lastErrorTimeNanos = System.nanoTime()
+            // println("got bad response: $error")
+            waitUntilNanos = System.nanoTime() + (30 * 1e9).toLong()
             isQuerying = false
             defaultOnError(error)
         })
 
         return testElements.getOrNull(index)
+    }
+
+    fun find(element: Element): Pair<Element3D, Int>? {
+        val searched = element.compacted
+        // in theory, we could skip ~0.99 * element.uuid...
+        for (chunkIndex in chunks.indices) {
+            val chunk = chunks[chunkIndex]
+            for (elementIndex in chunk.indices) {
+                val element2 = chunk[elementIndex]
+                if (compacted(element2.name) == searched) {
+                    return element2 to (chunkIndex * chunkSize + elementIndex)
+                }
+            }
+        }
+        return null
     }
 
 }

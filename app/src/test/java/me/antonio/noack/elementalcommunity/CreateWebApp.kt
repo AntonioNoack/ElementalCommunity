@@ -10,11 +10,15 @@ class CreateWebApp {
     // val androidAppPath = File("/home/antonio/AndroidStudioProjects/ElementalCommunity/")
     // val webAppPath = File("/home/antonio/IdeaProjects/ElementalCommunityWeb/")
 
-    val user = File(System.getProperty("user.home")!!)
+    val isLinux = true
+
+    val user =
+        if (isLinux) File("/mnt/Windows/Users/Antonio")
+        else File(System.getProperty("user.home")!!)
 
     // Windows system
-    val androidAppPath = File(user, "Documents\\IdeaProjects\\ElementalCommunity2")
-    val webAppPath = File(user, "Documents\\IdeaProjects\\ElementalCommunityWeb")
+    val androidAppPath = File(user, "Documents/IdeaProjects/ElementalCommunity2")
+    val webAppPath = File(user, "Documents/IdeaProjects/ElementalCommunityWeb")
 
     @Test
     fun main() {
@@ -50,6 +54,7 @@ class CreateWebApp {
                 1 -> {
                     tabs++
                 }
+
                 -1 -> {
                     tabs--
                 }
@@ -78,22 +83,28 @@ class CreateWebApp {
                     "color.${value.substring(7)}"
                     // colorString(colors.first { it.first == value.substring(7) }.second)
                 }
+
                 value.startsWith("@string/") -> {
                     "string.${value.substring(8)}"
                     // "\"${strings.first { it.first == value.substring(8) }.second}\""
                 }
+
                 value.startsWith("@drawable/") -> {
                     "drawable.${value.substring(10)}"
                 }
+
                 value.startsWith("#") -> {
                     colorString(parseColor(value))
                 }
+
                 value.startsWith("@+id/") -> {
                     "\"${value.substring(5)}\""
                 }
+
                 value.startsWith("@style") -> {
                     "style.${value.substring(7)}"
                 }
+
                 else -> "\"$value\""
             }
         }
@@ -110,10 +121,12 @@ class CreateWebApp {
                             val name = resource["name"]!!
                             colors.add(name to parseColor(resource.getContentString()))
                         }
+
                         "string" -> {
                             val name = resource["name"]!!
                             strings.add(name to parseString(resource.getContentString()))
                         }
+
                         "style" -> {
                             val name = resource["name"]!!
                             val style = Style()
@@ -170,9 +183,11 @@ class CreateWebApp {
                             )
                         }
                     }
-                    "png", "jpg", "gif" -> {
+
+                    "png", "jpg", "gif", "webp" -> {
                         send("const val ${file.nameWithoutExtension} = \"drawable/${file.name}\"")
                     }
+
                     else -> {
                         println("got unexpected drawable ${file.name}")
                     }
@@ -309,12 +324,14 @@ class CreateWebApp {
                     return 0xff000000.toInt() or (0x110000 * num.shr(8)) or (0x1100 * num.shr(4)
                         .and(15)) or (0x11 * num.and(15))
                 }
+
                 5 -> {
                     val num = text.substring(1).toInt(16)
                     return (0x11000000 * num.shr(12)) or (0x110000 * num.shr(8)) or (0x1100 * num.shr(
                         4
                     ).and(15)) or (0x11 * num.and(15))
                 }
+
                 7 -> 0xff000000.toInt() or text.substring(1).toInt(16)
                 9 -> text.substring(1).toLong(16).toInt()
                 else -> throw RuntimeException("Unknown color $text")
@@ -405,6 +422,7 @@ class CreateWebApp {
         } else if (when (src.name) {
                 "Maths.kt", "Sound.kt", "HTTP.kt", "Captcha.kt", "IDTypes.kt",
                 "BetterPreferences.kt", "FileChooser.kt", "FileSaver.kt" -> false
+
                 else -> true
             }
         ) {
@@ -420,7 +438,7 @@ class CreateWebApp {
                     "import android.content.Intent.Companion."
                 )
                 .replace(".code", ".toInt()")
-                .replace(".lowercase(Locale.getDefault())", ".toLowerCase()")
+                .replace(".lowercase(Locale.getDefault())", ".lowerCase()")
             if (text.contains("thread {") || text.contains("thread(true") || text.contains("thread{")) {
                 text = text.replaceFirst("import", "import java.util.*\nimport")
             }

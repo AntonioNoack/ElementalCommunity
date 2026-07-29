@@ -64,9 +64,11 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
             lastSearch = search
             lastParts = 0
         } else {
+
             val parts = search.split(',').map { it.trim() }
             val shownGroups = if (search.startsWith(lastSearch) && lastParts == parts.size)
                 shownSymbols else unlockeds
+
             for ((group, unlocked) in shownGroups.withIndex()) {
                 val list = shownSymbols[group]
                 val filtered = unlocked.filter {
@@ -78,10 +80,9 @@ open class UnlockedRows(ctx: Context, attributeSet: AttributeSet?) : View(ctx, a
                     }
                     false
                 }
-                if (list != filtered) {
-                    list.clear()
-                    list.addAll(filtered)
-                }
+
+                list.clear()
+                list.addAll(filtered)
             }
 
             lastSearch = search

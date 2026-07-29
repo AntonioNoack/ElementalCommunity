@@ -63,7 +63,7 @@ class CaptchaView(context: Context, attributeSet: AttributeSet?) : View(context,
         setOnTouchListener { _, e ->
 
             sign = 0
-            when (e.action) {
+            when (e.actionMasked) {
                 ACTION_MOVE, ACTION_DOWN -> {
                     for (i in 0 until e.pointerCount) {
                         val x = e.getX(i) //- this.x

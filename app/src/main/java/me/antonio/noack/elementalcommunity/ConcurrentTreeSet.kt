@@ -2,7 +2,7 @@ package me.antonio.noack.elementalcommunity
 
 import java.util.TreeSet
 
-class ConcurrentTreeSet<V> : Set<V> {
+class ConcurrentTreeSet<V: Comparable<V>> : Set<V> {
 
     private val content = TreeSet<V>()
 

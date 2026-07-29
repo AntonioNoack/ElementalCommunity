@@ -86,6 +86,7 @@ object CubeProgram : Program(
         rotation = glGetUniformLocation(program, "rotationY")
         metallic = glGetUniformLocation(program, "metallic")
 
+        bind()
         glUniform1i(glGetUniformLocation(program, "skyTexture"), 0)
     }
 }

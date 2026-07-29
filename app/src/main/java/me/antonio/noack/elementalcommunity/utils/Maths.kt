@@ -14,4 +14,8 @@ object Maths {
     fun mix(a: Float, b: Float, f: Float): Float {
         return (1 - f) * a + b * f
     }
+
+    fun mix(a: Double, b: Double, f: Double): Double {
+        return (1 - f) * a + b * f
+    }
 }

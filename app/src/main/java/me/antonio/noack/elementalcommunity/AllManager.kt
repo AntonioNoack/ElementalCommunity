@@ -34,6 +34,8 @@ import me.antonio.noack.elementalcommunity.cache.CombinationCache
 import me.antonio.noack.elementalcommunity.graph.GraphView
 import me.antonio.noack.elementalcommunity.help.RecipeHelper
 import me.antonio.noack.elementalcommunity.help.SettingsInit
+import me.antonio.noack.elementalcommunity.history3d.HistorySearch
+import me.antonio.noack.elementalcommunity.history3d.HistoryTimeChooser
 import me.antonio.noack.elementalcommunity.history3d.HistoryView3D
 import me.antonio.noack.elementalcommunity.io.SaveLoadLogic
 import me.antonio.noack.elementalcommunity.io.SplitReader2
@@ -219,6 +221,7 @@ class AllManager : AppCompatActivity() {
     private val searchButton1: View? get() = findViewById(R.id.searchButton1)
     private val searchButton2: View? get() = findViewById(R.id.searchButton2)
     val searchButton3: View? get() = findViewById(R.id.searchButton3)
+    val searchButton4: View? get() = findViewById(R.id.searchButton4)
 
     private val randomButton: View? get() = findViewById(R.id.randomButton)
     val resetEverythingButton: View? get() = findViewById(R.id.resetEverythingButton)
@@ -270,6 +273,9 @@ class AllManager : AppCompatActivity() {
         }
     }
 
+    val settingView: View?
+        get() = findViewById<View>(R.id.settingsLayout)
+
     @Suppress("DEPRECATION")
     private fun goFullScreen() {
         val flags = SYSTEM_UI_FLAG_IMMERSIVE or
@@ -277,6 +283,11 @@ class AllManager : AppCompatActivity() {
                 SYSTEM_UI_FLAG_HIDE_NAVIGATION
         unlocked?.systemUiVisibility = flags
         combiner?.systemUiVisibility = flags
+        historyView?.systemUiVisibility = flags
+        itempediaElements?.systemUiVisibility = flags
+        mandalaView?.systemUiVisibility = flags
+        treeView?.systemUiVisibility = flags
+        settingView?.systemUiVisibility = flags
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -389,8 +400,11 @@ class AllManager : AppCompatActivity() {
 
     }
 
+    val itempediaElements: RecyclerView?
+        get() = findViewById(R.id.itempediaElements)
+
     private val lazyItempediaInit = lazy {
-        val rec = findViewById<RecyclerView>(R.id.itempediaElements)!!
+        val rec = itempediaElements!!
         rec.setHasFixedSize(true)
         val numColumns = 10 // good number?
         rec.layoutManager = GridLayoutManager(this, numColumns)
@@ -401,9 +415,15 @@ class AllManager : AppCompatActivity() {
         createItempediaPages(this, 10)
     }
 
+    val historyView: HistoryView3D?
+        get() = findViewById(R.id.historyView)
+
     private val historyInitIsOK = lazy {
-        val view = findViewById<HistoryView3D>(R.id.historyView)
-        view != null && view.init(this)
+        val timeChooser = findViewById<HistoryTimeChooser>(R.id.historyTimeChooser)
+        timeChooser?.init(this)
+        val historyView = historyView
+        HistorySearch.setupSearchButton(this)
+        historyView != null && historyView.init(this)
     }
 
     lateinit var itempediaAdapter: ItempediaAdapter

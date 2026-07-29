@@ -116,7 +116,7 @@ object RecipeHelper {
         ) { all, list, dialog ->
 
             val mainList =
-                all.layoutInflater.inflate(R.layout.helper_search_recipe, list, false) as ViewGroup
+                all.layoutInflater.inflate(R.layout.recipe_search_results, list, false) as ViewGroup
             val textField = mainList.findViewById<EditText>(R.id.search)!!
 
             var oldSearch: String

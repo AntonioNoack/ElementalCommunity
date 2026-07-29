@@ -38,6 +38,7 @@ import android.view.MotionEvent.ACTION_MOVE
 import android.view.ScaleGestureDetector
 import android.widget.TextView
 import me.antonio.noack.elementalcommunity.AllManager
+import me.antonio.noack.elementalcommunity.Element
 import me.antonio.noack.elementalcommunity.GroupsEtc
 import me.antonio.noack.elementalcommunity.GroupsEtc.getCacheEntry
 import me.antonio.noack.elementalcommunity.R
@@ -46,14 +47,12 @@ import me.antonio.noack.elementalcommunity.history3d.FloatBuffer.Companion.cubeI
 import me.antonio.noack.elementalcommunity.history3d.FloatBuffer.Companion.cubePositions
 import me.antonio.noack.elementalcommunity.history3d.FloatBuffer.Companion.flatIndices
 import me.antonio.noack.elementalcommunity.history3d.FloatBuffer.Companion.flatPositions
+import me.antonio.noack.elementalcommunity.time.SimpleDate.formatMinutesSince1970
+import me.antonio.noack.elementalcommunity.utils.Compact.compacted
 import me.antonio.noack.elementalcommunity.utils.Maths.mix
 import java.lang.StrictMath.clamp
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.PI
@@ -139,8 +138,8 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
     lateinit var all: AllManager
 
-    private var width = 1
-    private var height = 1
+    private var frameWidth = 1
+    private var frameHeight = 1
 
     private val fontImage = Texture2D(R.drawable.font, true)
     private val skyboxImage = Texture2D(R.drawable.skybox, false)
@@ -193,12 +192,13 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
-        this.width = max(width, 1)
-        this.height = max(height, 1)
+        this.frameWidth = max(width, 1)
+        this.frameHeight = max(height, 1)
     }
 
     override fun onDrawFrame(gl: GL10?) {
-        updateTime()
+        val dt = updateTime()
+        skipToTarget(dt)
         calculateCameraMatrix()
 
         glDisable(GL_BLEND)
@@ -230,16 +230,10 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         checkErrors()
     }
 
-    private val formatter = DateTimeFormatter.ofLocalizedDateTime(
-        FormatStyle.MEDIUM,
-        FormatStyle.SHORT
-    )
-
     var elementBirthView: TextView? = null
     private var lastShownBirthedElement = ""
 
     fun showBirthedElements() {
-
         val elements = lastGoodElements
         if (elements.isEmpty()) return
 
@@ -248,22 +242,22 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         if (lastAddedName == lastShownBirthedElement) return
         lastShownBirthedElement = lastAddedName
 
-        val asyncSafeList = ArrayList(elements)
-        asyncSafeList.reverse()
         all.runOnUiThread {
-            view.text = asyncSafeList.joinToString("\n") { element ->
-                val date = LocalDateTime.ofEpochSecond(element.timestampMinutes * 60L, 0, ZoneOffset.UTC)
-                val dateText = formatter.format(date)
-                "${element.name}: $dateText"
-            }
+            val se = searchedElement
+            view.text = elements.indices.joinToString("\n") { i ->
+                val element = elements[elements.lastIndex - i]
+                val date = formatMinutesSince1970(element.timestampMinutes)
+                "${element.name}: $date"
+            } + if (se != null) "\n\nSearching '${se.name}': ${lastSearchedIndex}/?" else ""
         }
     }
 
     private val shownGoodElements = 4
-    private var lastGoodElements = ArrayDeque<Element3D>(shownGoodElements)
+    var currentTimeEstimate = 0.0
+    var lastGoodElements: List<Element3D> = emptyList()
 
     private var autoSpeed = 0f
-    private fun updateTime() {
+    private fun updateTime(): Float {
         val time = System.nanoTime()
         val dt = min(abs(time - lastTime) * 1e-9f, 0.1f)
         animationTime += dt
@@ -287,13 +281,14 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         }
 
         lastTime = time
+        return dt
     }
 
     private fun calculateCameraMatrix() {
         cameraMatrix
             .identity()
             .perspective(
-                90f * (PI.toFloat() / 180), width.toFloat() / height,
+                90f * (PI.toFloat() / 180), frameWidth.toFloat() / frameHeight.toFloat(),
                 far * 0.01f, far, zZeroToOne = false
             )
             .rotateX(-rotX)
@@ -308,7 +303,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         shader.bind()
         checkErrors()
 
-        val scale = far * 0.6f
+        val scale = far * 0.55f
         transform.identity()
             .scale(scale, scale, scale) // large to clear depth
 
@@ -348,22 +343,45 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         glUniform1f(shader.metallic, 0.5f)
 
         var maxZ = 0
-        lastGoodElements.clear()
+        val lastGoodElements = ArrayDeque<Element3D>(shownGoodElements)
+        var firstHiddenElement = true
+        var currentTimeEstimate1 = 0.0
         for (index in lastMinElementId until Int.MAX_VALUE) {
-            val element = getElement(index) ?: break
-            val done = drawElementCube(index, element, camZ)
-            maxZ = element.z
+            val curr = getElement(index) ?: break
+            val done = drawElementCube(index, curr, camZ)
+            maxZ = curr.z
 
-            if (element.name.isNotEmpty() && element.z < camZ) {
+            if (curr.name.isNotEmpty() && curr.z < camZ) {
                 if (lastGoodElements.size >= shownGoodElements) {
                     lastGoodElements.removeFirstOrNull()
                 }
-                lastGoodElements.add(element)
+                lastGoodElements.add(curr)
+            }
+
+            if (curr.z >= camZ && firstHiddenElement && lastGoodElements.isNotEmpty()) {
+                for (prev in lastGoodElements) {
+                    if (curr.timestampMinutes == prev.timestampMinutes) {
+                        currentTimeEstimate1 = prev.timestampMinutes.toDouble()
+                    } else {
+                        firstHiddenElement = false
+                        val fraction = (camZ - prev.z) / (curr.z - prev.z)
+                        currentTimeEstimate1 = mix(
+                            prev.timestampMinutes.toDouble(),
+                            curr.timestampMinutes.toDouble(),
+                            fraction
+                        )
+                    }
+                }
             }
 
             if (done) break
         }
-        animationTime = min(animationTime, (maxZ + 5) / zSpeed)
+
+        this.lastGoodElements = lastGoodElements
+        currentTimeEstimate = currentTimeEstimate1
+        val maxT = (maxZ + 5) / zSpeed
+        if (maxT + 1 < animationTime) println("Jumping down from $animationTime to $maxT by maxZ")
+        animationTime = min(animationTime, maxT)
     }
 
     private fun drawElementNames() {
@@ -548,7 +566,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
                 val middleZ = mix(minZ.toFloat(), element.z.toFloat(), 0.5f * growthTime)
                 drawCube(
                     px, (middleZ - camZ).toFloat(), pz,
-                    scaleX, growthTime * topDZ * 0.5f, scaleX, color, rotation
+                    scaleX, growthTime * topDZ * 0.5f, scaleX, color, 0f
                 )
             }
         }
@@ -654,9 +672,10 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
                 ACTION_MOVE -> {
                     if (!disableMove && !scaleDetector.isInProgress) {
-                        val speed = 10f / max(width, height)
+                        val speed = 10f / max(frameWidth, frameHeight)
                         val dx = (event.x - lastX) * speed
                         val dy = (event.y - lastY) * speed
+                        cancelSearchingMotion += hypot(dx, dy)
 
                         targetRotY -= dx
                         targetRotX = clamp(
@@ -680,5 +699,56 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
     private fun clamp(x: Int, min: Int, max: Int): Int {
         return if (x < min) min else if (x > max) max else x
+    }
+
+    private var lastSearchedIndex = 0
+    private var searchedElement: Element? = null
+    private var cancelSearchingMotion = 0f
+
+    private fun skipToTarget(dt: Float) {
+        val te = searchedElement ?: return
+        if (cancelSearchingMotion > 1f) {
+            all.runOnUiThread { AllManager.toast("Cancelled search", true) }
+            searchedElement = null
+            cancelSearchingMotion = 0f
+            return
+        }
+
+        val k = 1000
+        animationTime += dt * 10f // sped up ^^
+        for (i in lastSearchedIndex until lastSearchedIndex + k) {
+
+            val element = getElement(i) ?: break
+            lastSearchedIndex = i + 1
+            if (element.name.isEmpty()) continue
+
+            if (compacted(element.name) == te.compacted) {
+                // found :)
+                animationTime = element.z / zSpeed - 1.0
+                println("Found element by skipping, $animationTime")
+                searchedElement = null
+                return
+            } else if (element.z > i - 4) {
+                val newT = element.z / zSpeed
+                if (newT + 1 < animationTime) println("Jumping down zo $newT by search")
+                animationTime = min(newT, animationTime)
+            }
+        }
+    }
+
+    fun skipToElement(element: Element) {
+        animationTime = 0.0
+        cancelSearchingMotion = 0f
+        val quickIndex = ElementHistoryCache.find(element)
+        if (quickIndex != null) {
+            animationTime = quickIndex.first.z / zSpeed - 1.0
+            lastMinElementId = max(quickIndex.second - 100, 0)
+            println("Found element by immediately, $animationTime")
+        } else {
+            animationTime = 0.0
+            searchedElement = element
+            lastSearchedIndex = 0
+            lastMinElementId = 0
+        }
     }
 }

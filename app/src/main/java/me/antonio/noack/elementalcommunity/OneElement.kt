@@ -14,8 +14,15 @@ class OneElement(ctx: Context, attributeSet: AttributeSet?) : View(ctx, attribut
 
     var element: Element? = null
     var alphaOverride = 255
+    var simpleSize = false
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (simpleSize) {
+            val size = MeasureSpec.getSize(widthMeasureSpec)
+            setMeasuredDimension(size, size)
+            return
+        }
+
         val fittingSize = min(
             MeasureSpec.getSize(widthMeasureSpec),
             MeasureSpec.getSize(heightMeasureSpec)

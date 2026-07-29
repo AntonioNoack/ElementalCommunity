@@ -85,4 +85,5 @@
     <string name="neon_style_name">Neon</string>
     <string name="light_style_name">Light</string>
     <string name="history_in_3d">History in 3D</string>
+    <string name="element_name">Element Name</string>
 </resources>
