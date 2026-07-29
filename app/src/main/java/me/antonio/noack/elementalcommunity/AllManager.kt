@@ -502,7 +502,7 @@ class AllManager : AppCompatActivity() {
             value.append(element.craftingCount.toString())
             val unlockedRecipes = recipesByElement[element]
             val unlocked = unlockedIds[id] || unlockedRecipes?.isNotEmpty() == true
-            println("Saving element $element, isUnlocked? $unlocked, recipes: $unlockedRecipes")
+            // println("Saving element $element, isUnlocked? $unlocked, recipes: $unlockedRecipes")
             if (unlocked) {
                 value.append(';')
                 value.append('1')
@@ -517,12 +517,12 @@ class AllManager : AppCompatActivity() {
                     }
                 }
             }
-            println("Put String $value for $id")
+            // println("Put String $value for $id")
             edit.putString(id.toString(), value.toString())
         }
 
         saveElement2 = { element ->
-            println("Saving element $element")
+            // println("Saving element $element")
             MusicScheduler.tick()
             val edit = pref.edit()
             saveElement(edit, element)
