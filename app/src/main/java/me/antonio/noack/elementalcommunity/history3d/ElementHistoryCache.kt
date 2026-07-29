@@ -236,6 +236,8 @@ object ElementHistoryCache {
         0, 0, 0,
         0, 0, 0, 0
     )
+    var isFinished = false
+        private set
 
     fun getElement(index: Int): Element3D? {
         if (index < 0) return null
@@ -250,7 +252,7 @@ object ElementHistoryCache {
             return testElements.getOrNull(index)
         }
 
-        if (System.nanoTime() < waitUntilNanos) {
+        if (isFinished || System.nanoTime() < waitUntilNanos) {
             // wait a little
             return testElements.getOrNull(index)
         }
@@ -270,7 +272,7 @@ object ElementHistoryCache {
                     }//  else println("duplicate/skipped???")
                 }
             } else {
-                waitUntilNanos = System.nanoTime() + (60 * 1e9).toLong() // no more elements
+                isFinished = true // no more elements
             }
             isQuerying = false
         }, { error ->

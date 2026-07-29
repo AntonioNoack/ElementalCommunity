@@ -98,8 +98,6 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         private val animTimeX = 0.3f
         private val maxAnimTime = 30f
 
-        private val charWidth0 = 64
-
         val min = 0
         val max = 99
         val center = (min + max) * 0.5f
@@ -469,6 +467,10 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
             drawCube(px, py, pz, scale1, scale1, scale1, color, 0f)
         }
 
+        if (element.parentAZ > element.z ||
+            element.parentBZ > element.z
+        ) return false // weird :/
+
         val dx = (element.parentAX - element.parentBX).toFloat()
         val dz = (element.parentAY - element.parentBY).toFloat()
 
@@ -718,7 +720,14 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
         animationTime += dt * 10f // sped up ^^
         for (i in lastSearchedIndex until lastSearchedIndex + k) {
 
-            val element = getElement(i) ?: break
+            val element = getElement(i)
+            if (element == null && ElementHistoryCache.isFinished) {
+                AllManager.toast("Missing recipe for ${te.name}?", true)
+                searchedElement = null
+                return
+            }
+            element ?: break
+
             lastSearchedIndex = i + 1
             if (element.name.isEmpty()) continue
 
@@ -737,6 +746,9 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
     }
 
     fun skipToElement(element: Element) {
+
+        // todo bug: why are the primary elements not coming up in the search???
+
         animationTime = 0.0
         cancelSearchingMotion = 0f
         val quickIndex = ElementHistoryCache.find(element)
@@ -745,10 +757,17 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
             lastMinElementId = max(quickIndex.second - 100, 0)
             println("Found element by immediately, $animationTime")
         } else {
-            animationTime = 0.0
-            searchedElement = element
-            lastSearchedIndex = 0
-            lastMinElementId = 0
+            if (ElementHistoryCache.isFinished) {
+                // it's plain missing
+                AllManager.toast("Missing recipe for ${element.name}?", true)
+                return
+            } else {
+                // lazy/slow search
+                animationTime = 0.0
+                searchedElement = element
+                lastSearchedIndex = 0
+                lastMinElementId = 0
+            }
         }
     }
 }
