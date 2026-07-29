@@ -32,13 +32,15 @@ class SplitReader2 {
         val pri = primary.code
         val sec = secondary.code
         var i = 0
+        var negative = false
         while (true) {
             when (val char = read()) {
                 sec -> return i
                 pri, -1 -> {
                     hasReachedEndOfBlock = true
-                    return i
+                    return if (negative) -i else i
                 }
+                '-'.code -> negative = true
                 in 48..58 -> i = i * 10 + char - 48
                 else -> return readError(pri, default)
             }
@@ -57,6 +59,7 @@ class SplitReader2 {
                     hasReachedEndOfBlock = true
                     return builder.toString()
                 }
+
                 else -> builder.append(char.toChar())
             }
         }
