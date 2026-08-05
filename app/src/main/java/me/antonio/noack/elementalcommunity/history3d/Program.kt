@@ -9,6 +9,8 @@ import android.opengl.GLES20.glAttachShader
 import android.opengl.GLES20.glCompileShader
 import android.opengl.GLES20.glCreateProgram
 import android.opengl.GLES20.glCreateShader
+import android.opengl.GLES20.glDeleteProgram
+import android.opengl.GLES20.glDeleteShader
 import android.opengl.GLES20.glGetProgramInfoLog
 import android.opengl.GLES20.glGetProgramiv
 import android.opengl.GLES20.glGetShaderInfoLog
@@ -43,6 +45,7 @@ abstract class Program(val name: String, val vertexSource: String, val fragmentS
                 errorLog.append(name).append(":").append(variantName).append("\n")
                     .append(msg.trim()).append('\n')
             }
+            glDeleteShader(shader)
             return INVALID
         }
         return shader
@@ -54,13 +57,18 @@ abstract class Program(val name: String, val vertexSource: String, val fragmentS
         val vertexShader = createShader("vs", GL_VERTEX_SHADER, vertexSource)
         val fragmentShader = createShader("fs", GL_FRAGMENT_SHADER, fragmentSource)
         if (vertexShader == INVALID || fragmentShader == INVALID) {
+            if (vertexShader != INVALID) glDeleteShader(vertexShader)
+            if (fragmentShader != INVALID) glDeleteShader(fragmentShader)
             return false
         }
 
         glAttachShader(program, vertexShader)
         glAttachShader(program, fragmentShader)
         glLinkProgram(program)
-        this.program = program
+
+        // shaders are no longer needed after linking
+        glDeleteShader(vertexShader)
+        glDeleteShader(fragmentShader)
 
         glGetProgramiv(program, GL_LINK_STATUS, tmp, 0)
         if (tmp[0] != GL_TRUE) {
@@ -69,8 +77,12 @@ abstract class Program(val name: String, val vertexSource: String, val fragmentS
                 errorLog.append(name).append(':').append("pr").append('\n')
                     .append(msg.trim()).append('\n')
             }
+            // the program is broken, so delete it
+            glDeleteProgram(program)
             return false
         }
+
+        this.program = program
 
         init()
 
