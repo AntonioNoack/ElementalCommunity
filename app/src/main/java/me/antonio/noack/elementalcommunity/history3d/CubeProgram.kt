@@ -6,7 +6,7 @@ import android.opengl.GLES20.glUniform1i
 import kotlin.math.PI
 
 object CubeProgram : Program(
-    """
+    "cube", """
         attribute vec3 pos;
         attribute vec3 nor;
         

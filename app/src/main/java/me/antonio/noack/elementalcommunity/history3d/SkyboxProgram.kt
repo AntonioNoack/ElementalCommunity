@@ -4,7 +4,7 @@ import android.opengl.GLES20.glGetUniformLocation
 import kotlin.math.PI
 
 object SkyboxProgram : Program(
-    """
+    "skybox", """
         attribute vec3 pos;
         varying vec3 position;
         

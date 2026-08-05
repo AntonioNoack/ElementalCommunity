@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.Paint
 import android.opengl.GLES20.GL_BACK
 import android.opengl.GLES20.GL_BLEND
+import android.opengl.GLES20.GL_COLOR_BUFFER_BIT
 import android.opengl.GLES20.GL_CULL_FACE
 import android.opengl.GLES20.GL_DEPTH_BUFFER_BIT
 import android.opengl.GLES20.GL_DEPTH_TEST
@@ -20,6 +21,7 @@ import android.opengl.GLES20.GL_UNSIGNED_INT
 import android.opengl.GLES20.glBlendEquation
 import android.opengl.GLES20.glBlendFuncSeparate
 import android.opengl.GLES20.glClear
+import android.opengl.GLES20.glClearColor
 import android.opengl.GLES20.glClearDepthf
 import android.opengl.GLES20.glCullFace
 import android.opengl.GLES20.glDepthFunc
@@ -142,10 +144,6 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
     private val fontImage = Texture2D(R.drawable.font, true)
     private val skyboxImage = Texture2D(R.drawable.skybox, false)
 
-    // todo render date and time
-    // todo render timeline??? with zoom and scroll??
-    // todo date-picker would be nice
-
     var animationTime = 0.0
     var lastDown = 0L
 
@@ -167,26 +165,41 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
 
     private lateinit var textProgram: TextProgramBase
 
+    private var isInitialized = false
+
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
+        try {
+            check(SkyboxProgram.create()) { "Failed to create skybox program" }
+            textProgram = if (TextProgram.create()) TextProgram else {
+                check(TextProgramFallback.create()) { "Failed to create text program & fallback" }
+                TextProgramFallback
+            }
 
-        check(SkyboxProgram.create()) { "Failed to create skybox program" }
-        textProgram = if (TextProgram.create()) TextProgram else {
-            check(TextProgramFallback.create()) { "Failed to create text program & fallback" }
-            TextProgramFallback
+            check(CubeProgram.create()) { "Failed to create cube program" }
+            checkErrors()
+
+            cubePositions.create()
+            cubeIndices.create()
+            flatPositions.create()
+            flatIndices.create()
+            checkErrors()
+
+            fontImage.create(all)
+            skyboxImage.create(all)
+            checkErrors()
+
+            isInitialized = true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            isInitialized = false
+            val ev = elementBirthView
+            if (ev != null) {
+                all.runOnUiThread {
+                    ev.setTextColor(0xff0000 or 0xff000000.toInt())
+                    ev.text = "${e.message ?: "Error"}\n${Program.errorLog}"
+                }
+            }
         }
-
-        check(CubeProgram.create()) { "Failed to create cube program" }
-        checkErrors()
-
-        cubePositions.create()
-        cubeIndices.create()
-        flatPositions.create()
-        flatIndices.create()
-        checkErrors()
-
-        fontImage.create(all)
-        skyboxImage.create(all)
-        checkErrors()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -195,6 +208,12 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
     }
 
     override fun onDrawFrame(gl: GL10?) {
+        if (!isInitialized) {
+            glClearColor(0f, 0f, 0f, 1f)
+            glClear(GL_COLOR_BUFFER_BIT)
+            return
+        }
+
         val dt = updateTime()
         skipToTarget(dt)
         calculateCameraMatrix()
@@ -231,6 +250,7 @@ class HistoryView3D(ctx: Context, attributeSet: AttributeSet?) :
     var elementBirthView: TextView? = null
     private var lastShownBirthedElement = ""
 
+    @SuppressLint("SetTextI18n")
     fun showBirthedElements() {
         val elements = lastGoodElements
         if (elements.isEmpty()) return

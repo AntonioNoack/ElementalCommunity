@@ -1,7 +1,7 @@
 package me.antonio.noack.elementalcommunity.history3d
 
 object TextProgramFallback : TextProgramBase(
-    TextProgram.vertexSource, """
+    "text-legacy", TextProgram.vertexSource, """
         varying vec2 uvs;
         
         uniform vec3 textColor;

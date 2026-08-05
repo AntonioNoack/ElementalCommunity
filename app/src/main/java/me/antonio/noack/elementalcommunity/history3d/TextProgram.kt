@@ -4,7 +4,7 @@ import me.antonio.noack.elementalcommunity.history3d.HistoryView3D.Companion.cub
 import kotlin.math.PI
 
 object TextProgram : TextProgramBase(
-    """
+    "text","""
         attribute vec3 position0;
         varying vec2 uvs;
         
