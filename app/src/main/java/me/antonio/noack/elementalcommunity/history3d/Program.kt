@@ -52,8 +52,9 @@ abstract class Program(val name: String, val vertexSource: String, val fragmentS
     }
 
     fun create(): Boolean {
+
         this.program = INVALID
-        val program = glCreateProgram()
+
         val vertexShader = createShader("vs", GL_VERTEX_SHADER, vertexSource)
         val fragmentShader = createShader("fs", GL_FRAGMENT_SHADER, fragmentSource)
         if (vertexShader == INVALID || fragmentShader == INVALID) {
@@ -62,6 +63,7 @@ abstract class Program(val name: String, val vertexSource: String, val fragmentS
             return false
         }
 
+        val program = glCreateProgram()
         glAttachShader(program, vertexShader)
         glAttachShader(program, fragmentShader)
         glLinkProgram(program)
