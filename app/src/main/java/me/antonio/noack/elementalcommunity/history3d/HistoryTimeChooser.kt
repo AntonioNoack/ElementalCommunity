@@ -43,22 +43,16 @@ class HistoryTimeChooser(ctx: Context, attributeSet: AttributeSet?) :
     var deltaTime = (24 * 60).toDouble()
     var centerTime = minTime + deltaTime * 0.5
 
-    val bgPaint = Paint()
     val linePaint = Paint()
     val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     override fun draw(canvas: Canvas) {
-
-        bgPaint.color = -1
 
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.textSize = height * 0.4f
 
         linePaint.color = 0x2CA4EC or 0xff000000.toInt()
         textPaint.color = 0x8fd5ff or 0xff000000.toInt()
-
-        bgPaint.style = Style.FILL
-        canvas.drawRect(x, y, x + width, y + height, bgPaint)
 
         linePaint.style = Style.STROKE
         linePaint.strokeWidth = 1f
